@@ -1,0 +1,1 @@
+通过golang的简单的redis实现
