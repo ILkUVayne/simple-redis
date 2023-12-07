@@ -10,7 +10,7 @@ type SRedisServer struct {
 	fd      int
 	db      *SRedisDB
 	clients map[int]*SRedisClient
-	//aeLoop  *AeLoop
+	aeLoop  *aeEventLoop
 }
 
 type SRedisClient struct {
