@@ -22,14 +22,13 @@ const (
 )
 
 func main() {
+	// initialization
 	fmt.Printf("%s\n\n", banner)
 	fmt.Printf("vsersion: %s\n", VERSION)
 	confPath := flag.String("c", CONFIG, "config path")
 	flag.Parse()
-	// init config
-	src.InitServerConfig(*confPath)
-	// init server
-	// TODO
-	// aeMain
-	// TODO
+	// load config
+	src.SetupConf(*confPath)
+	// server start
+	src.ServerStart()
 }

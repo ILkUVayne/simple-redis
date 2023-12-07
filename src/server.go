@@ -21,7 +21,20 @@ type SRedisClient struct {
 
 var server SRedisServer
 
-func InitServerConfig(conf string) {
-	setupConf(conf)
+func initServerConfig() {
 	server.port = config.Port
+	server.fd = -1
+}
+
+func initServer() {
+
+}
+
+func ServerStart() {
+	// init config
+	initServerConfig()
+	// init server
+	initServer()
+	// aeMain
+	// TODO
 }

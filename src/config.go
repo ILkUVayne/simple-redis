@@ -24,7 +24,7 @@ func defaultWithoutConf() {
 	}
 }
 
-func setupConf(confName string) {
+func SetupConf(confName string) {
 	if confName == "" {
 		defaultWithoutConf()
 		return
