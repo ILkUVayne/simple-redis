@@ -10,7 +10,7 @@ type SRedisServer struct {
 	fd      int
 	db      *SRedisDB
 	clients map[int]*SRedisClient
-	aeLoop  *aeEventLoop
+	el      *aeEventLoop
 }
 
 type SRedisClient struct {
@@ -33,6 +33,7 @@ func initServer() {
 	}
 	server.clients = make(map[int]*SRedisClient)
 	server.fd = TcpServer(server.port)
+	server.el = aeCreateEventLoop()
 }
 
 func ServerStart() {
@@ -41,5 +42,5 @@ func ServerStart() {
 	// init server
 	initServer()
 	// aeMain
-	// TODO
+	aeMain(server.el)
 }

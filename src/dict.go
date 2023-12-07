@@ -2,7 +2,7 @@ package src
 
 import (
 	"hash/fnv"
-	glog "simple-redis/utils"
+	"simple-redis/utils"
 )
 
 type dictEntry struct {
@@ -37,7 +37,7 @@ func SRStrHash(key *SRobj) int64 {
 	hash := fnv.New64()
 	_, err := hash.Write([]byte(key.strVal()))
 	if err != nil {
-		glog.Error("simple-redis server: hashFunc err: ", err)
+		utils.Error("simple-redis server: hashFunc err: ", err)
 	}
 	return int64(hash.Sum64())
 }
