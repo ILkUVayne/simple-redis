@@ -27,7 +27,8 @@ func initServerConfig() {
 }
 
 func initServer() {
-
+	server.clients = make(map[int]*SRedisClient)
+	server.fd = TcpServer(server.port)
 }
 
 func ServerStart() {
