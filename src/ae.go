@@ -170,7 +170,9 @@ func (el *aeEventLoop) aeProcessEvents() {
 	var events [128]unix.EpollEvent
 	n, err := unix.EpollWait(el.ffd, events[:], int(timeout))
 	if err != nil {
-		utils.ErrorP("simple-redis server: ae epoll err: ", err)
+		if err != unix.EINTR {
+			utils.ErrorP("simple-redis server: ae epoll_wait err: ", err)
+		}
 	}
 	utils.InfoF("simple-redis server: ae epoll get %d events: ", n)
 	// 收集可执行事件
