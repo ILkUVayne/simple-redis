@@ -143,6 +143,8 @@ func (el *aeEventLoop) removeTimeEvent(id int) {
 			} else {
 				pre.next = p.next
 			}
+			// remove timeEvent
+			// 解除需要删除的timeEvent的next引用，便于gc回收
 			p.next = nil
 			break
 		}
