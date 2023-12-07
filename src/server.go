@@ -1,8 +1,8 @@
 package src
 
 type SRedisDB struct {
-	//data   *Dict
-	//expire *Dict
+	data   *dict
+	expire *dict
 }
 
 type SRedisServer struct {
@@ -27,6 +27,10 @@ func initServerConfig() {
 }
 
 func initServer() {
+	server.db = &SRedisDB{
+		data:   dictCreate(&dictType{hashFunc: SRStrHash, keyCompare: SRStrCompare}),
+		expire: dictCreate(&dictType{hashFunc: SRStrHash, keyCompare: SRStrCompare}),
+	}
 	server.clients = make(map[int]*SRedisClient)
 	server.fd = TcpServer(server.port)
 }
