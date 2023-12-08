@@ -24,7 +24,7 @@ const (
 func main() {
 	// initialization
 	fmt.Printf("%s\n\n", banner)
-	fmt.Printf("vsersion: %s\n", VERSION)
+	fmt.Printf("version: %s\n", VERSION)
 	confPath := flag.String("c", CONFIG, "config path")
 	flag.Parse()
 	// load config
