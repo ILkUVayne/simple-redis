@@ -9,7 +9,7 @@ import (
 type FeType int
 
 const (
-	AE_READABLE FeType = iota
+	AE_READABLE FeType = iota + 1
 	AE_WRITEABLE
 )
 
@@ -72,7 +72,7 @@ func (el *aeEventLoop) epollMask(fd int) uint32 {
 	}
 	// 该fd上已存在AE_WRITEABLE事件
 	if el.fileEvent[feKey(fd, AE_WRITEABLE)] != nil {
-		// em == unix.EPOLLOUT
+		// em == unix.EPOLLIN | unix.EPOLLOUT
 		em |= fe2ep[AE_WRITEABLE]
 	}
 	// default em == 0
@@ -201,7 +201,6 @@ func (el *aeEventLoop) aeProcessEvents() {
 		if p.when <= now {
 			timeEvents = append(timeEvents, p)
 		}
-		p = p.next
 	}
 	// 事件处理
 	// 时间事件
