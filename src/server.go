@@ -34,6 +34,10 @@ func initServer() {
 	server.clients = make(map[int]*SRedisClient)
 	server.fd = TcpServer(server.port)
 	server.el = aeCreateEventLoop()
+	// add fileEvent
+	server.el.addFileEvent(server.fd, AE_READABLE, acceptTcpHandler, nil)
+	// add timeEvent
+	server.el.addTimeEvent(AE_NORMAL, 100, serverCron, nil)
 }
 
 func ServerStart() {
