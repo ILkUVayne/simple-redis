@@ -1,5 +1,8 @@
 package src
 
+const SREDIS_MAX_BULK = 1024 * 4
+const SREDIS_MAX_INLINE = 1024 * 4
+
 type SRedisDB struct {
 	data   *dict
 	expire *dict
@@ -11,12 +14,6 @@ type SRedisServer struct {
 	db      *SRedisDB
 	clients map[int]*SRedisClient
 	el      *aeEventLoop
-}
-
-type SRedisClient struct {
-	fd int
-	db *SRedisDB
-	// TODO
 }
 
 var server SRedisServer

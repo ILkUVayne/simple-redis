@@ -29,3 +29,23 @@ func (s *SRobj) strVal() string {
 	}
 	return s.Val.(string)
 }
+
+func (s *SRobj) incrRefCount() {
+	s.refCount++
+}
+
+func (s *SRobj) decrRefCount() {
+	s.refCount--
+	// gc 自动回收
+	if s.refCount == 0 {
+		s.Val = nil
+	}
+}
+
+func createSRobj(typ SRType, ptr any) *SRobj {
+	return &SRobj{
+		Typ:      typ,
+		Val:      ptr,
+		refCount: 1,
+	}
+}

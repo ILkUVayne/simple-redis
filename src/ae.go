@@ -5,6 +5,11 @@ import (
 	"simple-redis/utils"
 )
 
+const (
+	AE_OK  = 0
+	AE_ERR = -1
+)
+
 // FeType fileEvent type
 type FeType int
 
@@ -21,8 +26,8 @@ const (
 	AE_ONCE
 )
 
-type aeFileProc func(loop *aeEventLoop, fd int, clientData any)
-type aeTimeProc func(loop *aeEventLoop, id int, clientData any)
+type aeFileProc func(el *aeEventLoop, fd int, clientData any)
+type aeTimeProc func(el *aeEventLoop, id int, clientData any)
 
 type aeFileEvent struct {
 	mask       FeType
