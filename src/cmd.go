@@ -13,4 +13,5 @@ const (
 func processCommand(c *SRedisClient) {
 	cmdStr := c.args[0].strVal()
 	utils.Info("process command: ", cmdStr+" "+c.args[1].strVal())
+	// TODO
 }

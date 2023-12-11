@@ -18,6 +18,7 @@ func serverCron(el *aeEventLoop, id int, clientData any) {
 	// TODO check expire key
 }
 
+// read client query and process
 func readQueryFromClient(el *aeEventLoop, fd int, clientData any) {
 	c := clientData.(*SRedisClient)
 	if (len(c.queryBuf) - c.queryLen) < SREDIS_MAX_BULK {

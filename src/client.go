@@ -19,6 +19,11 @@ type SRedisClient struct {
 	// TODO
 }
 
+// getQueryLine
+// e.g. "get name\r\n"
+// idx == 8
+// e.g. "$3\r\nget\r\n$4\r\nname\r\n"
+// idx == 2
 func (c *SRedisClient) getQueryLine() (int, error) {
 	idx := strings.Index(string(c.queryBuf[:c.queryLen]), "\r\n")
 	if idx < 0 && c.queryLen > SREDIS_MAX_INLINE {
@@ -27,6 +32,10 @@ func (c *SRedisClient) getQueryLine() (int, error) {
 	return idx, nil
 }
 
+// getQueryNum
+// e.g. "$3\r\nget\r\n$4\r\nname\r\n"
+// n == 3
+// string(queryBuf) == "get\r\n$4\r\nname\r\n"
 func (c *SRedisClient) getQueryNum(start, end int) (int, error) {
 	n, err := strconv.Atoi(string(c.queryBuf[start:end]))
 	c.queryBuf = c.queryBuf[end+2:]
@@ -65,6 +74,8 @@ func resetClient(c *SRedisClient) {
 	c.bulkNum = 0
 }
 
+// inline command handle
+// e.g. "get name\r\n"
 func inlineBufHandle(c *SRedisClient) (bool, error) {
 	idx, err := c.getQueryLine()
 	if idx < 0 {
@@ -81,13 +92,16 @@ func inlineBufHandle(c *SRedisClient) (bool, error) {
 	return true, nil
 }
 
+// bulk command handle
+// e.g. "*2\r\n$3\r\nget\r\n$4\r\nname\r\n"
+// bulkNum == 2
 func bulkBufHandle(c *SRedisClient) (bool, error) {
-	// read bulk
 	if c.bulkNum == 0 {
 		idx, err := c.getQueryLine()
 		if idx < 0 {
 			return false, err
 		}
+		// get bulkNum
 		n, err := c.getQueryNum(1, idx)
 		if err != nil {
 			return false, err
@@ -98,6 +112,7 @@ func bulkBufHandle(c *SRedisClient) (bool, error) {
 		c.bulkNum = n
 		c.args = make([]*SRobj, n)
 	}
+	// get command
 	for c.bulkNum > 0 {
 		// get bulkLen
 		if c.bulkLen == 0 {
@@ -135,6 +150,7 @@ func bulkBufHandle(c *SRedisClient) (bool, error) {
 	return true, nil
 }
 
+// query to args and processCommand
 func processQueryBuf(c *SRedisClient) error {
 	for c.queryLen > 0 {
 		// get cmd type
