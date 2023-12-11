@@ -9,11 +9,12 @@ type SRedisDB struct {
 }
 
 type SRedisServer struct {
-	port    int
-	fd      int
-	db      *SRedisDB
-	clients map[int]*SRedisClient
-	el      *aeEventLoop
+	port       int
+	fd         int
+	db         *SRedisDB
+	clients    map[int]*SRedisClient
+	el         *aeEventLoop
+	loadFactor int64
 }
 
 var server SRedisServer
@@ -31,6 +32,7 @@ func initServer() {
 	server.clients = make(map[int]*SRedisClient)
 	server.fd = TcpServer(server.port)
 	server.el = aeCreateEventLoop()
+	server.loadFactor = LOAD_FACTOR
 	// add fileEvent
 	server.el.addFileEvent(server.fd, AE_READABLE, acceptTcpHandler, nil)
 	// add timeEvent
