@@ -1,5 +1,12 @@
 package src
 
+import "fmt"
+
+const (
+	DEFAULT_PORT       = 6379
+	DEFAULT_RH_NN_STEP = 10
+)
+
 const SREDIS_MAX_BULK = 1024 * 4
 const SREDIS_MAX_INLINE = 1024 * 4
 
@@ -9,19 +16,28 @@ type SRedisDB struct {
 }
 
 type SRedisServer struct {
-	port       int
-	fd         int
-	db         *SRedisDB
-	clients    map[int]*SRedisClient
-	el         *aeEventLoop
-	loadFactor int64
+	port           int
+	fd             int
+	db             *SRedisDB
+	clients        map[int]*SRedisClient
+	el             *aeEventLoop
+	loadFactor     int64
+	rehashNullStep int64
 }
 
 var server SRedisServer
 
 func initServerConfig() {
-	server.port = config.Port
+	fmt.Println(config)
+	server.port = DEFAULT_PORT
+	if config.Port > 0 {
+		server.port = config.Port
+	}
 	server.fd = -1
+	server.rehashNullStep = DEFAULT_RH_NN_STEP
+	if config.RehashNullStep > 0 {
+		server.rehashNullStep = config.RehashNullStep
+	}
 }
 
 func initServer() {
