@@ -1,7 +1,5 @@
 package src
 
-import "fmt"
-
 const (
 	DEFAULT_PORT       = 6379
 	DEFAULT_RH_NN_STEP = 10
@@ -28,7 +26,6 @@ type SRedisServer struct {
 var server SRedisServer
 
 func initServerConfig() {
-	fmt.Println(config)
 	server.port = DEFAULT_PORT
 	if config.Port > 0 {
 		server.port = config.Port
