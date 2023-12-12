@@ -10,25 +10,15 @@ import (
 )
 
 type configVal struct {
-	Bind       string `cfg:"bind"`
-	Port       int    `cfg:"port"`
-	AppendOnly bool   `cfg:"appendOnly"`
+	Bind           string `cfg:"bind"`
+	Port           int    `cfg:"port"`
+	AppendOnly     bool   `cfg:"appendOnly"`
+	RehashNullStep int64  `cfg:"rehashNullStep"`
 }
 
 var config *configVal
 
-func defaultWithoutConf() {
-	config = &configVal{
-		Bind: "127.0.0.1",
-		Port: 6379,
-	}
-}
-
 func SetupConf(confName string) {
-	if confName == "" {
-		defaultWithoutConf()
-		return
-	}
 	f, err := os.Open(confName)
 	if err != nil {
 		log.Fatal(err)
@@ -79,7 +69,7 @@ func parse(f *os.File) *configVal {
 			switch field.Type.Kind() {
 			case reflect.String:
 				fieldVal.SetString(value)
-			case reflect.Int:
+			case reflect.Int, reflect.Int64:
 				intVal, err := strconv.ParseInt(value, 10, 64)
 				if err == nil {
 					fieldVal.SetInt(intVal)
