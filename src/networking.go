@@ -38,3 +38,31 @@ func readQueryFromClient(el *aeEventLoop, fd int, clientData any) {
 		return
 	}
 }
+
+func SendReplyToClient(el *aeEventLoop, fd int, clientData any) {
+	c := clientData.(*SRedisClient)
+	for c.reply.len() > 0 {
+		resp := c.reply.first()
+		buf := []byte(resp.data.strVal())
+		bufLen := len(buf)
+		if c.sentLen < bufLen {
+			n, err := Write(c.fd, buf[c.sentLen:])
+			if err != nil {
+				freeClient(c)
+				utils.ErrorP("simple-redis server: SendReplyToClient err: ", err)
+				return
+			}
+			c.sentLen += n
+			utils.InfoF("simple-redis server: send %v bytes to client:%v", n, c.fd)
+			if c.sentLen != bufLen {
+				break
+			}
+			c.reply.delNode(resp)
+			resp.data.decrRefCount()
+		}
+	}
+	if c.reply.len() == 0 {
+		c.sentLen = 0
+		el.removeFileEvent(c.fd, AE_WRITEABLE)
+	}
+}

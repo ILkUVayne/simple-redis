@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"simple-redis/src"
+	"simple-redis/utils"
 )
 
 var banner = `
@@ -22,6 +23,7 @@ const (
 )
 
 func main() {
+	utils.SetLevel(utils.ErrorLevel)
 	// initialization
 	fmt.Printf("%s\n\n", banner)
 	fmt.Printf("version: %s\n", VERSION)

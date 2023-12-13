@@ -10,6 +10,7 @@ type SRedisClient struct {
 	fd       int
 	db       *SRedisDB
 	args     []*SRobj
+	reply    *list
 	queryBuf []byte
 	queryLen int
 	sentLen  int
@@ -43,13 +44,25 @@ func (c *SRedisClient) getQueryNum(start, end int) (int, error) {
 	return n, err
 }
 
+func (c *SRedisClient) addReply(data *SRobj) {
+	c.reply.rPush(data)
+	data.incrRefCount()
+	server.el.addFileEvent(c.fd, AE_WRITEABLE, SendReplyToClient, c)
+}
+
+func (c *SRedisClient) addReplyStr(s string) {
+	data := createSRobj(SR_STR, s)
+	c.addReply(data)
+	data.decrRefCount()
+}
+
 func createSRClient(fd int) *SRedisClient {
 	c := new(SRedisClient)
 	c.fd = fd
 	c.db = server.db
 	c.cmdTyp = CMD_UNKNOWN
-	// TODO other attribute
-
+	c.reply = listCreate(&listType{keyCompare: SRStrCompare})
+	c.queryBuf = make([]byte, SREDIS_IO_BUF)
 	return c
 }
 

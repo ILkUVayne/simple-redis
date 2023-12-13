@@ -1,5 +1,7 @@
 package src
 
+import "simple-redis/utils"
+
 const (
 	DEFAULT_PORT       = 6379
 	DEFAULT_RH_NN_STEP = 10
@@ -7,6 +9,7 @@ const (
 
 const SREDIS_MAX_BULK = 1024 * 4
 const SREDIS_MAX_INLINE = 1024 * 4
+const SREDIS_IO_BUF = 1024 * 16
 
 type SRedisDB struct {
 	data   *dict
@@ -24,6 +27,24 @@ type SRedisServer struct {
 }
 
 var server SRedisServer
+
+func expireIfNeeded(key *SRobj) {
+	_, e := server.db.expire.dictFind(key)
+	if e == nil {
+		return
+	}
+
+	if when := e.val.intVal(); when > utils.GetMsTime() {
+		return
+	}
+	server.db.expire.dictDelete(key)
+	server.db.data.dictDelete(key)
+}
+
+func findVal(key *SRobj) *SRobj {
+	expireIfNeeded(key)
+	return server.db.data.dictGet(key)
+}
 
 func initServerConfig() {
 	server.port = DEFAULT_PORT

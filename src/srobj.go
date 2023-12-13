@@ -1,5 +1,7 @@
 package src
 
+import "strconv"
+
 type SRType uint8
 
 // SR_STR 字符串类型
@@ -40,6 +42,14 @@ func (s *SRobj) decrRefCount() {
 	if s.refCount == 0 {
 		s.Val = nil
 	}
+}
+
+func (s *SRobj) intVal() int64 {
+	if s.Typ != SR_STR {
+		return 0
+	}
+	i, _ := strconv.ParseInt(s.Val.(string), 10, 64)
+	return i
 }
 
 func createSRobj(typ SRType, ptr any) *SRobj {
