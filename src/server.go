@@ -79,5 +79,6 @@ func ServerStart() {
 	// init server
 	initServer()
 	// aeMain
+	utils.Info("server starting ...")
 	aeMain(server.el)
 }
