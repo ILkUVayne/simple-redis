@@ -185,7 +185,7 @@ func (el *aeEventLoop) aeProcessEvents() {
 			utils.ErrorP("simple-redis server: ae epoll_wait err: ", err)
 		}
 	}
-	utils.InfoF("simple-redis server: ae epoll get %d events: ", n)
+	//utils.InfoF("simple-redis server: ae epoll get %d events: ", n)
 	// 收集可执行事件
 	// 文件事件
 	var fileEvents []*aeFileEvent
