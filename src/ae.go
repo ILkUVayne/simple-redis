@@ -112,6 +112,10 @@ func (el *aeEventLoop) addFileEvent(fd int, mask FeType, proc aeFileProc, client
 func (el *aeEventLoop) removeFileEvent(fd int, mask FeType) {
 	// epoll_ctl
 	em := el.epollMask(fd)
+	// 该fd对应的mask事件未注册，无需删除
+	if em&fe2ep[mask] == 0 {
+		return
+	}
 	op := unix.EPOLL_CTL_DEL
 	em &= ^fe2ep[mask]
 	if em != 0 {

@@ -72,11 +72,20 @@ func freeArgs(c *SRedisClient) {
 	}
 }
 
+func freeReplyList(c *SRedisClient) {
+	for c.reply.length != 0 {
+		n := c.reply.head
+		c.reply.delNode(n)
+		n.data.decrRefCount()
+	}
+}
+
 func freeClient(c *SRedisClient) {
 	freeArgs(c)
 	delete(server.clients, c.fd)
 	server.el.removeFileEvent(c.fd, AE_READABLE)
 	server.el.removeFileEvent(c.fd, AE_WRITEABLE)
+	freeReplyList(c)
 	Close(c.fd)
 }
 
