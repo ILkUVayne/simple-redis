@@ -71,13 +71,13 @@ func processCommand(c *SRedisClient) {
 	}
 	cmd := lookupCommand(cmdStr)
 	if cmd == nil {
-		c.addReplyStr("-ERR: unknow command")
-		freeClient(c)
+		c.addReplyStr("-ERR: unknow command\r\n")
+		resetClient(c)
 		return
 	}
 	if cmd.arity != len(c.args) {
-		c.addReplyStr("-ERR: wrong number of args")
-		freeClient(c)
+		c.addReplyStr("-ERR: wrong number of args\r\n")
+		resetClient(c)
 		return
 	}
 	cmd.proc(c)
