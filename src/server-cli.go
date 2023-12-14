@@ -1,13 +1,10 @@
 package src
 
-import (
-	"fmt"
-)
-
 func parseOptions() {
 
 }
 
 func CliStart() {
-	fmt.Println(CliArgs)
+	//fmt.Println(CliArgs)
+	//fmt.Println(utils.StrToHost(CliArgs.hostIp))
 }
