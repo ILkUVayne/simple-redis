@@ -74,6 +74,8 @@ func initServer() {
 }
 
 func ServerStart() {
+	// load config
+	SetupConf(ServerArgs.confPath)
 	// init config
 	initServerConfig()
 	// init server

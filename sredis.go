@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"simple-redis/src"
 )
@@ -18,7 +17,6 @@ var banner = `
 
 const (
 	VERSION = "0.0.0"
-	CONFIG  = "./sredis.conf"
 )
 
 func main() {
@@ -26,10 +24,8 @@ func main() {
 	// initialization
 	fmt.Printf("%s\n\n", banner)
 	fmt.Printf("version: %s\n", VERSION)
-	confPath := flag.String("c", CONFIG, "config path")
-	flag.Parse()
-	// load config
-	src.SetupConf(*confPath)
+	// parse args
+	src.ParseServerArgs()
 	// server start
 	src.ServerStart()
 }
