@@ -62,6 +62,8 @@ func TestAddFe(t *testing.T) {
 	if len(el.fileEvent) != 2 {
 		t.Error("addFileEvent err: fileEvent number ==", len(el.fileEvent))
 	}
+	el.addFileEvent(fd, AE_READABLE, testFeProc, nil)
+	el.addFileEvent(fd, AE_WRITEABLE, testFeProc, nil)
 	el.fileEvent[feKey(fd, AE_READABLE)].proc(el, fd, nil)
 	el.fileEvent[feKey(fd, AE_WRITEABLE)].proc(el, fd, nil)
 	// remove
@@ -73,6 +75,8 @@ func TestAddFe(t *testing.T) {
 	if el.fileEvent[feKey(fd, AE_READABLE)] != nil {
 		t.Error("addFileEvent err: fileEvent remove err")
 	}
+	el.removeFileEvent(fd, AE_READABLE)
+	el.removeFileEvent(fd, AE_WRITEABLE)
 }
 
 // test addTimeEvent and removeTimeEvent
