@@ -53,6 +53,7 @@ func setCommand(c *SRedisClient) {
 	c.addReplyStr("+OK\r\n")
 }
 
+// 查询需要执行的命令
 func lookupCommand(cmdStr string) *SRedisCommand {
 	for _, c := range commandTable {
 		if c.name == cmdStr {
@@ -62,6 +63,7 @@ func lookupCommand(cmdStr string) *SRedisCommand {
 	return nil
 }
 
+// 执行命令
 func processCommand(c *SRedisClient) {
 	cmdStr := c.args[0].strVal()
 	utils.Info("process command: ", cmdStr)

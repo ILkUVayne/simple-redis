@@ -88,6 +88,7 @@ func (d *dict) isRehash() bool {
 	return d.rehashIdx != -1
 }
 
+// rehash n step
 func (d *dict) dictRehash(step int) {
 	if !d.isRehash() {
 		return
@@ -146,6 +147,7 @@ func (d *dict) dictNextPower(size int64) int64 {
 	}
 }
 
+// 扩容
 func (d *dict) dictExpand(size int64) int {
 	realSize := d.dictNextPower(size)
 
@@ -164,6 +166,7 @@ func (d *dict) dictExpand(size int64) int {
 	return DICK_OK
 }
 
+// 检查是否需要扩容
 func (d *dict) dictExpandIfNeeded() int {
 	if d.isRehash() {
 		return DICK_OK
@@ -183,6 +186,7 @@ func (d *dict) dictKeyIndex(key *SRobj) int64 {
 	return idx
 }
 
+// find index and val
 func (d *dict) dictFind(key *SRobj) (int64, *dictEntry) {
 	if d.ht[0].size == 0 {
 		return -1, nil

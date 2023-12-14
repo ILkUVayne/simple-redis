@@ -21,6 +21,8 @@ const (
 // TeType timeEvent type
 type TeType int
 
+// AE_NORMAL 周期执行的事件事件
+// AE_ONCE 只执行一次
 const (
 	AE_NORMAL TeType = iota
 	AE_ONCE

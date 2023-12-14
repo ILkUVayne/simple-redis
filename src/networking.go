@@ -2,6 +2,7 @@ package src
 
 import "simple-redis/utils"
 
+// accept client connect
 func acceptTcpHandler(el *aeEventLoop, fd int, clientData any) {
 	cfd := Accept(fd)
 	if cfd == AE_ERR {
@@ -39,6 +40,7 @@ func readQueryFromClient(el *aeEventLoop, fd int, clientData any) {
 	}
 }
 
+// SendReplyToClient send query result to client
 func SendReplyToClient(el *aeEventLoop, fd int, clientData any) {
 	c := clientData.(*SRedisClient)
 	for c.reply.len() > 0 {
