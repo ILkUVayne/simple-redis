@@ -39,7 +39,7 @@ func getCommand(c *SRedisClient) {
 		return
 	}
 	str := val.strVal()
-	c.addReplyStr(fmt.Sprintf("$%d%v\r\n", len(str), str))
+	c.addReplyStr(fmt.Sprintf("$%d\r\n%v\r\n", len(str), str))
 }
 
 func setCommand(c *SRedisClient) {
