@@ -1,8 +1,10 @@
 package src
 
 import (
+	"fmt"
 	"os"
 	"simple-redis/utils"
+	"time"
 )
 
 const (
@@ -43,6 +45,14 @@ func cliConnect(force int) int {
 }
 
 /*------------------------------------------------------------------------------
+ * Utility functions
+ *--------------------------------------------------------------------------- */
+
+func cliRefreshPrompt() {
+	CliArgs.prompt = fmt.Sprintf("%s:%d> ", CliArgs.hostIp, CliArgs.port)
+}
+
+/*------------------------------------------------------------------------------
  * User interface
  *--------------------------------------------------------------------------- */
 
@@ -51,12 +61,15 @@ func parseOptions() {
 }
 
 func repl() {
-	for {
-		//var args []byte
-		//if string(args[0]) == "quit" || string(args[0]) == "exit" {
-		//	os.Exit(0)
-		//}
-	}
+	cliRefreshPrompt()
+	fmt.Print(CliArgs.prompt)
+	time.Sleep(time.Second * 3)
+	//for {
+	//	var args []byte
+	//	if string(args[0]) == "quit" || string(args[0]) == "exit" {
+	//		os.Exit(0)
+	//	}
+	//}
 }
 
 func noninteractive(args []string) {

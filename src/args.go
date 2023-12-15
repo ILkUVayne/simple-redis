@@ -22,6 +22,7 @@ func ParseServerArgs() {
 type cliArgs struct {
 	hostIp string
 	port   int
+	prompt string
 }
 
 var CliArgs cliArgs
