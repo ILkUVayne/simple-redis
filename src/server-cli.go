@@ -2,14 +2,16 @@ package src
 
 import (
 	"fmt"
-	"os"
+	linenoise "github.com/GeertJohan/go.linenoise"
 	"simple-redis/utils"
-	"time"
+	"strings"
 )
 
 const (
 	CLI_OK  = 0
 	CLI_ERR = 1
+
+	REDIS_CLI_HISTFILE_DEFAULT = ".srediscli_history"
 )
 
 type sRedisContext struct {
@@ -52,6 +54,18 @@ func cliRefreshPrompt() {
 	CliArgs.prompt = fmt.Sprintf("%s:%d> ", CliArgs.hostIp, CliArgs.port)
 }
 
+func getHome() string {
+	str, err := utils.Home()
+	if err != nil {
+		utils.Error(err)
+	}
+	return str
+}
+
+func historyFile(file string) string {
+	return getHome() + "/" + file
+}
+
 /*------------------------------------------------------------------------------
  * User interface
  *--------------------------------------------------------------------------- */
@@ -61,15 +75,40 @@ func parseOptions() {
 }
 
 func repl() {
+	history := false
+	historyfile := ""
+
+	if utils.Isatty() {
+		history = true
+		historyfile = historyFile(REDIS_CLI_HISTFILE_DEFAULT)
+		_ = linenoise.LoadHistory(historyfile)
+	}
+
 	cliRefreshPrompt()
-	fmt.Print(CliArgs.prompt)
-	time.Sleep(time.Second * 3)
-	//for {
-	//	var args []byte
-	//	if string(args[0]) == "quit" || string(args[0]) == "exit" {
-	//		os.Exit(0)
-	//	}
-	//}
+	for {
+		var str string
+		var err error
+		if context == nil {
+			str, err = linenoise.Line("not connected> ")
+		} else {
+			str, err = linenoise.Line(CliArgs.prompt)
+		}
+		if err != nil {
+			break
+		}
+
+		if history {
+			_ = linenoise.AddHistory(str)
+			_ = linenoise.SaveHistory(historyfile)
+		}
+
+		fields := strings.Fields(str)
+		switch fields[0] {
+		case "quit":
+			utils.Exit(0)
+		}
+	}
+	utils.Exit(0)
 }
 
 func noninteractive(args []string) {
@@ -87,7 +126,7 @@ func CliStart(args []string) {
 
 	// Otherwise, we have some arguments to execute
 	if cliConnect(0) == CLI_ERR {
-		os.Exit(1)
+		utils.Exit(1)
 	}
 	noninteractive(args)
 }
