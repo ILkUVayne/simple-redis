@@ -101,12 +101,15 @@ func repl() {
 			_ = linenoise.AddHistory(str)
 			_ = linenoise.SaveHistory(historyfile)
 		}
-
+		if len(str) == 0 {
+			fmt.Println("Invalid argument(s)")
+			continue
+		}
 		fields := strings.Fields(str)
-		switch fields[0] {
-		case "quit":
+		if fields[0] == "quit" || fields[0] == "exit" {
 			utils.Exit(0)
 		}
+		// cliSendCommand
 	}
 	utils.Exit(0)
 }
