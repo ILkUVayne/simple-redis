@@ -7,7 +7,11 @@
 This command will build an executable file **sredis**
 
 ~~~bash
+# server
 go build ./sredis.go
+
+# cli
+go build ./sredis-cli.go
 ~~~
 
 - run
@@ -15,19 +19,43 @@ go build ./sredis.go
 This command will directly start the server
 
 ~~~bash
-go run ./sredis.go
+# server
+go run ./sredis.go -c ./sredis.conf
+# server with config
+
+# cli
+go run ./sredis-cli.go
+# cli with args
+go run ./sredis-cli.go -host 127.0.0.1 -p 6379
 ~~~
 
 ## Running
 
 ~~~bash
+# server
 ./sredis
-
 # or with conf
 ./sredis -c ./sredis.conf
+
+# cli
+./sredis-cli
+# cli with args
+./sredis-cli -host 127.0.0.1 -p 6379
 ~~~
 
 ## Playing
+
+- use sredis-cli
+
+~~~bash
+./sredis-cli
+127.0.0.1:6379> set name helloworld
+OK
+127.0.0.1:6379> get name
+"helloworld"
+127.0.0.1:6379>
+
+~~~
 
 - use telnet
 
