@@ -14,18 +14,7 @@ const (
 	REDIS_CLI_HISTFILE_DEFAULT = ".srediscli_history"
 )
 
-type sRedisContext struct {
-	fd     int
-	obuf   []byte
-	reader []byte
-}
-
 var context *sRedisContext
-
-func sRedisContextInit() *sRedisContext {
-	c := new(sRedisContext)
-	return c
-}
 
 /*------------------------------------------------------------------------------
  * Networking / parsing
@@ -46,12 +35,36 @@ func cliConnect(force int) int {
 	return CLI_OK
 }
 
+func cliSendCommand(args []string) int {
+	if context == nil {
+		return CLI_ERR
+	}
+	var reply sRedisReply
+	sRedisAppendCommandArg(context, args)
+	sRedisGetReply(context, &reply)
+	context.reader = &reply
+	printPrompt()
+	return CLI_OK
+}
+
 /*------------------------------------------------------------------------------
  * Utility functions
  *--------------------------------------------------------------------------- */
 
 func cliRefreshPrompt() {
 	CliArgs.prompt = fmt.Sprintf("%s:%d> ", CliArgs.hostIp, CliArgs.port)
+}
+
+func printPrompt() {
+	if context.err != nil {
+		fmt.Println(context.err.Error())
+	}
+	reader := context.reader.(*sRedisReply)
+	if reader.fStr != "" {
+		fmt.Println(reader.fStr)
+		return
+	}
+	fmt.Println(reader.str)
 }
 
 func getHome() string {
@@ -110,6 +123,12 @@ func repl() {
 			utils.Exit(0)
 		}
 		// cliSendCommand
+		if cliSendCommand(fields) != CLI_OK {
+			cliConnect(1)
+			if cliSendCommand(fields) != CLI_OK {
+				utils.Error("simple-redis cli: cliSendCommand error")
+			}
+		}
 	}
 	utils.Exit(0)
 }
