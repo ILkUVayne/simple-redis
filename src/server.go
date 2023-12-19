@@ -44,7 +44,7 @@ func expireIfNeeded(key *SRobj) {
 }
 
 func findVal(key *SRobj) *SRobj {
-	//expireIfNeeded(key)
+	expireIfNeeded(key)
 	return server.db.data.dictGet(key)
 }
 
