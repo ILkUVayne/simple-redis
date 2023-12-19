@@ -7,6 +7,16 @@ import (
 )
 
 const (
+	RESP_NIL_VAL      = "$-1\r\n"
+	RESP_TYP_ERR      = "-ERR: wrong type\r\n"
+	RESP_OK           = "+OK\r\n"
+	RESP_UNKOWN       = "-ERR: unknow command\r\n"
+	RESP_ARGS_NUM_ERR = "-ERR: wrong number of args\r\n"
+
+	RESP_BULK = "$%d\r\n%v\r\n"
+)
+
+const (
 	SIMPLE_STR   = iota + 1 // +OK\r\n
 	SIMPLE_ERROR            // -Error message\r\n
 	INTEGERS                // :[<+|->]<value>\r\n
@@ -85,7 +95,7 @@ func respParseBulk(buf []byte, length int) (string, error) {
 		return "", err
 	}
 	if sLen == -1 {
-		return "Null bulk strings", nil
+		return "(nil)", nil
 	}
 	if sLen == 0 && len(buf) == 6 {
 		return "empty string", nil

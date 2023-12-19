@@ -3,12 +3,14 @@ package src
 import (
 	"hash/fnv"
 	"math"
+	"math/rand"
 	"simple-redis/utils"
 )
 
 // LOAD_FACTOR 负载因子
 // BG_PERSISTENCE_LOAD_FACTOR bgsave或者bgrewriteaof 的负载因子
 const (
+	EXPIRE_CHECK_COUNT   int   = 100
 	DICK_OK                    = 0
 	DICK_ERR                   = 1
 	DEFAULT_REHASH_STEP        = 1
@@ -65,6 +67,22 @@ func SRStrCompare(key1, key2 *SRobj) bool {
 }
 
 // -------------------------------- api ----------------------------
+
+func (d *dict) dictSlots() int64 {
+	s := d.ht[0].size
+	if d.ht[1] != nil {
+		s += d.ht[1].size
+	}
+	return s
+}
+
+func (d *dict) dictSize() int64 {
+	s := d.ht[0].used
+	if d.ht[1] != nil {
+		s += d.ht[1].used
+	}
+	return s
+}
 
 func dictCreate(dType *dictType) *dict {
 	d := new(dict)
@@ -293,4 +311,46 @@ func (d *dict) dictDelete(key *SRobj) int {
 		}
 	}
 	return DICK_ERR
+}
+
+func (d *dict) dictGetRandomKey() *dictEntry {
+	if d.dictSize() == 0 {
+		return nil
+	}
+	if d.isRehash() {
+		d.dictRehashStep()
+	}
+	// find a non-empty bucket
+	var he *dictEntry
+	var slotIdx int64
+	if d.isRehash() {
+		for he == nil {
+			slotIdx = rand.Int63n(d.dictSlots())
+			if slotIdx >= d.ht[0].size {
+				he = d.ht[1].table[slotIdx-d.ht[0].size]
+			} else {
+				he = d.ht[0].table[slotIdx]
+			}
+		}
+	} else {
+		for he == nil {
+			slotIdx = rand.Int63n(d.ht[0].mask)
+			he = d.ht[0].table[slotIdx]
+		}
+	}
+	var listLen int64
+	var listele int64
+	var orighe *dictEntry
+	listLen = 0
+	orighe = he
+	for he != nil {
+		he = he.next
+		listLen++
+	}
+	listele = rand.Int63n(listLen)
+	he = orighe
+	for ; listele < 0; listele-- {
+		he = he.next
+	}
+	return he
 }

@@ -59,3 +59,11 @@ func createSRobj(typ SRType, ptr any) *SRobj {
 		refCount: 1,
 	}
 }
+
+func createFromInt(val int64) *SRobj {
+	return &SRobj{
+		Typ:      SR_STR,
+		Val:      strconv.FormatInt(val, 10),
+		refCount: 1,
+	}
+}

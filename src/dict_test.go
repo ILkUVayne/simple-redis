@@ -1,6 +1,7 @@
 package src
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -193,4 +194,20 @@ func TestDictDelete(t *testing.T) {
 	if d.dictGet(key) != nil {
 		t.Error("dictDelete err")
 	}
+}
+
+func TestDictGetRandomKey(t *testing.T) {
+	d := dictCreate(&dictType{hashFunc: SRStrHash, keyCompare: SRStrCompare})
+	d.dictSet(createSRobj(SR_STR, "name1"), createSRobj(SR_STR, "ly1"))
+	d.dictSet(createSRobj(SR_STR, "name2"), createSRobj(SR_STR, "ly2"))
+	d.dictSet(createSRobj(SR_STR, "name3"), createSRobj(SR_STR, "ly3"))
+	d.dictSet(createSRobj(SR_STR, "name4"), createSRobj(SR_STR, "ly4"))
+	d.dictSet(createSRobj(SR_STR, "name5"), createSRobj(SR_STR, "ly5"))
+	d.dictSet(createSRobj(SR_STR, "name6"), createSRobj(SR_STR, "ly6"))
+	d.dictSet(createSRobj(SR_STR, "name7"), createSRobj(SR_STR, "ly7"))
+	e := d.dictGetRandomKey()
+	if e == nil {
+		t.Error("dictGetRandomKey err")
+	}
+	fmt.Println(e.val.strVal())
 }

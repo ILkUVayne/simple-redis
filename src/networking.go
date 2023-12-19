@@ -1,6 +1,8 @@
 package src
 
-import "simple-redis/utils"
+import (
+	"simple-redis/utils"
+)
 
 // accept client connect
 func acceptTcpHandler(el *aeEventLoop, fd int, clientData any) {
@@ -12,11 +14,6 @@ func acceptTcpHandler(el *aeEventLoop, fd int, clientData any) {
 	server.clients[cfd] = client
 	// 注册读取查询事件
 	el.addFileEvent(cfd, AE_READABLE, readQueryFromClient, client)
-}
-
-// run cronjob, default 100ms
-func serverCron(el *aeEventLoop, id int, clientData any) {
-	// TODO check expire key
 }
 
 // read client query and process
@@ -67,4 +64,29 @@ func SendReplyToClient(el *aeEventLoop, fd int, clientData any) {
 		c.sentLen = 0
 		el.removeFileEvent(c.fd, AE_WRITEABLE)
 	}
+}
+
+// ======================= Cron: called every 100 ms ========================
+
+func activeExpireCycle() {
+	for i := 0; i < EXPIRE_CHECK_COUNT; i++ {
+		if server.db.expire.dictSize() == 0 {
+			break
+		}
+
+		entry := server.db.expire.dictGetRandomKey()
+		if entry == nil {
+			break
+		}
+		if entry.val.intVal() < utils.GetMsTime() {
+			server.db.data.dictDelete(entry.key)
+			server.db.expire.dictDelete(entry.key)
+		}
+	}
+}
+
+// run cronjob, default 100ms
+func serverCron(el *aeEventLoop, id int, clientData any) {
+	// check expire key
+	activeExpireCycle()
 }

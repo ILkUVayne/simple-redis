@@ -5,6 +5,10 @@ import (
 	"fmt"
 )
 
+const (
+	NIL_STR = "(nil)"
+)
+
 type sRedisReply struct {
 	typ    int
 	buf    []byte
@@ -16,7 +20,9 @@ type sRedisReply struct {
 func (r *sRedisReply) formatStr() {
 	switch r.typ {
 	case BULK_STR:
-		r.fStr = fmt.Sprintf("\"%s\"", r.str)
+		if r.str != NIL_STR {
+			r.fStr = fmt.Sprintf("\"%s\"", r.str)
+		}
 	case SIMPLE_ERROR:
 		r.fStr = fmt.Sprintf("(error) %s", r.str)
 	}

@@ -1,6 +1,8 @@
 package src
 
-import "simple-redis/utils"
+import (
+	"simple-redis/utils"
+)
 
 const (
 	DEFAULT_PORT       = 6379
@@ -42,7 +44,7 @@ func expireIfNeeded(key *SRobj) {
 }
 
 func findVal(key *SRobj) *SRobj {
-	expireIfNeeded(key)
+	//expireIfNeeded(key)
 	return server.db.data.dictGet(key)
 }
 
