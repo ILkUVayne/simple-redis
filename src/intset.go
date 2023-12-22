@@ -1,56 +1,115 @@
 package src
 
-import (
-	"math"
-	"simple-redis/utils"
-)
+import "math/rand"
 
-// contents []int16 []int32 []int64
+const DEFAULT_INTSET_BUF = 4
+
 type intSet struct {
-	encoding uint8
 	length   uint32
-	contents any
+	contents []int64
 }
 
-func (is *intSet) _intSetGetEncoded(pos int, enc uint8) int64 {
-	if enc == uint8(utils.SizeofIn64()) {
-		return is.contents.([]int64)[pos]
-	}
-	if enc == uint8(utils.SizeofIn32()) {
-		return int64(is.contents.([]int32)[pos])
-	}
-	return int64(is.contents.([]int16)[pos])
-}
-
-func (is *intSet) _intSetGet(pos int) {
-	is._intSetGetEncoded(pos, is.encoding)
+func (is *intSet) _intSetGet(pos int) int64 {
+	return is.contents[pos]
 }
 
 func (is *intSet) _intSetSet(pos int, value int64) {
-	if is.encoding == uint8(utils.SizeofIn64()) {
-		is.contents.([]int64)[pos] = value
+	if pos > int(is.length) {
+		is.contents[pos] = value
 		return
 	}
-	if is.encoding == uint8(utils.SizeofIn32()) {
-		is.contents.([]int32)[pos] = int32(value)
-		return
-	}
-	is.contents.([]int16)[pos] = int16(value)
+	copy(is.contents[pos+1:], is.contents[pos:])
+	is.contents[pos] = value
 }
 
-func _intSetValueEncoding(v int64) uint8 {
-	if v < math.MinInt32 || v > math.MaxInt32 {
-		return uint8(utils.SizeofIn64())
+func (is *intSet) _intSetRemove(pos int) {
+	is.contents = append(is.contents[:pos], is.contents[pos+1:]...)
+}
+
+func (is *intSet) intSetSearch(value int64, pos *uint32) uint8 {
+	minIdx, midIdx, maxIdx := 0, -1, int(is.length)
+	cur := int64(-1)
+	if is.length == 0 {
+		*pos = 0
+		return 0
 	}
-	if v < math.MinInt16 || v > math.MaxInt16 {
-		return uint8(utils.SizeofIn32())
+	if value > is._intSetGet(int(is.length)-1) {
+		*pos = is.length
+		return 0
 	}
-	return uint8(utils.SizeofIn16())
+	if value < is._intSetGet(0) {
+		*pos = 0
+		return 0
+	}
+	for maxIdx >= minIdx {
+		midIdx = (minIdx + maxIdx) / 2
+		cur = is._intSetGet(midIdx)
+		if value == cur {
+			break
+		}
+		if value > cur {
+			minIdx = midIdx + 1
+			continue
+		}
+		maxIdx = midIdx - 1
+	}
+
+	if value == cur {
+		*pos = uint32(midIdx)
+		return 1
+	}
+	*pos = uint32(minIdx)
+	return 0
+}
+
+func (is *intSet) intSetResize() {
+	length := is.length * 2
+	newContents := make([]int64, length, length)
+	copy(newContents, is.contents)
+	is.contents = newContents
+}
+
+func (is *intSet) intSetAdd(value int64) *intSet {
+	if is.length == uint32(len(is.contents)) {
+		is.intSetResize()
+	}
+	var pos uint32
+	if is.intSetSearch(value, &pos) == 1 {
+		return is
+	}
+	is._intSetSet(int(pos), value)
+	is.length++
+	return is
+}
+
+func (is *intSet) intSetRemove(value int64) {
+	var pos uint32
+	if is.intSetSearch(value, &pos) == 0 {
+		return
+	}
+	is._intSetRemove(int(pos))
+	is.length--
+}
+
+func (is *intSet) intSetRandom() int64 {
+	return is._intSetGet(rand.Intn(int(is.length)))
+}
+
+func (is *intSet) intSetGet(pos uint32, value *int64) bool {
+	if pos > is.length {
+		*value = is._intSetGet(int(pos))
+		return true
+	}
+	return false
+}
+
+func (is *intSet) intSetLen() uint32 {
+	return is.length
 }
 
 // Create an empty intSet
 func intSetNew() *intSet {
 	is := new(intSet)
-	is.encoding = uint8(utils.SizeofIn16())
+	is.contents = make([]int64, DEFAULT_INTSET_BUF, DEFAULT_INTSET_BUF)
 	return is
 }
