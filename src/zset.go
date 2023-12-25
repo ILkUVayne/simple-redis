@@ -4,7 +4,7 @@ type zSkipListNode struct {
 	obj            *SRobj
 	score          float64
 	backward       *zSkipListNode
-	zSkipListLevel struct {
+	zSkipListLevel []struct {
 		forward *zSkipListNode
 		span    uint
 	}
