@@ -1,15 +1,13 @@
 package src
 
-type zSkipListLevel struct {
-	forward *zSkipListNode
-	span    uint
-}
-
 type zSkipListNode struct {
 	obj      *SRobj
 	score    float64
 	backward *zSkipListNode
-	level    []*zSkipListLevel
+	level    []struct {
+		forward *zSkipListNode
+		span    uint
+	}
 }
 
 type zSkipList struct {
