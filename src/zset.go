@@ -26,6 +26,13 @@ type zSkipListNode struct {
 	level    []*zSkipListNodeLevel
 }
 
+func (zn *zSkipListNode) freeNode() {
+	zn.obj.decrRefCount()
+	zn.obj = nil
+	zn.backward = nil
+	zn.level = nil
+}
+
 func zslCreateNode(level int, score float64, obj *SRobj) *zSkipListNode {
 	zsln := new(zSkipListNode)
 	zsln.obj = obj
@@ -35,13 +42,6 @@ func zslCreateNode(level int, score float64, obj *SRobj) *zSkipListNode {
 		zsln.level[i] = new(zSkipListNodeLevel)
 	}
 	return zsln
-}
-
-func (zn *zSkipListNode) freeNode() {
-	zn.obj.decrRefCount()
-	zn.obj = nil
-	zn.backward = nil
-	zn.level = nil
 }
 
 type zSkipList struct {
