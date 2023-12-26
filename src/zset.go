@@ -9,6 +9,11 @@ const (
 	ZSKIPLIST_P        = 0.25
 )
 
+type zRangeSpec struct {
+	min, max     float64
+	minex, maxex int
+}
+
 type zSkipListNodeLevel struct {
 	forward *zSkipListNode
 	span    uint
@@ -19,6 +24,17 @@ type zSkipListNode struct {
 	score    float64
 	backward *zSkipListNode
 	level    []*zSkipListNodeLevel
+}
+
+func zslCreateNode(level int, score float64, obj *SRobj) *zSkipListNode {
+	zsln := new(zSkipListNode)
+	zsln.obj = obj
+	zsln.score = score
+	zsln.level = make([]*zSkipListNodeLevel, level)
+	for i := 0; i < level; i++ {
+		zsln.level[i] = new(zSkipListNodeLevel)
+	}
+	return zsln
 }
 
 func (zn *zSkipListNode) freeNode() {
@@ -158,17 +174,6 @@ func zslRandomLevel() int {
 		level = ZSKIPLIST_MAXLEVEL
 	}
 	return level
-}
-
-func zslCreateNode(level int, score float64, obj *SRobj) *zSkipListNode {
-	zsln := new(zSkipListNode)
-	zsln.obj = obj
-	zsln.score = score
-	zsln.level = make([]*zSkipListNodeLevel, level)
-	for i := 0; i < level; i++ {
-		zsln.level[i] = new(zSkipListNodeLevel)
-	}
-	return zsln
 }
 
 func zslCreate() *zSkipList {
