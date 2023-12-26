@@ -45,7 +45,7 @@ go run ./sredis-cli.go -host 127.0.0.1 -p 6379
 
 ## Playing
 
-Please refer to  [command list](https://github.com/ILkUVayne/simple-redis/blob/master/commamdlist.md) for the complete command documentation
+Please refer to  [command list](https://github.com/ILkUVayne/simple-redis/blob/master/commandlist.md) for the complete command documentation
 
 - use sredis-cli
 
