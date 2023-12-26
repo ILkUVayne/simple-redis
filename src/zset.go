@@ -47,11 +47,11 @@ func (z *zSkipList) free() {
 	z.tail = nil
 }
 
-func (z *zSkipList) zslInsert(score float64, obj *SRobj) *zSkipListNode {
+func (z *zSkipList) _getUpdateAndRank(score float64, obj *SRobj) (*[32]*zSkipListNode, *[32]uint, *zSkipListNode) {
 	var update [ZSKIPLIST_MAXLEVEL]*zSkipListNode
 	var rank [ZSKIPLIST_MAXLEVEL]uint
 	var x *zSkipListNode
-	var i, level int
+	var i int
 
 	x = z.header
 	for i = z.level - 1; i >= 0; i-- {
@@ -69,6 +69,12 @@ func (z *zSkipList) zslInsert(score float64, obj *SRobj) *zSkipListNode {
 		}
 		update[i] = x
 	}
+	return &update, &rank, x
+}
+
+func (z *zSkipList) insert(score float64, obj *SRobj) *zSkipListNode {
+	var i, level int
+	update, rank, x := z._getUpdateAndRank(score, obj)
 
 	level = zslRandomLevel()
 	if level > z.level {
@@ -105,6 +111,37 @@ func (z *zSkipList) zslInsert(score float64, obj *SRobj) *zSkipListNode {
 
 	z.length++
 	return x
+}
+
+func (z *zSkipList) deleteNode(node *zSkipListNode, update *[ZSKIPLIST_MAXLEVEL]*zSkipListNode) {
+	for i := 0; i < z.level; i++ {
+		if update[i].level[i].forward != node {
+			update[i].level[i].span -= 1
+			continue
+		}
+		update[i].level[i].span += node.level[i].span - 1
+		update[i].level[i].forward = node.level[i].forward
+	}
+	if node.level[0].forward != nil {
+		node.level[0].forward.backward = node.backward
+	} else {
+		z.tail = node.backward
+	}
+	for z.level > 1 && (z.header.level[z.level-1].forward == nil) {
+		z.level--
+	}
+	z.length--
+}
+
+func (z *zSkipList) delete(score float64, obj *SRobj) bool {
+	update, _, x := z._getUpdateAndRank(score, obj)
+	x = x.level[0].forward
+	if x != nil && score == x.score && compareStringObjects(x.obj, obj) == 0 {
+		z.deleteNode(x, update)
+		x.freeNode()
+		return true
+	}
+	return false
 }
 
 type zSet struct {

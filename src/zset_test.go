@@ -35,16 +35,44 @@ func TestZslCreate(t *testing.T) {
 func TestZslInsert(t *testing.T) {
 	zsl := zslCreate()
 	o1 := createSRobj(SR_STR, "qqqq")
-	zsl.zslInsert(5.1, o1)
+	zsl.insert(5.1, o1)
 	o2 := createSRobj(SR_STR, "qqq")
-	zsl.zslInsert(4.6, o2)
+	zsl.insert(4.6, o2)
 	o3 := createSRobj(SR_STR, "qqq11")
-	zsl.zslInsert(4.8, o3)
+	zsl.insert(4.8, o3)
 	o4 := createSRobj(SR_STR, "qqq112")
-	zsl.zslInsert(4.7, o4)
+	zsl.insert(4.7, o4)
 	o5 := createSRobj(SR_STR, "qqq1122")
-	zsl.zslInsert(5.0, o5)
+	zsl.insert(5.0, o5)
 	if zsl.length != 5 {
 		t.Error("zslInsert err: zsl.length = ", zsl.length)
+	}
+}
+
+func TestZslDelete(t *testing.T) {
+	zsl := zslCreate()
+	o1 := createSRobj(SR_STR, "qqqq")
+	zsl.insert(5.1, o1)
+	o2 := createSRobj(SR_STR, "qqq")
+	zsl.insert(4.6, o2)
+	o3 := createSRobj(SR_STR, "qqq11")
+	zsl.insert(4.8, o3)
+	o4 := createSRobj(SR_STR, "qqq112")
+	zsl.insert(4.7, o4)
+	o5 := createSRobj(SR_STR, "qqq1122")
+	zsl.insert(5.0, o5)
+	res := zsl.delete(5.2, o5)
+	if zsl.length != 5 {
+		t.Error("delete err: zsl.length = ", zsl.length)
+	}
+	if res {
+		t.Error("delete err: res = ", res)
+	}
+	res = zsl.delete(4.8, o3)
+	if zsl.length != 4 {
+		t.Error("delete err: zsl.length = ", zsl.length)
+	}
+	if !res {
+		t.Error("delete err: res = ", res)
 	}
 }
