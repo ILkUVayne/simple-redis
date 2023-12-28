@@ -1,6 +1,7 @@
 package src
 
 import (
+	"fmt"
 	"simple-redis/utils"
 )
 
@@ -57,9 +58,10 @@ func processCommand(c *SRedisClient) {
 
 // commandTable 命令列表
 var commandTable = []SRedisCommand{
+	{"expire", expireCommand, 3},
+	{"object", objectCommand, 3},
 	{"get", getCommand, 2},
 	{"set", setCommand, 3},
-	{"expire", expireCommand, 3},
 	// more
 }
 
@@ -74,4 +76,18 @@ func expireCommand(c *SRedisClient) {
 	server.db.expire.dictSet(key, expireObj)
 	expireObj.decrRefCount()
 	c.addReplyStr(RESP_OK)
+}
+
+func objectCommand(c *SRedisClient) {
+	val := c.args[2]
+	if val.Typ != SR_STR {
+		c.addReplyStr(RESP_TYP_ERR)
+	}
+	value := server.db.data.dictGet(val)
+	if value == nil {
+		c.addReplyStr(RESP_NIL_VAL)
+		return
+	}
+	str := value.strEncoding()
+	c.addReplyStr(fmt.Sprintf(RESP_BULK, len(str), str))
 }
