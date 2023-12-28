@@ -17,6 +17,17 @@ const (
 	REDIS_ENCODING_SKIPLIST                // Encoded as skiplist
 )
 
+var encodingMaps = map[uint8]string{
+	REDIS_ENCODING_RAW:        "raw",
+	REDIS_ENCODING_INT:        "int",
+	REDIS_ENCODING_HT:         "hashtable",
+	REDIS_ENCODING_ZIPMAP:     "zipmap",
+	REDIS_ENCODING_LINKEDLIST: "linkedlist",
+	REDIS_ENCODING_ZIPLIST:    "ziplist",
+	REDIS_ENCODING_INTSET:     "intset",
+	REDIS_ENCODING_SKIPLIST:   "skiplist",
+}
+
 type SRType uint8
 
 // SR_STR 字符串类型
@@ -69,24 +80,11 @@ func (s *SRobj) intVal() int64 {
 }
 
 func (s *SRobj) strEncoding() string {
-	switch s.encoding {
-	case REDIS_ENCODING_RAW:
-		return "raw"
-	case REDIS_ENCODING_INT:
-		return "int"
-	case REDIS_ENCODING_HT:
-		return "hashtable"
-	case REDIS_ENCODING_LINKEDLIST:
-		return "linkedlist"
-	case REDIS_ENCODING_ZIPLIST:
-		return "ziplist"
-	case REDIS_ENCODING_INTSET:
-		return "intset"
-	case REDIS_ENCODING_SKIPLIST:
-		return "skiplist"
-	default:
+	encoding, ok := encodingMaps[s.encoding]
+	if !ok {
 		return "unknown"
 	}
+	return encoding
 }
 
 func createSRobj(typ SRType, ptr any) *SRobj {
