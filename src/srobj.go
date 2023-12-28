@@ -56,6 +56,9 @@ func (s *SRobj) strVal() string {
 	if s.Typ != SR_STR {
 		return ""
 	}
+	if s.encoding == REDIS_ENCODING_INT {
+		return strconv.FormatInt(s.Val.(int64), 10)
+	}
 	return s.Val.(string)
 }
 
@@ -98,11 +101,12 @@ func (s *SRobj) tryObjectEncoding() {
 		return
 	}
 	// Check if we can represent this string as a long integer
-	_, err := strconv.ParseInt(s.Val.(string), 10, 64)
+	i, err := strconv.ParseInt(s.Val.(string), 10, 64)
 	if err != nil {
 		return
 	}
 	s.encoding = REDIS_ENCODING_INT
+	s.Val = i
 }
 
 func createSRobj(typ SRType, ptr any) *SRobj {
