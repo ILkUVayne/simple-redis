@@ -87,6 +87,24 @@ func (s *SRobj) strEncoding() string {
 	return encoding
 }
 
+func (s *SRobj) tryObjectEncoding() {
+	if s.encoding != REDIS_ENCODING_RAW {
+		return
+	}
+	if s.refCount > 1 {
+		return
+	}
+	if s.Typ != SR_STR {
+		return
+	}
+	// Check if we can represent this string as a long integer
+	_, err := strconv.ParseInt(s.Val.(string), 10, 64)
+	if err != nil {
+		return
+	}
+	s.encoding = REDIS_ENCODING_INT
+}
+
 func createSRobj(typ SRType, ptr any) *SRobj {
 	return &SRobj{
 		Typ:      typ,

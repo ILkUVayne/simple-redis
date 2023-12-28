@@ -23,6 +23,7 @@ func setCommand(c *SRedisClient) {
 	if val.Typ != SR_STR {
 		c.addReplyStr(RESP_TYP_ERR)
 	}
+	val.tryObjectEncoding()
 	server.db.data.dictSet(key, val)
 	server.db.expire.dictDelete(key)
 	c.addReplyStr(RESP_OK)
