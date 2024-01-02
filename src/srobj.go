@@ -78,6 +78,9 @@ func (s *SRobj) intVal() int64 {
 	if s.Typ != SR_STR {
 		return 0
 	}
+	if s.encoding == REDIS_ENCODING_INT {
+		return s.Val.(int64)
+	}
 	i, _ := strconv.ParseInt(s.Val.(string), 10, 64)
 	return i
 }
@@ -107,6 +110,39 @@ func (s *SRobj) tryObjectEncoding() {
 	}
 	s.encoding = REDIS_ENCODING_INT
 	s.Val = i
+}
+
+func (s *SRobj) getFloat64FromObject(target *float64) int {
+	if s.Typ != SR_STR {
+		return REDIS_ERR
+	}
+	if s.encoding == REDIS_ENCODING_INT {
+		*target = s.Val.(float64)
+		return REDIS_OK
+	}
+	if s.encoding == REDIS_ENCODING_RAW {
+		i, err := strconv.ParseInt(s.Val.(string), 10, 64)
+		if err != nil {
+			return REDIS_ERR
+		}
+		*target = float64(i)
+		return REDIS_OK
+	}
+	panic("Unknown string encoding")
+}
+
+func (s *SRobj) getFloat64FromObjectOrReply(c *SRedisClient, target *float64, msg *string) int {
+	var value float64
+	if s.getFloat64FromObject(&value) == REDIS_ERR {
+		if msg != nil {
+			c.addReplyError(*msg)
+			return REDIS_ERR
+		}
+		c.addReplyError(*msg)
+		return REDIS_ERR
+	}
+	*target = value
+	return REDIS_OK
 }
 
 func createSRobj(typ SRType, ptr any) *SRobj {

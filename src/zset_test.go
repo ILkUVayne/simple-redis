@@ -76,3 +76,26 @@ func TestZslDelete(t *testing.T) {
 		t.Error("delete err: res = ", res)
 	}
 }
+
+func TestZslParseRange(t *testing.T) {
+	min := createSRobj(SR_STR, "(15")
+	min.tryObjectEncoding()
+	max := createSRobj(SR_STR, "20")
+	max.tryObjectEncoding()
+	rg, err := zslParseRange(min, max)
+	if err != nil {
+		t.Error("zslParseRange err: ", err)
+	}
+	if rg.min != float64(15) {
+		t.Error("zslParseRange err: rg.min = ", rg.min)
+	}
+	if rg.minex != 1 {
+		t.Error("zslParseRange err: rg.minex = ", rg.minex)
+	}
+	if rg.max != float64(20) {
+		t.Error("zslParseRange err: rg.min = ", rg.max)
+	}
+	if rg.maxex != 0 {
+		t.Error("zslParseRange err: rg.maxex = ", rg.maxex)
+	}
+}

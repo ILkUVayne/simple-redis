@@ -2,6 +2,7 @@ package src
 
 import (
 	"math/rand"
+	"strconv"
 )
 
 const (
@@ -12,6 +13,33 @@ const (
 type zRangeSpec struct {
 	min, max     float64
 	minex, maxex int
+}
+
+// return (min,minex) or (max,maxnx) and error
+func _parseRange(obj *SRobj) (float64, int, error) {
+	if obj.encoding == REDIS_ENCODING_INT {
+		return float64(obj.intVal()), 0, nil
+	}
+	str := obj.strVal()
+	if str[0] == '(' {
+		str = str[1:]
+	}
+	i, err := strconv.ParseInt(str, 10, 64)
+	if err != nil {
+		return 0, 0, err
+	}
+	return float64(i), 1, nil
+}
+
+func zslParseRange(min *SRobj, max *SRobj) (*zRangeSpec, error) {
+	var err error
+	spec := new(zRangeSpec)
+	spec.min, spec.minex, err = _parseRange(min)
+	if err != nil {
+		return nil, err
+	}
+	spec.max, spec.maxex, err = _parseRange(max)
+	return spec, err
 }
 
 type zSkipListNodeLevel struct {

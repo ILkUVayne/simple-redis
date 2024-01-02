@@ -1,21 +1,35 @@
 package src
 
 import (
+	"fmt"
 	"simple-redis/utils"
 )
 
 const (
 	DEFAULT_PORT       = 6379
 	DEFAULT_RH_NN_STEP = 10
+	REDIS_OK           = 0
+	REDIS_ERR          = 1
 )
 
 const SREDIS_MAX_BULK = 1024 * 4
 const SREDIS_MAX_INLINE = 1024 * 4
 const SREDIS_IO_BUF = 1024 * 16
 
-type SRedisDB struct {
-	data   *dict
-	expire *dict
+type sharedObjects struct {
+	ok, err, nullBulk, syntaxErr, typeErr, unknowErr, argsNumErr *SRobj
+}
+
+var shared sharedObjects
+
+func createSharedObjects() {
+	shared.ok = createSRobj(SR_STR, RESP_OK)
+	shared.err = createSRobj(SR_STR, RESP_ERR)
+	shared.nullBulk = createSRobj(SR_STR, RESP_NIL_VAL)
+	shared.syntaxErr = createSRobj(SR_STR, fmt.Sprintf(RESP_ERR, "syntax error"))
+	shared.typeErr = createSRobj(SR_STR, fmt.Sprintf(RESP_ERR, "wrong type"))
+	shared.unknowErr = createSRobj(SR_STR, fmt.Sprintf(RESP_ERR, "unknow command"))
+	shared.argsNumErr = createSRobj(SR_STR, fmt.Sprintf(RESP_ERR, "wrong number of args"))
 }
 
 type SRedisServer struct {
@@ -69,6 +83,7 @@ func initServer() {
 	server.fd = TcpServer(server.port)
 	server.el = aeCreateEventLoop()
 	server.loadFactor = LOAD_FACTOR
+	createSharedObjects()
 	// add fileEvent
 	server.el.addFileEvent(server.fd, AE_READABLE, acceptTcpHandler, nil)
 	// add timeEvent

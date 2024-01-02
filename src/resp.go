@@ -7,11 +7,10 @@ import (
 )
 
 const (
-	RESP_NIL_VAL      = "$-1\r\n"
-	RESP_TYP_ERR      = "-ERR: wrong type\r\n"
-	RESP_OK           = "+OK\r\n"
-	RESP_UNKOWN       = "-ERR: unknow command\r\n"
-	RESP_ARGS_NUM_ERR = "-ERR: wrong number of args\r\n"
+	RESP_NIL_VAL = "$-1\r\n"
+
+	RESP_OK  = "+OK\r\n"
+	RESP_ERR = "-ERR: %s\r\n"
 
 	RESP_BULK = "$%d\r\n%v\r\n"
 )

@@ -2,6 +2,7 @@ package src
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -55,6 +56,13 @@ func (c *SRedisClient) addReplyStr(s string) {
 	data := createSRobj(SR_STR, s)
 	c.addReply(data)
 	data.decrRefCount()
+}
+
+func (c *SRedisClient) addReplyError(err string) {
+	if err == "" {
+		return
+	}
+	c.addReplyStr(fmt.Sprintf(RESP_ERR, err))
 }
 
 func createSRClient(fd int) *SRedisClient {

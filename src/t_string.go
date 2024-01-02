@@ -2,15 +2,19 @@ package src
 
 import "fmt"
 
+//-----------------------------------------------------------------------------
+// String commands
+//-----------------------------------------------------------------------------
+
 func getCommand(c *SRedisClient) {
 	key := c.args[1]
 	val := findVal(key)
 	if val == nil {
-		c.addReplyStr(RESP_NIL_VAL)
+		c.addReply(shared.nullBulk)
 		return
 	}
 	if val.Typ != SR_STR {
-		c.addReplyStr(RESP_TYP_ERR)
+		c.addReply(shared.typeErr)
 		return
 	}
 	str := val.strVal()
@@ -21,10 +25,11 @@ func setCommand(c *SRedisClient) {
 	key := c.args[1]
 	val := c.args[2]
 	if val.Typ != SR_STR {
-		c.addReplyStr(RESP_TYP_ERR)
+		c.addReply(shared.typeErr)
+		return
 	}
 	val.tryObjectEncoding()
 	server.db.data.dictSet(key, val)
 	server.db.expire.dictDelete(key)
-	c.addReplyStr(RESP_OK)
+	c.addReply(shared.ok)
 }

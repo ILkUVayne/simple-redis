@@ -41,12 +41,12 @@ func processCommand(c *SRedisClient) {
 	}
 	cmd := lookupCommand(cmdStr)
 	if cmd == nil {
-		c.addReplyStr(RESP_UNKOWN)
+		c.addReply(shared.unknowErr)
 		resetClient(c)
 		return
 	}
 	if cmd.arity != len(c.args) {
-		c.addReplyStr(RESP_ARGS_NUM_ERR)
+		c.addReply(shared.argsNumErr)
 		resetClient(c)
 		return
 	}
@@ -69,23 +69,25 @@ func expireCommand(c *SRedisClient) {
 	key := c.args[1]
 	val := c.args[2]
 	if val.Typ != SR_STR {
-		c.addReplyStr(RESP_TYP_ERR)
+		c.addReply(shared.typeErr)
+		return
 	}
 	expire := utils.GetMsTime() + (val.intVal() * 1000)
 	expireObj := createFromInt(expire)
 	server.db.expire.dictSet(key, expireObj)
 	expireObj.decrRefCount()
-	c.addReplyStr(RESP_OK)
+	c.addReply(shared.ok)
 }
 
 func objectCommand(c *SRedisClient) {
 	val := c.args[2]
 	if val.Typ != SR_STR {
-		c.addReplyStr(RESP_TYP_ERR)
+		c.addReply(shared.typeErr)
+		return
 	}
 	value := server.db.data.dictGet(val)
 	if value == nil {
-		c.addReplyStr(RESP_NIL_VAL)
+		c.addReply(shared.nullBulk)
 		return
 	}
 	str := value.strEncoding()
