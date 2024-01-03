@@ -2,7 +2,6 @@ package src
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 )
@@ -42,27 +41,6 @@ func (c *SRedisClient) getQueryNum(start, end int) (int, error) {
 	c.queryBuf = c.queryBuf[end+2:]
 	c.queryLen -= end + 2
 	return n, err
-}
-
-// 将查询结果添加到c.reply中,并创建SendReplyToClient事件
-func (c *SRedisClient) addReply(data *SRobj) {
-	c.reply.rPush(data)
-	data.incrRefCount()
-	server.el.addFileEvent(c.fd, AE_WRITEABLE, SendReplyToClient, c)
-}
-
-// 查询结果添加到c.reply中
-func (c *SRedisClient) addReplyStr(s string) {
-	data := createSRobj(SR_STR, s)
-	c.addReply(data)
-	data.decrRefCount()
-}
-
-func (c *SRedisClient) addReplyError(err string) {
-	if err == "" {
-		return
-	}
-	c.addReplyStr(fmt.Sprintf(RESP_ERR, err))
 }
 
 func createSRClient(fd int) *SRedisClient {

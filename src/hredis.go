@@ -25,6 +25,8 @@ func (r *sRedisReply) formatStr() {
 		}
 	case SIMPLE_ERROR:
 		r.fStr = fmt.Sprintf("(error) %s", r.str)
+	case INTEGERS:
+		r.fStr = fmt.Sprintf("(integer) %s", r.str)
 	}
 }
 

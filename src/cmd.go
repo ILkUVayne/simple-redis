@@ -45,7 +45,7 @@ func processCommand(c *SRedisClient) {
 		resetClient(c)
 		return
 	}
-	if cmd.arity != len(c.args) {
+	if cmd.arity > 0 && cmd.arity != len(c.args) {
 		c.addReply(shared.argsNumErr)
 		resetClient(c)
 		return
@@ -60,8 +60,12 @@ func processCommand(c *SRedisClient) {
 var commandTable = []SRedisCommand{
 	{"expire", expireCommand, 3},
 	{"object", objectCommand, 3},
+	// string
 	{"get", getCommand, 2},
 	{"set", setCommand, 3},
+	// zset
+	{"zadd", zAddCommand, -4},
+	{"zrange", zRangeCommand, -4},
 	// more
 }
 

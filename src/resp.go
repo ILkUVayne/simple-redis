@@ -56,6 +56,7 @@ var respParseFuncs = map[int]respParseFunc{
 	SIMPLE_STR:   respParseSimpleStr,
 	SIMPLE_ERROR: respParseSimpleStr,
 	BULK_STR:     respParseBulk,
+	INTEGERS:     respParseIntegers,
 }
 
 // return -1 if invalid type
@@ -105,5 +106,14 @@ func respParseBulk(buf []byte, length int) (string, error) {
 		return "", err
 	}
 	str := string(buf[:idx])
+	return str, nil
+}
+
+func respParseIntegers(buf []byte, length int) (string, error) {
+	idx, err := getQueryLine(buf, length)
+	if err != nil || idx < 0 {
+		return "", err
+	}
+	str := string(buf[1:idx])
 	return str, nil
 }

@@ -1,7 +1,9 @@
 package src
 
 import (
+	"fmt"
 	"simple-redis/utils"
+	"strconv"
 )
 
 // accept client connect
@@ -89,4 +91,44 @@ func activeExpireCycle() {
 func serverCron(el *aeEventLoop, id int, clientData any) {
 	// check expire key
 	activeExpireCycle()
+}
+
+// ================================ addReply =================================
+
+// 将查询结果添加到c.reply中,并创建SendReplyToClient事件
+func (c *SRedisClient) addReply(data *SRobj) {
+	c.reply.rPush(data)
+	data.incrRefCount()
+	server.el.addFileEvent(c.fd, AE_WRITEABLE, SendReplyToClient, c)
+}
+
+// 查询结果添加到c.reply中
+func (c *SRedisClient) addReplyStr(s string) {
+	data := createSRobj(SR_STR, s)
+	c.addReply(data)
+	data.decrRefCount()
+}
+
+func (c *SRedisClient) addReplyError(err string) {
+	if err == "" {
+		return
+	}
+	c.addReplyStr(fmt.Sprintf(RESP_ERR, err))
+}
+
+func (c *SRedisClient) addReplyDouble(f float64) {
+	str := strconv.FormatFloat(f, 'f', 2, 64)
+	c.addReplyStr(fmt.Sprintf("$%d\r\n%s\r\n", len(str), str))
+}
+
+func (c *SRedisClient) addReplyLongLong(ll int) {
+	if ll == 0 {
+		c.addReply(shared.czero)
+		return
+	}
+	if ll == 1 {
+		c.addReply(shared.cone)
+		return
+	}
+	c.addReplyStr(fmt.Sprintf(":%d\r\n", ll))
 }
