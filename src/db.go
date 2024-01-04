@@ -57,7 +57,7 @@ func (db *SRedisDB) lookupKeyRead(key *SRobj) *SRobj {
 func (db *SRedisDB) lookupKeyReadOrReply(c *SRedisClient, key *SRobj, reply *SRobj) *SRobj {
 	o := db.lookupKeyRead(key)
 	if o == nil {
-		c.addReply(reply)
+		c.addReply(shared.nullBulk)
 	}
 	return o
 }

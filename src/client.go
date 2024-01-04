@@ -7,16 +7,17 @@ import (
 )
 
 type SRedisClient struct {
-	fd       int
-	db       *SRedisDB
-	args     []*SRobj
-	reply    *list
-	queryBuf []byte
-	queryLen int
-	sentLen  int
-	cmdTyp   CmdType
-	bulkNum  int
-	bulkLen  int
+	fd         int
+	db         *SRedisDB
+	args       []*SRobj
+	reply      *list
+	replyReady bool
+	queryBuf   []byte
+	queryLen   int
+	sentLen    int
+	cmdTyp     CmdType
+	bulkNum    int
+	bulkLen    int
 }
 
 // getQueryLine
@@ -50,6 +51,7 @@ func createSRClient(fd int) *SRedisClient {
 	c.cmdTyp = CMD_UNKNOWN
 	c.reply = listCreate(&listType{keyCompare: SRStrCompare})
 	c.queryBuf = make([]byte, SREDIS_IO_BUF)
+	c.replyReady = true
 	return c
 }
 

@@ -47,17 +47,18 @@ func SendReplyToClient(el *aeEventLoop, fd int, clientData any) {
 		buf := []byte(resp.data.strVal())
 		bufLen := len(buf)
 		if c.sentLen < bufLen {
-			n, err := Write(c.fd, buf[c.sentLen:])
+			//n, err := Write(c.fd, buf[c.sentLen:])
+			_, err := Write(c.fd, buf[:])
 			if err != nil {
 				freeClient(c)
 				utils.ErrorP("simple-redis server: SendReplyToClient err: ", err)
 				return
 			}
-			c.sentLen += n
-			utils.InfoF("simple-redis server: send %v bytes to client:%v", n, c.fd)
-			if c.sentLen != bufLen {
-				break
-			}
+			//c.sentLen += n
+			//utils.InfoF("simple-redis server: send %v bytes to client:%v", n, c.fd)
+			//if c.sentLen != bufLen {
+			//	break
+			//}
 			c.reply.delNode(resp)
 			resp.data.decrRefCount()
 		}
@@ -95,11 +96,20 @@ func serverCron(el *aeEventLoop, id int, clientData any) {
 
 // ================================ addReply =================================
 
+func (c *SRedisClient) doReply() {
+	c.replyReady = true
+	c.addReply(nil)
+}
+
 // 将查询结果添加到c.reply中,并创建SendReplyToClient事件
 func (c *SRedisClient) addReply(data *SRobj) {
-	c.reply.rPush(data)
-	data.incrRefCount()
-	server.el.addFileEvent(c.fd, AE_WRITEABLE, SendReplyToClient, c)
+	if data != nil {
+		c.reply.rPush(data)
+		data.incrRefCount()
+	}
+	if c.replyReady {
+		server.el.addFileEvent(c.fd, AE_WRITEABLE, SendReplyToClient, c)
+	}
 }
 
 // 查询结果添加到c.reply中
@@ -131,4 +141,23 @@ func (c *SRedisClient) addReplyLongLong(ll int) {
 		return
 	}
 	c.addReplyStr(fmt.Sprintf(":%d\r\n", ll))
+}
+
+func (c *SRedisClient) addReplyLongLongWithPrefix(ll int64, prefix string) {
+	str := prefix + strconv.FormatInt(ll, 10) + "\r\n"
+	c.addReplyStr(str)
+}
+
+func (c *SRedisClient) addReplyMultiBulkLen(length int64) {
+	c.addReplyLongLongWithPrefix(length, "*")
+}
+
+func (c *SRedisClient) addReplyBulkLen(data *SRobj) {
+	c.addReplyLongLongWithPrefix(int64(len(data.strVal())), "$")
+}
+
+func (c *SRedisClient) addReplyBulk(data *SRobj) {
+	c.addReplyBulkLen(data)
+	c.addReplyStr(fmt.Sprintf("%s", data.strVal()))
+	c.addReply(shared.crlf)
 }

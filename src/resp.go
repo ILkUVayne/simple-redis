@@ -57,6 +57,7 @@ var respParseFuncs = map[int]respParseFunc{
 	SIMPLE_ERROR: respParseSimpleStr,
 	BULK_STR:     respParseBulk,
 	INTEGERS:     respParseIntegers,
+	ARRAYS:       respParseArrays,
 }
 
 // return -1 if invalid type
@@ -116,4 +117,52 @@ func respParseIntegers(buf []byte, length int) (string, error) {
 	}
 	str := string(buf[1:idx])
 	return str, nil
+}
+
+// *2\r\n$2\r\nxx\r\n$3\r\nccc\r\n
+func respParseArrays(buf []byte, length int) (string, error) {
+	idx, err := getQueryLine(buf, length)
+	if err != nil || idx < 0 {
+		return "", err
+	}
+	aLen, err := strconv.Atoi(string(buf[1:idx]))
+	if err != nil {
+		return "", err
+	}
+	if aLen == -1 {
+		return "(nil)", nil
+	}
+	if aLen == 0 && len(buf) == 6 {
+		return "empty arrays", nil
+	}
+	buf = buf[idx+2:]
+	str := ""
+	for i := 0; i < aLen; i++ {
+		idx, err = getQueryLine(buf, length)
+		if err != nil || idx < 0 {
+			return "", err
+		}
+		bulkLen, err := strconv.Atoi(string(buf[1:idx]))
+		if err != nil {
+			return "", err
+		}
+		if bulkLen == -1 {
+			str += strconv.Itoa(i+1) + ") (nil)\r\n"
+			buf = buf[idx+2:]
+			continue
+		}
+		if bulkLen == 0 {
+			str += strconv.Itoa(i+1) + ") \r\n"
+			buf = buf[idx+2:]
+			continue
+		}
+		buf = buf[idx+2:]
+		idx, err = getQueryLine(buf, length)
+		if err != nil || idx < 0 {
+			return "", err
+		}
+		str += strconv.Itoa(i+1) + ") \"" + string(buf[:idx]) + "\"\r\n"
+		buf = buf[idx+2:]
+	}
+	return str[:len(str)-2], nil
 }

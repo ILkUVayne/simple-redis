@@ -140,12 +140,22 @@ func (s *SRobj) getLongLongFromObject(target *int64) int {
 }
 
 func (s *SRobj) getFloat64FromObject(target *float64) int {
-	var value int64
-	res := s.getLongLongFromObject(&value)
-	if res == REDIS_OK {
-		*target = float64(value)
+	if s.Typ != SR_STR {
+		return REDIS_ERR
 	}
-	return res
+	if s.encoding == REDIS_ENCODING_INT {
+		*target = s.Val.(float64)
+		return REDIS_OK
+	}
+	if s.encoding == REDIS_ENCODING_RAW {
+		i, err := strconv.ParseFloat(s.Val.(string), 64)
+		if err != nil {
+			return REDIS_ERR
+		}
+		*target = i
+		return REDIS_OK
+	}
+	panic("Unknown string encoding")
 }
 
 func (s *SRobj) getFloat64FromObjectOrReply(c *SRedisClient, target *float64, msg *string) int {

@@ -17,12 +17,13 @@ const SREDIS_MAX_INLINE = 1024 * 4
 const SREDIS_IO_BUF = 1024 * 16
 
 type sharedObjects struct {
-	ok, err, czero, cone, emptyMultiBulk, nullBulk, syntaxErr, typeErr, unknowErr, argsNumErr, wrongTypeErr *SRobj
+	crlf, ok, err, czero, cone, emptyMultiBulk, nullBulk, syntaxErr, typeErr, unknowErr, argsNumErr, wrongTypeErr *SRobj
 }
 
 var shared sharedObjects
 
 func createSharedObjects() {
+	shared.crlf = createSRobj(SR_STR, "\r\n")
 	shared.ok = createSRobj(SR_STR, RESP_OK)
 	shared.err = createSRobj(SR_STR, RESP_ERR)
 	shared.czero = createSRobj(SR_STR, ":0\r\n")

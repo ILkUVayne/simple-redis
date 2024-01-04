@@ -1,7 +1,5 @@
 package src
 
-import "fmt"
-
 //-----------------------------------------------------------------------------
 // String commands
 //-----------------------------------------------------------------------------
@@ -17,8 +15,7 @@ func getCommand(c *SRedisClient) {
 		c.addReply(shared.typeErr)
 		return
 	}
-	str := val.strVal()
-	c.addReplyStr(fmt.Sprintf(RESP_BULK, len(str), str))
+	c.addReplyBulk(val)
 }
 
 func setCommand(c *SRedisClient) {

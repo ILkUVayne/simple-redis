@@ -1,7 +1,5 @@
 package src
 
-import "fmt"
-
 //-----------------------------------------------------------------------------
 // Sorted set commands
 //-----------------------------------------------------------------------------
@@ -134,10 +132,15 @@ func zRangeGenericCommand(c *SRedisClient, reverse bool) {
 			ln = zsl.getElementByRank(uint(start + 1))
 		}
 	}
-
+	arrayLen := rangeLen
+	if withscores {
+		arrayLen *= 2
+	}
+	c.replyReady = false
+	c.addReplyMultiBulkLen(arrayLen)
 	for ; rangeLen > 0; rangeLen-- {
 		ele := ln.obj
-		c.addReplyStr(fmt.Sprintf("$%d\r\n%s\r\n", len(ele.strVal()), ele.strVal()))
+		c.addReplyBulk(ele)
 		if withscores {
 			c.addReplyDouble(ln.score)
 		}
@@ -147,6 +150,7 @@ func zRangeGenericCommand(c *SRedisClient, reverse bool) {
 			ln = ln.level[0].forward
 		}
 	}
+	c.doReply()
 }
 
 func zRangeCommand(c *SRedisClient) {
