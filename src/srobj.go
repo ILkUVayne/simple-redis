@@ -93,6 +93,14 @@ func (s *SRobj) strEncoding() string {
 	return encoding
 }
 
+func (s *SRobj) checkType(c *SRedisClient, typ SRType) bool {
+	if s.Typ != typ {
+		c.addReply(shared.wrongTypeErr)
+		return false
+	}
+	return true
+}
+
 func (s *SRobj) tryObjectEncoding() {
 	if s.encoding != REDIS_ENCODING_RAW {
 		return
@@ -112,6 +120,25 @@ func (s *SRobj) tryObjectEncoding() {
 	s.Val = i
 }
 
+func (s *SRobj) getLongLongFromObject(target *int64) int {
+	if s.Typ != SR_STR {
+		return REDIS_ERR
+	}
+	if s.encoding == REDIS_ENCODING_INT {
+		*target = s.Val.(int64)
+		return REDIS_OK
+	}
+	if s.encoding == REDIS_ENCODING_RAW {
+		i, err := strconv.ParseInt(s.Val.(string), 10, 64)
+		if err != nil {
+			return REDIS_ERR
+		}
+		*target = i
+		return REDIS_OK
+	}
+	panic("Unknown string encoding")
+}
+
 func (s *SRobj) getFloat64FromObject(target *float64) int {
 	if s.Typ != SR_STR {
 		return REDIS_ERR
@@ -121,11 +148,11 @@ func (s *SRobj) getFloat64FromObject(target *float64) int {
 		return REDIS_OK
 	}
 	if s.encoding == REDIS_ENCODING_RAW {
-		i, err := strconv.ParseInt(s.Val.(string), 10, 64)
+		i, err := strconv.ParseFloat(s.Val.(string), 64)
 		if err != nil {
 			return REDIS_ERR
 		}
-		*target = float64(i)
+		*target = i
 		return REDIS_OK
 	}
 	panic("Unknown string encoding")
@@ -145,6 +172,28 @@ func (s *SRobj) getFloat64FromObjectOrReply(c *SRedisClient, target *float64, ms
 	return REDIS_OK
 }
 
+func (s *SRobj) getLongLongFromObjectOrReply(c *SRedisClient, target *int64, msg *string) int {
+	var value int64
+	if s.getLongLongFromObject(&value) == REDIS_ERR {
+		if msg != nil {
+			c.addReplyError(*msg)
+			return REDIS_ERR
+		}
+		c.addReplyError(*msg)
+		return REDIS_ERR
+	}
+	*target = value
+	return REDIS_OK
+}
+
+func createFromInt(val int64) *SRobj {
+	return &SRobj{
+		Typ:      SR_STR,
+		Val:      strconv.FormatInt(val, 10),
+		refCount: 1,
+	}
+}
+
 func createSRobj(typ SRType, ptr any) *SRobj {
 	return &SRobj{
 		Typ:      typ,
@@ -154,12 +203,22 @@ func createSRobj(typ SRType, ptr any) *SRobj {
 	}
 }
 
-func createFromInt(val int64) *SRobj {
+func createFloatSRobj(typ SRType, ptr any) *SRobj {
 	return &SRobj{
-		Typ:      SR_STR,
-		Val:      strconv.FormatInt(val, 10),
+		Typ:      typ,
+		Val:      ptr,
 		refCount: 1,
+		encoding: REDIS_ENCODING_INT,
 	}
+}
+
+func createZsetSRobj() *SRobj {
+	zs := new(zSet)
+	zs.zsl = zslCreate()
+	zs.d = dictCreate(&dictType{hashFunc: SRStrHash, keyCompare: SRStrCompare})
+	o := createSRobj(SR_ZSET, zs)
+	o.encoding = REDIS_ENCODING_SKIPLIST
+	return o
 }
 
 // return 0 obj1 == obj2, 1 obj1 > obj2, -1 obj1 < obj2

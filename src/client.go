@@ -2,22 +2,22 @@ package src
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 )
 
 type SRedisClient struct {
-	fd       int
-	db       *SRedisDB
-	args     []*SRobj
-	reply    *list
-	queryBuf []byte
-	queryLen int
-	sentLen  int
-	cmdTyp   CmdType
-	bulkNum  int
-	bulkLen  int
+	fd         int
+	db         *SRedisDB
+	args       []*SRobj
+	reply      *list
+	replyReady bool
+	queryBuf   []byte
+	queryLen   int
+	sentLen    int
+	cmdTyp     CmdType
+	bulkNum    int
+	bulkLen    int
 }
 
 // getQueryLine
@@ -44,27 +44,6 @@ func (c *SRedisClient) getQueryNum(start, end int) (int, error) {
 	return n, err
 }
 
-// 将查询结果添加到c.reply中,并创建SendReplyToClient事件
-func (c *SRedisClient) addReply(data *SRobj) {
-	c.reply.rPush(data)
-	data.incrRefCount()
-	server.el.addFileEvent(c.fd, AE_WRITEABLE, SendReplyToClient, c)
-}
-
-// 查询结果添加到c.reply中
-func (c *SRedisClient) addReplyStr(s string) {
-	data := createSRobj(SR_STR, s)
-	c.addReply(data)
-	data.decrRefCount()
-}
-
-func (c *SRedisClient) addReplyError(err string) {
-	if err == "" {
-		return
-	}
-	c.addReplyStr(fmt.Sprintf(RESP_ERR, err))
-}
-
 func createSRClient(fd int) *SRedisClient {
 	c := new(SRedisClient)
 	c.fd = fd
@@ -72,6 +51,7 @@ func createSRClient(fd int) *SRedisClient {
 	c.cmdTyp = CMD_UNKNOWN
 	c.reply = listCreate(&listType{keyCompare: SRStrCompare})
 	c.queryBuf = make([]byte, SREDIS_IO_BUF)
+	c.replyReady = true
 	return c
 }
 

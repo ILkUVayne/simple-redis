@@ -1,14 +1,12 @@
 package src
 
-import "fmt"
-
 //-----------------------------------------------------------------------------
 // String commands
 //-----------------------------------------------------------------------------
 
 func getCommand(c *SRedisClient) {
 	key := c.args[1]
-	val := findVal(key)
+	val := server.db.lookupKeyRead(key)
 	if val == nil {
 		c.addReply(shared.nullBulk)
 		return
@@ -17,8 +15,7 @@ func getCommand(c *SRedisClient) {
 		c.addReply(shared.typeErr)
 		return
 	}
-	str := val.strVal()
-	c.addReplyStr(fmt.Sprintf(RESP_BULK, len(str), str))
+	c.addReplyBulk(val)
 }
 
 func setCommand(c *SRedisClient) {
@@ -29,7 +26,7 @@ func setCommand(c *SRedisClient) {
 		return
 	}
 	val.tryObjectEncoding()
-	server.db.data.dictSet(key, val)
-	server.db.expire.dictDelete(key)
+	server.db.dictSet(key, val)
+	server.db.expireDel(key)
 	c.addReply(shared.ok)
 }

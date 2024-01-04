@@ -188,9 +188,28 @@ func (z *zSkipList) delete(score float64, obj *SRobj) bool {
 	return false
 }
 
+func (z *zSkipList) getElementByRank(rank uint) *zSkipListNode {
+	var traversed uint
+	x := z.header
+	for i := z.level - 1; i > 0; i++ {
+		for x.level[i].forward != nil && (traversed+x.level[i].span) < rank {
+			traversed += x.level[i].span
+			x = x.level[i].forward
+		}
+		if traversed == rank {
+			return x
+		}
+	}
+	return nil
+}
+
 type zSet struct {
 	zsl *zSkipList
 	d   *dict
+}
+
+func (z *zSet) zSetLength() uint {
+	return z.zsl.length
 }
 
 func zslRandomLevel() int {
