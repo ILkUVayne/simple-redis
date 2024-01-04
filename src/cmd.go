@@ -1,7 +1,6 @@
 package src
 
 import (
-	"fmt"
 	"simple-redis/utils"
 )
 
@@ -94,6 +93,5 @@ func objectCommand(c *SRedisClient) {
 		c.addReply(shared.nullBulk)
 		return
 	}
-	str := value.strEncoding()
-	c.addReplyStr(fmt.Sprintf(RESP_BULK, len(str), str))
+	c.addReplyBulk(value.getEncoding())
 }

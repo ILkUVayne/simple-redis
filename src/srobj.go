@@ -93,6 +93,10 @@ func (s *SRobj) strEncoding() string {
 	return encoding
 }
 
+func (s *SRobj) getEncoding() *SRobj {
+	return createSRobj(SR_STR, s.strEncoding())
+}
+
 func (s *SRobj) checkType(c *SRedisClient, typ SRType) bool {
 	if s.Typ != typ {
 		c.addReply(shared.wrongTypeErr)
