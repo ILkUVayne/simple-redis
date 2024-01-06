@@ -99,3 +99,22 @@ func TestZslParseRange(t *testing.T) {
 		t.Error("zslParseRange err: rg.maxex = ", rg.maxex)
 	}
 }
+
+func TestGetElementByRank(t *testing.T) {
+	zsl := zslCreate()
+	z1 := createSRobj(SR_STR, "z1")
+	zsl.insert(50, z1)
+	z2 := createSRobj(SR_STR, "z2")
+	zsl.insert(40, z2)
+	z3 := createSRobj(SR_STR, "z3")
+	zsl.insert(60, z3)
+	z4 := createSRobj(SR_STR, "z4")
+	zsl.insert(45.5, z4)
+	n := zsl.getElementByRank(1)
+	if n.obj.strVal() != "z2" {
+		t.Error("getElementByRank err: n.obj.strVal() = ", n.obj.strVal())
+	}
+	if n.score != 40 {
+		t.Error("getElementByRank err: n.score = ", n.score)
+	}
+}

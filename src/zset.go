@@ -191,8 +191,8 @@ func (z *zSkipList) delete(score float64, obj *SRobj) bool {
 func (z *zSkipList) getElementByRank(rank uint) *zSkipListNode {
 	var traversed uint
 	x := z.header
-	for i := z.level - 1; i > 0; i++ {
-		for x.level[i].forward != nil && (traversed+x.level[i].span) < rank {
+	for i := z.level - 1; i >= 0; i-- {
+		for x.level[i].forward != nil && (traversed+x.level[i].span) <= rank {
 			traversed += x.level[i].span
 			x = x.level[i].forward
 		}
