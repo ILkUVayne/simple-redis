@@ -49,7 +49,8 @@ func TcpServer(port int) int {
 	if err != nil {
 		utils.Error("simple-redis server: init socket err: ", err)
 	}
-	err = unix.SetsockoptInt(sfd, unix.SOL_SOCKET, unix.SO_REUSEPORT, port)
+	//err = unix.SetsockoptInt(sfd, unix.SOL_SOCKET, unix.SO_REUSEPORT, port)
+	err = unix.SetsockoptInt(sfd, unix.SOL_SOCKET, unix.SO_REUSEADDR, port)
 	if err != nil {
 		utils.Error("simple-redis server: set SO_REUSEPORT err: ", err)
 	}
