@@ -42,7 +42,7 @@ func zAddGenericCommand(c *SRedisClient, incr bool) {
 		_, de := zs.d.dictFind(ele)
 		if de != nil {
 			curobj := de.key
-			curscore := de.val.Val.(float64)
+			curscore := de.val.floatVal()
 			if incr {
 				score += curscore
 			}

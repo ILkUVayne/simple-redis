@@ -57,7 +57,7 @@ func (s *SRobj) strVal() string {
 		return ""
 	}
 	if s.encoding == REDIS_ENCODING_INT {
-		return strconv.FormatInt(s.Val.(int64), 10)
+		return strconv.FormatInt(s.intVal(), 10)
 	}
 	return s.Val.(string)
 }
@@ -81,8 +81,29 @@ func (s *SRobj) intVal() int64 {
 	if s.encoding == REDIS_ENCODING_INT {
 		return s.Val.(int64)
 	}
-	i, _ := strconv.ParseInt(s.Val.(string), 10, 64)
-	return i
+	if s.encoding == REDIS_ENCODING_RAW {
+		var i int64
+		str := s.strVal()
+		utils.String2Int64(&str, &i)
+		return i
+	}
+	panic("Unknown string encoding")
+}
+
+func (s *SRobj) floatVal() float64 {
+	if s.Typ != SR_STR {
+		return 0
+	}
+	if s.encoding == REDIS_ENCODING_INT {
+		return s.Val.(float64)
+	}
+	if s.encoding == REDIS_ENCODING_RAW {
+		var i float64
+		str := s.strVal()
+		utils.String2Float64(&str, &i)
+		return i
+	}
+	panic("Unknown string encoding")
 }
 
 func (s *SRobj) strEncoding() string {
@@ -116,8 +137,9 @@ func (s *SRobj) tryObjectEncoding() {
 		return
 	}
 	// Check if we can represent this string as a long integer
-	i, err := strconv.ParseInt(s.Val.(string), 10, 64)
-	if err != nil {
+	var i int64
+	str := s.strVal()
+	if !utils.String2Int64(&str, &i) {
 		return
 	}
 	s.encoding = REDIS_ENCODING_INT
@@ -128,38 +150,16 @@ func (s *SRobj) getLongLongFromObject(target *int64) int {
 	if s.Typ != SR_STR {
 		return REDIS_ERR
 	}
-	if s.encoding == REDIS_ENCODING_INT {
-		*target = s.Val.(int64)
-		return REDIS_OK
-	}
-	if s.encoding == REDIS_ENCODING_RAW {
-		i, err := strconv.ParseInt(s.Val.(string), 10, 64)
-		if err != nil {
-			return REDIS_ERR
-		}
-		*target = i
-		return REDIS_OK
-	}
-	panic("Unknown string encoding")
+	*target = s.intVal()
+	return REDIS_OK
 }
 
 func (s *SRobj) getFloat64FromObject(target *float64) int {
 	if s.Typ != SR_STR {
 		return REDIS_ERR
 	}
-	if s.encoding == REDIS_ENCODING_INT {
-		*target = s.Val.(float64)
-		return REDIS_OK
-	}
-	if s.encoding == REDIS_ENCODING_RAW {
-		i, err := strconv.ParseFloat(s.Val.(string), 64)
-		if err != nil {
-			return REDIS_ERR
-		}
-		*target = i
-		return REDIS_OK
-	}
-	panic("Unknown string encoding")
+	*target = s.floatVal()
+	return REDIS_OK
 }
 
 func (s *SRobj) getFloat64FromObjectOrReply(c *SRedisClient, target *float64, msg *string) int {
@@ -189,6 +189,30 @@ func (s *SRobj) getLongLongFromObjectOrReply(c *SRedisClient, target *int64, msg
 	*target = value
 	return REDIS_OK
 }
+
+func (s *SRobj) isObjectRepresentableAsInt64(intVal *int64) int {
+	if s.Typ != SR_STR {
+		utils.ErrorF("isObjectRepresentableAsLongLong err: type fail, value.Typ = %d", s.Typ)
+	}
+	*intVal = s.intVal()
+	return REDIS_OK
+}
+
+//-----------------------------------------------------------------------------
+// object func
+//-----------------------------------------------------------------------------
+
+// return 0 obj1 == obj2, 1 obj1 > obj2, -1 obj1 < obj2
+func compareStringObjects(obj1, obj2 *SRobj) int {
+	if obj1.Typ != SR_STR || obj2.Typ != SR_STR {
+		utils.ErrorF("compareStringObjects err: type fail, obj1.Typ = %d obj2.Typ = %d", obj1.Typ, obj2.Typ)
+	}
+	return strings.Compare(obj1.strVal(), obj2.strVal())
+}
+
+//-----------------------------------------------------------------------------
+// create object
+//-----------------------------------------------------------------------------
 
 func createFromInt(val int64) *SRobj {
 	return &SRobj{
@@ -225,10 +249,16 @@ func createZsetSRobj() *SRobj {
 	return o
 }
 
-// return 0 obj1 == obj2, 1 obj1 > obj2, -1 obj1 < obj2
-func compareStringObjects(obj1, obj2 *SRobj) int {
-	if obj1.Typ != SR_STR || obj2.Typ != SR_STR {
-		utils.ErrorF("compareStringObjects err: type fail, obj1.Typ = %d obj2.Typ = %d", obj1.Typ, obj2.Typ)
-	}
-	return strings.Compare(obj1.strVal(), obj2.strVal())
+func createIntSetObject() *SRobj {
+	is := intSetNew()
+	o := createSRobj(SR_SET, is)
+	o.encoding = REDIS_ENCODING_INTSET
+	return o
+}
+
+func createSetObject() *SRobj {
+	d := dictCreate(&dictType{hashFunc: SRStrHash, keyCompare: SRStrCompare})
+	o := createSRobj(SR_SET, d)
+	o.encoding = REDIS_ENCODING_HT
+	return o
 }

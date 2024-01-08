@@ -1,8 +1,9 @@
 package src
 
 import (
+	"errors"
 	"math/rand"
-	"strconv"
+	"simple-redis/utils"
 )
 
 const (
@@ -24,9 +25,9 @@ func _parseRange(obj *SRobj) (float64, int, error) {
 	if str[0] == '(' {
 		str = str[1:]
 	}
-	i, err := strconv.ParseInt(str, 10, 64)
-	if err != nil {
-		return 0, 0, err
+	var i int64
+	if !utils.String2Int64(&str, &i) {
+		return 0, 0, errors.New("zset range invalid")
 	}
 	return float64(i), 1, nil
 }

@@ -45,7 +45,7 @@ func TestFreeArgs(t *testing.T) {
 	c.args = make([]*SRobj, 2)
 	c.args[0] = createSRobj(SR_STR, "get")
 	c.args[1] = createSRobj(SR_STR, "name")
-	if c.args[0].Val.(string) != "get" || c.args[1].Val.(string) != "name" {
+	if c.args[0].strVal() != "get" || c.args[1].strVal() != "name" {
 		t.Error("createSRobj error")
 	}
 	freeArgs(c)
@@ -63,7 +63,7 @@ func TestInlineBufHandle(t *testing.T) {
 	if err != nil {
 		t.Error("inlineBufHandle err: ", err)
 	}
-	if len(c.args) != 2 || c.args[0].Val.(string) != "get" || c.args[1].Val.(string) != "name" {
+	if len(c.args) != 2 || c.args[0].strVal() != "get" || c.args[1].strVal() != "name" {
 		t.Error("c.args set error")
 	}
 }
@@ -77,7 +77,7 @@ func TestBulkBufHandle(t *testing.T) {
 	if err != nil {
 		t.Error("bulkBufHandle err: ", err)
 	}
-	if len(c.args) != 2 || c.args[0].Val.(string) != "get" || c.args[1].Val.(string) != "name" {
+	if len(c.args) != 2 || c.args[0].strVal() != "get" || c.args[1].strVal() != "name" {
 		t.Error("c.args set error")
 	}
 }

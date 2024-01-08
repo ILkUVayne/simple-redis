@@ -99,3 +99,25 @@ func Isatty() bool {
 func Exit(code int) {
 	os.Exit(code)
 }
+
+func String2Int64(s *string, intVal *int64) bool {
+	i, err := strconv.ParseInt(*s, 10, 64)
+	if err != nil {
+		return false
+	}
+	if intVal != nil {
+		*intVal = i
+	}
+	return true
+}
+
+func String2Float64(s *string, intVal *float64) bool {
+	i, err := strconv.ParseFloat(*s, 64)
+	if err != nil {
+		return false
+	}
+	if intVal != nil {
+		*intVal = i
+	}
+	return true
+}
