@@ -81,7 +81,8 @@ func activeExpireCycle() {
 		if entry == nil {
 			break
 		}
-		if entry.val.intVal() < utils.GetMsTime() {
+		intVal, _ := entry.val.intVal()
+		if intVal < utils.GetMsTime() {
 			server.db.data.dictDelete(entry.key)
 			server.db.expire.dictDelete(entry.key)
 		}

@@ -12,6 +12,11 @@ import (
 	"strings"
 )
 
+const (
+	REDIS_OK  = 0
+	REDIS_ERR = 1
+)
+
 // StrToHost string type host to []byte host
 // e.g. "127.0.0.1" -> []byte{127,0,0,1}
 func StrToHost(host string) [4]byte {
@@ -100,24 +105,24 @@ func Exit(code int) {
 	os.Exit(code)
 }
 
-func String2Int64(s *string, intVal *int64) bool {
+func String2Int64(s *string, intVal *int64) int {
 	i, err := strconv.ParseInt(*s, 10, 64)
 	if err != nil {
-		return false
+		return REDIS_ERR
 	}
 	if intVal != nil {
 		*intVal = i
 	}
-	return true
+	return REDIS_OK
 }
 
-func String2Float64(s *string, intVal *float64) bool {
+func String2Float64(s *string, intVal *float64) int {
 	i, err := strconv.ParseFloat(*s, 64)
 	if err != nil {
-		return false
+		return REDIS_ERR
 	}
 	if intVal != nil {
 		*intVal = i
 	}
-	return true
+	return REDIS_OK
 }

@@ -19,17 +19,18 @@ type zRangeSpec struct {
 // return (min,minex) or (max,maxnx) and error
 func _parseRange(obj *SRobj) (float64, int, error) {
 	if obj.encoding == REDIS_ENCODING_INT {
-		return float64(obj.intVal()), 0, nil
+		val, _ := obj.floatVal()
+		return val, 0, nil
 	}
 	str := obj.strVal()
 	if str[0] == '(' {
 		str = str[1:]
 	}
-	var i int64
-	if !utils.String2Int64(&str, &i) {
+	var i float64
+	if utils.String2Float64(&str, &i) == REDIS_ERR {
 		return 0, 0, errors.New("zset range invalid")
 	}
-	return float64(i), 1, nil
+	return i, 1, nil
 }
 
 func zslParseRange(min *SRobj, max *SRobj) (*zRangeSpec, error) {

@@ -75,7 +75,8 @@ func expireCommand(c *SRedisClient) {
 		c.addReply(shared.typeErr)
 		return
 	}
-	expire := utils.GetMsTime() + (val.intVal() * 1000)
+	eval, _ := val.intVal()
+	expire := utils.GetMsTime() + (eval * 1000)
 	expireObj := createFromInt(expire)
 	server.db.expire.dictSet(key, expireObj)
 	expireObj.decrRefCount()

@@ -71,7 +71,7 @@ func parse(f *os.File) *configVal {
 				fieldVal.SetString(value)
 			case reflect.Int, reflect.Int64:
 				var intVal int64
-				if utils.String2Int64(&value, &intVal) {
+				if utils.String2Int64(&value, &intVal) == REDIS_OK {
 					fieldVal.SetInt(intVal)
 				}
 			case reflect.Bool:

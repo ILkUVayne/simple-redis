@@ -33,7 +33,8 @@ func (db *SRedisDB) expireIfNeeded(key *SRobj) {
 		return
 	}
 
-	if when := e.intVal(); when > utils.GetMsTime() {
+	intVal, _ := e.intVal()
+	if when := intVal; when > utils.GetMsTime() {
 		return
 	}
 	db.expireDel(key)
