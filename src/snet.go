@@ -58,7 +58,7 @@ func TcpServer(port int) int {
 	addr.Port = port
 	err = unix.Bind(sfd, &addr)
 	if err != nil {
-		utils.Error("simple-redis server: bind err: ", err)
+		utils.ErrorF("simple-redis server: %s:%d bind err: %s", string(addr.Addr[:]), addr.Port, err)
 	}
 	err = unix.Listen(sfd, BACKLOG)
 	if err != nil {
