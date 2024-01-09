@@ -1,12 +1,5 @@
 package src
 
-func setTypeCreate(value *SRobj) *SRobj {
-	if value.isObjectRepresentableAsInt64(nil) == REDIS_OK {
-		return createIntSetObject()
-	}
-	return createSetObject()
-}
-
 //-----------------------------------------------------------------------------
 // Set commands
 //-----------------------------------------------------------------------------
@@ -23,4 +16,12 @@ func sAddCommand(c *SRedisClient) {
 		server.db.dictSet(key, set)
 	}
 	// add...
+	added := 0
+	for j := 2; j < len(c.args); j++ {
+		c.args[j].tryObjectEncoding()
+		if setTypeAdd(set, c.args[j]) {
+			added++
+		}
+	}
+	c.addReplyLongLong(added)
 }

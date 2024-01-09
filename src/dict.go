@@ -20,6 +20,12 @@ const (
 	//BG_PERSISTENCE_LOAD_FACTOR       = 5
 )
 
+type dictIterator struct {
+	d                *dict
+	table, index     int
+	entry, nextEntry *dictEntry
+}
+
 type dictEntry struct {
 	key  *SRobj
 	val  *SRobj
