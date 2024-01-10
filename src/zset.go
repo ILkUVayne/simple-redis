@@ -1,8 +1,9 @@
 package src
 
 import (
+	"errors"
 	"math/rand"
-	"strconv"
+	"simple-redis/utils"
 )
 
 const (
@@ -15,20 +16,26 @@ type zRangeSpec struct {
 	minex, maxex int
 }
 
+var zSetDictType = dictType{
+	hashFunc:   SRStrHash,
+	keyCompare: SRStrCompare,
+}
+
 // return (min,minex) or (max,maxnx) and error
 func _parseRange(obj *SRobj) (float64, int, error) {
 	if obj.encoding == REDIS_ENCODING_INT {
-		return float64(obj.intVal()), 0, nil
+		val, _ := obj.floatVal()
+		return val, 0, nil
 	}
 	str := obj.strVal()
 	if str[0] == '(' {
 		str = str[1:]
 	}
-	i, err := strconv.ParseInt(str, 10, 64)
-	if err != nil {
-		return 0, 0, err
+	var i float64
+	if utils.String2Float64(&str, &i) == REDIS_ERR {
+		return 0, 0, errors.New("zset range invalid")
 	}
-	return float64(i), 1, nil
+	return i, 1, nil
 }
 
 func zslParseRange(min *SRobj, max *SRobj) (*zRangeSpec, error) {

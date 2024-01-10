@@ -7,6 +7,16 @@ type SRedisDB struct {
 	expire *dict
 }
 
+var dbDictType = dictType{
+	hashFunc:   SRStrHash,
+	keyCompare: SRStrCompare,
+}
+
+var keyPtrDictType = dictType{
+	hashFunc:   SRStrHash,
+	keyCompare: SRStrCompare,
+}
+
 func (db *SRedisDB) dictDel(key *SRobj) {
 	db.data.dictDelete(key)
 }
@@ -33,7 +43,8 @@ func (db *SRedisDB) expireIfNeeded(key *SRobj) {
 		return
 	}
 
-	if when := e.intVal(); when > utils.GetMsTime() {
+	intVal, _ := e.intVal()
+	if when := intVal; when > utils.GetMsTime() {
 		return
 	}
 	db.expireDel(key)

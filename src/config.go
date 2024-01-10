@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 	"reflect"
-	"strconv"
+	"simple-redis/utils"
 	"strings"
 )
 
@@ -70,8 +70,8 @@ func parse(f *os.File) *configVal {
 			case reflect.String:
 				fieldVal.SetString(value)
 			case reflect.Int, reflect.Int64:
-				intVal, err := strconv.ParseInt(value, 10, 64)
-				if err == nil {
+				var intVal int64
+				if utils.String2Int64(&value, &intVal) == REDIS_OK {
 					fieldVal.SetInt(intVal)
 				}
 			case reflect.Bool:

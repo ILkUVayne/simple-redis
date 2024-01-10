@@ -65,6 +65,8 @@ var commandTable = []SRedisCommand{
 	// zset
 	{"zadd", zAddCommand, -4},
 	{"zrange", zRangeCommand, -4},
+	// set
+	{"sadd", sAddCommand, -3},
 	// more
 }
 
@@ -75,7 +77,8 @@ func expireCommand(c *SRedisClient) {
 		c.addReply(shared.typeErr)
 		return
 	}
-	expire := utils.GetMsTime() + (val.intVal() * 1000)
+	eval, _ := val.intVal()
+	expire := utils.GetMsTime() + (eval * 1000)
 	expireObj := createFromInt(expire)
 	server.db.expire.dictSet(key, expireObj)
 	expireObj.decrRefCount()

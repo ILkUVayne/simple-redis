@@ -57,7 +57,8 @@ func (s *SRobj) strVal() string {
 		return ""
 	}
 	if s.encoding == REDIS_ENCODING_INT {
-		return strconv.FormatInt(s.Val.(int64), 10)
+		iVal, _ := s.intVal()
+		return strconv.FormatInt(iVal, 10)
 	}
 	return s.Val.(string)
 }
@@ -74,15 +75,34 @@ func (s *SRobj) decrRefCount() {
 	}
 }
 
-func (s *SRobj) intVal() int64 {
+func (s *SRobj) intVal() (int64, int) {
 	if s.Typ != SR_STR {
-		return 0
+		return 0, REDIS_ERR
 	}
 	if s.encoding == REDIS_ENCODING_INT {
-		return s.Val.(int64)
+		return s.Val.(int64), REDIS_OK
 	}
-	i, _ := strconv.ParseInt(s.Val.(string), 10, 64)
-	return i
+	if s.encoding == REDIS_ENCODING_RAW {
+		var i int64
+		str := s.strVal()
+		return i, utils.String2Int64(&str, &i)
+	}
+	panic("Unknown string encoding")
+}
+
+func (s *SRobj) floatVal() (float64, int) {
+	if s.Typ != SR_STR {
+		return 0, REDIS_ERR
+	}
+	if s.encoding == REDIS_ENCODING_INT {
+		return s.Val.(float64), REDIS_OK
+	}
+	if s.encoding == REDIS_ENCODING_RAW {
+		var i float64
+		str := s.strVal()
+		return i, utils.String2Float64(&str, &i)
+	}
+	panic("Unknown string encoding")
 }
 
 func (s *SRobj) strEncoding() string {
@@ -116,8 +136,9 @@ func (s *SRobj) tryObjectEncoding() {
 		return
 	}
 	// Check if we can represent this string as a long integer
-	i, err := strconv.ParseInt(s.Val.(string), 10, 64)
-	if err != nil {
+	var i int64
+	str := s.strVal()
+	if utils.String2Int64(&str, &i) == REDIS_ERR {
 		return
 	}
 	s.encoding = REDIS_ENCODING_INT
@@ -128,38 +149,18 @@ func (s *SRobj) getLongLongFromObject(target *int64) int {
 	if s.Typ != SR_STR {
 		return REDIS_ERR
 	}
-	if s.encoding == REDIS_ENCODING_INT {
-		*target = s.Val.(int64)
-		return REDIS_OK
-	}
-	if s.encoding == REDIS_ENCODING_RAW {
-		i, err := strconv.ParseInt(s.Val.(string), 10, 64)
-		if err != nil {
-			return REDIS_ERR
-		}
-		*target = i
-		return REDIS_OK
-	}
-	panic("Unknown string encoding")
+	intVal, res := s.intVal()
+	*target = intVal
+	return res
 }
 
 func (s *SRobj) getFloat64FromObject(target *float64) int {
 	if s.Typ != SR_STR {
 		return REDIS_ERR
 	}
-	if s.encoding == REDIS_ENCODING_INT {
-		*target = s.Val.(float64)
-		return REDIS_OK
-	}
-	if s.encoding == REDIS_ENCODING_RAW {
-		i, err := strconv.ParseFloat(s.Val.(string), 64)
-		if err != nil {
-			return REDIS_ERR
-		}
-		*target = i
-		return REDIS_OK
-	}
-	panic("Unknown string encoding")
+	i, res := s.floatVal()
+	*target = i
+	return res
 }
 
 func (s *SRobj) getFloat64FromObjectOrReply(c *SRedisClient, target *float64, msg *string) int {
@@ -169,7 +170,7 @@ func (s *SRobj) getFloat64FromObjectOrReply(c *SRedisClient, target *float64, ms
 			c.addReplyError(*msg)
 			return REDIS_ERR
 		}
-		c.addReplyError(*msg)
+		c.addReplyError("value is not an float or out of range")
 		return REDIS_ERR
 	}
 	*target = value
@@ -183,12 +184,39 @@ func (s *SRobj) getLongLongFromObjectOrReply(c *SRedisClient, target *int64, msg
 			c.addReplyError(*msg)
 			return REDIS_ERR
 		}
-		c.addReplyError(*msg)
+		c.addReplyError("value is not an integer or out of range")
 		return REDIS_ERR
 	}
 	*target = value
 	return REDIS_OK
 }
+
+func (s *SRobj) isObjectRepresentableAsInt64(intVal *int64) int {
+	if s.Typ != SR_STR {
+		utils.ErrorF("isObjectRepresentableAsLongLong err: type fail, value.Typ = %d", s.Typ)
+	}
+	i, res := s.intVal()
+	if intVal != nil {
+		*intVal = i
+	}
+	return res
+}
+
+//-----------------------------------------------------------------------------
+// object func
+//-----------------------------------------------------------------------------
+
+// return 0 obj1 == obj2, 1 obj1 > obj2, -1 obj1 < obj2
+func compareStringObjects(obj1, obj2 *SRobj) int {
+	if obj1.Typ != SR_STR || obj2.Typ != SR_STR {
+		utils.ErrorF("compareStringObjects err: type fail, obj1.Typ = %d obj2.Typ = %d", obj1.Typ, obj2.Typ)
+	}
+	return strings.Compare(obj1.strVal(), obj2.strVal())
+}
+
+//-----------------------------------------------------------------------------
+// create object
+//-----------------------------------------------------------------------------
 
 func createFromInt(val int64) *SRobj {
 	return &SRobj{
@@ -219,16 +247,22 @@ func createFloatSRobj(typ SRType, ptr any) *SRobj {
 func createZsetSRobj() *SRobj {
 	zs := new(zSet)
 	zs.zsl = zslCreate()
-	zs.d = dictCreate(&dictType{hashFunc: SRStrHash, keyCompare: SRStrCompare})
+	zs.d = dictCreate(&zSetDictType)
 	o := createSRobj(SR_ZSET, zs)
 	o.encoding = REDIS_ENCODING_SKIPLIST
 	return o
 }
 
-// return 0 obj1 == obj2, 1 obj1 > obj2, -1 obj1 < obj2
-func compareStringObjects(obj1, obj2 *SRobj) int {
-	if obj1.Typ != SR_STR || obj2.Typ != SR_STR {
-		utils.ErrorF("compareStringObjects err: type fail, obj1.Typ = %d obj2.Typ = %d", obj1.Typ, obj2.Typ)
-	}
-	return strings.Compare(obj1.strVal(), obj2.strVal())
+func createIntSetObject() *SRobj {
+	is := intSetNew()
+	o := createSRobj(SR_SET, is)
+	o.encoding = REDIS_ENCODING_INTSET
+	return o
+}
+
+func createSetObject() *SRobj {
+	d := dictCreate(&setDictType)
+	o := createSRobj(SR_SET, d)
+	o.encoding = REDIS_ENCODING_HT
+	return o
 }

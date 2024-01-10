@@ -42,11 +42,28 @@ OK
 "hello"
 ~~~
 
+## set
+
+- sadd
+
+**add key member [member ...]**
+
+~~~bash
+127.0.0.1:6379> sadd s1 12 51 789 13 456
+(integer) 5
+127.0.0.1:6379> object encoding s1
+"intset"
+127.0.0.1:6379> sadd s2 12 51 789 13 456 asd
+(integer) 6
+127.0.0.1:6379> object encoding s2
+"hashtable"
+~~~
+
 ## zset
 
 - zadd
 
-**zadd key score value ...**
+**zadd key score member [score member ...] **
 
 ~~~bash
 127.0.0.1:6379> zadd zs 50 z1 40 z2 60 z3 45.5 z4

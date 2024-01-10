@@ -20,10 +20,62 @@ const (
 	//BG_PERSISTENCE_LOAD_FACTOR       = 5
 )
 
+type dictIterator struct {
+	d                *dict
+	table, index     int
+	entry, nextEntry *dictEntry
+}
+
+func (di *dictIterator) dictNext() *dictEntry {
+	for {
+		if di.entry != nil {
+			di.entry = di.nextEntry
+		} else {
+			ht := di.d.ht[di.table]
+			if di.index == -1 && di.table == 0 {
+				di.d.iterators++
+			}
+			di.index++
+			if di.index >= int(ht.size) {
+				if di.d.isRehash() && di.table == 0 {
+					di.table++
+					di.index = 0
+					ht = di.d.ht[1]
+				} else {
+					break
+				}
+			}
+			di.entry = ht.table[di.index]
+		}
+		if di.entry != nil {
+			di.nextEntry = di.entry.next
+			return di.entry
+		}
+	}
+	return nil
+}
+
+func (di *dictIterator) dictReleaseIterator() {
+	if !(di.index == -1 && di.table == 0) {
+		di.d.iterators--
+	}
+	di.d = nil
+	di.entry = nil
+	di.nextEntry = nil
+}
+
 type dictEntry struct {
 	key  *SRobj
 	val  *SRobj
 	next *dictEntry
+}
+
+func (de *dictEntry) getKey() *SRobj {
+	return de.key
+}
+
+func (de *dictEntry) getVal() *SRobj {
+	return de.val
 }
 
 type dictType struct {
@@ -43,6 +95,7 @@ type dict struct {
 	ht        [2]*dictht
 	rehashIdx int64
 	// iterators
+	iterators int64
 }
 
 // ----------------------------- hash func -------------------------
@@ -84,6 +137,16 @@ func (d *dict) dictSize() int64 {
 	return s
 }
 
+func (d *dict) dictGetIterator() *dictIterator {
+	di := new(dictIterator)
+	di.d = d
+	di.table = 0
+	di.index = -1
+	di.entry = nil
+	di.nextEntry = nil
+	return di
+}
+
 func dictCreate(dType *dictType) *dict {
 	d := new(dict)
 	d.dType = dType
@@ -94,6 +157,7 @@ func dictCreate(dType *dictType) *dict {
 	ht.table = make([]*dictEntry, DICT_HT_INITIAL_SIZE)
 	d.ht[0] = ht
 	d.rehashIdx = -1
+	d.iterators = 0
 	return d
 }
 
@@ -249,24 +313,30 @@ func (d *dict) dictAddRaw(key *SRobj) *dictEntry {
 	return &entry
 }
 
-func (d *dict) dictAdd(key, val *SRobj) int {
+func (d *dict) dictAdd(key, val *SRobj) bool {
 	entry := d.dictAddRaw(key)
 	if entry == nil {
-		return DICK_ERR
+		return false
 	}
 	entry.val = val
-	val.incrRefCount()
-	return DICK_OK
+	if val != nil {
+		val.incrRefCount()
+	}
+	return true
 }
 
 func (d *dict) dictSet(key, val *SRobj) {
-	if d.dictAdd(key, val) == DICK_OK {
+	if d.dictAdd(key, val) {
 		return
 	}
 	_, entry := d.dictFind(key)
-	entry.val.decrRefCount()
+	if entry.val != nil {
+		entry.val.decrRefCount()
+	}
 	entry.val = val
-	entry.val.incrRefCount()
+	if entry.val != nil {
+		entry.val.incrRefCount()
+	}
 }
 
 func (d *dict) dictGet(key *SRobj) *SRobj {
