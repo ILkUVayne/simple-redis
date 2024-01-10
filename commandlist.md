@@ -63,7 +63,7 @@ OK
 
 - zadd
 
-**zadd key score member [score member ...] **
+**zadd key score member [score member ...]**
 
 ~~~bash
 127.0.0.1:6379> zadd zs 50 z1 40 z2 60 z3 45.5 z4
