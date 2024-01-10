@@ -7,6 +7,16 @@ type SRedisDB struct {
 	expire *dict
 }
 
+var dbDictType = dictType{
+	hashFunc:   SRStrHash,
+	keyCompare: SRStrCompare,
+}
+
+var keyPtrDictType = dictType{
+	hashFunc:   SRStrHash,
+	keyCompare: SRStrCompare,
+}
+
 func (db *SRedisDB) dictDel(key *SRobj) {
 	db.data.dictDelete(key)
 }

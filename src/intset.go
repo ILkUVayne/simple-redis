@@ -69,16 +69,18 @@ func (is *intSet) intSetResize() {
 	is.contents = newContents
 }
 
-func (is *intSet) intSetAdd(value int64) *intSet {
+func (is *intSet) intSetAdd(value int64, success *bool) *intSet {
 	if is.length == uint32(len(is.contents)) {
 		is.intSetResize()
 	}
 	var pos uint32
 	if is.intSetSearch(value, &pos) == 1 {
+		*success = false
 		return is
 	}
 	is._intSetSet(int(pos), value)
 	is.length++
+	*success = true
 	return is
 }
 
@@ -96,7 +98,7 @@ func (is *intSet) intSetRandom() int64 {
 }
 
 func (is *intSet) intSetGet(pos uint32, value *int64) bool {
-	if pos > is.length {
+	if pos < is.length {
 		*value = is._intSetGet(int(pos))
 		return true
 	}

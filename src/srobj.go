@@ -196,7 +196,9 @@ func (s *SRobj) isObjectRepresentableAsInt64(intVal *int64) int {
 		utils.ErrorF("isObjectRepresentableAsLongLong err: type fail, value.Typ = %d", s.Typ)
 	}
 	i, res := s.intVal()
-	*intVal = i
+	if intVal != nil {
+		*intVal = i
+	}
 	return res
 }
 
@@ -245,7 +247,7 @@ func createFloatSRobj(typ SRType, ptr any) *SRobj {
 func createZsetSRobj() *SRobj {
 	zs := new(zSet)
 	zs.zsl = zslCreate()
-	zs.d = dictCreate(&dictType{hashFunc: SRStrHash, keyCompare: SRStrCompare})
+	zs.d = dictCreate(&zSetDictType)
 	o := createSRobj(SR_ZSET, zs)
 	o.encoding = REDIS_ENCODING_SKIPLIST
 	return o
@@ -259,7 +261,7 @@ func createIntSetObject() *SRobj {
 }
 
 func createSetObject() *SRobj {
-	d := dictCreate(&dictType{hashFunc: SRStrHash, keyCompare: SRStrCompare})
+	d := dictCreate(&setDictType)
 	o := createSRobj(SR_SET, d)
 	o.encoding = REDIS_ENCODING_HT
 	return o

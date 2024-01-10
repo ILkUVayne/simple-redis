@@ -16,6 +16,11 @@ type zRangeSpec struct {
 	minex, maxex int
 }
 
+var zSetDictType = dictType{
+	hashFunc:   SRStrHash,
+	keyCompare: SRStrCompare,
+}
+
 // return (min,minex) or (max,maxnx) and error
 func _parseRange(obj *SRobj) (float64, int, error) {
 	if obj.encoding == REDIS_ENCODING_INT {

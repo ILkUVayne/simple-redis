@@ -25,3 +25,7 @@ func sAddCommand(c *SRedisClient) {
 	}
 	c.addReplyLongLong(added)
 }
+
+func sinterGenericCommand(c *SRedisClient, setKeys []*SRobj, num int64, dstKey *SRobj) {
+
+}

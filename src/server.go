@@ -63,8 +63,8 @@ func initServerConfig() {
 
 func initServer() {
 	server.db = &SRedisDB{
-		data:   dictCreate(&dictType{hashFunc: SRStrHash, keyCompare: SRStrCompare}),
-		expire: dictCreate(&dictType{hashFunc: SRStrHash, keyCompare: SRStrCompare}),
+		data:   dictCreate(&dbDictType),
+		expire: dictCreate(&keyPtrDictType),
 	}
 	server.clients = make(map[int]*SRedisClient)
 	server.fd = TcpServer(server.port)

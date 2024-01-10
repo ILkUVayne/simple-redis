@@ -65,6 +65,8 @@ var commandTable = []SRedisCommand{
 	// zset
 	{"zadd", zAddCommand, -4},
 	{"zrange", zRangeCommand, -4},
+	// set
+	{"sadd", sAddCommand, -3},
 	// more
 }
 
