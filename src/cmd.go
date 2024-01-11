@@ -116,7 +116,6 @@ func delCommand(c *SRedisClient) {
 }
 
 func keysCommand(c *SRedisClient) {
-	//var de *dictEntry
 	pattern := c.args[1].strVal()
 	numKeys := 0
 	allKeys := false
