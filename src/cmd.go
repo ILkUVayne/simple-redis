@@ -60,6 +60,7 @@ var commandTable = []SRedisCommand{
 	{"expire", expireCommand, 3},
 	{"object", objectCommand, 3},
 	{"del", delCommand, -2},
+	{"keys", keysCommand, 2},
 	// string
 	{"get", getCommand, 2},
 	{"set", setCommand, 3},
@@ -112,4 +113,28 @@ func delCommand(c *SRedisClient) {
 		}
 	}
 	c.addReplyLongLong(deleted)
+}
+
+func keysCommand(c *SRedisClient) {
+	//var de *dictEntry
+	pattern := c.args[1].strVal()
+	numKeys := 0
+	allKeys := false
+	if pattern[0] == '*' && len(pattern) == 1 {
+		allKeys = true
+	}
+	replyLen := c.addDeferredMultiBulkLength()
+	di := server.db.data.dictGetIterator()
+	for de := di.dictNext(); de != nil; de = di.dictNext() {
+		key := de.getKey()
+		if allKeys {
+			if !server.db.expireIfNeeded(key) {
+
+				c.addReplyBulk(key)
+				numKeys++
+			}
+		}
+	}
+	di.dictReleaseIterator()
+	c.setDeferredMultiBulkLength(replyLen, numKeys)
 }

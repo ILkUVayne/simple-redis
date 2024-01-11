@@ -162,3 +162,17 @@ func (c *SRedisClient) addReplyBulk(data *SRobj) {
 	c.addReplyStr(fmt.Sprintf("%s", data.strVal()))
 	c.addReply(shared.crlf)
 }
+
+func (c *SRedisClient) addDeferredMultiBulkLength() *node {
+	c.replyReady = false
+	c.reply.rPush(createSRobj(SR_STR, nil))
+	return c.reply.first()
+}
+
+func (c *SRedisClient) setDeferredMultiBulkLength(n *node, length int) {
+	if n == nil {
+		return
+	}
+	n.data = createSRobj(SR_STR, fmt.Sprintf("*%d\r\n", length))
+	c.doReply()
+}
