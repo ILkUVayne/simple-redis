@@ -17,12 +17,19 @@ var keyPtrDictType = dictType{
 	keyCompare: SRStrCompare,
 }
 
-func (db *SRedisDB) dictDel(key *SRobj) {
-	db.data.dictDelete(key)
+func (db *SRedisDB) dictDel(key *SRobj) int {
+	return db.data.dictDelete(key)
 }
 
-func (db *SRedisDB) expireDel(key *SRobj) {
-	db.expire.dictDelete(key)
+func (db *SRedisDB) expireDel(key *SRobj) int {
+	return db.expire.dictDelete(key)
+}
+
+func (db *SRedisDB) dbDel(key *SRobj) int {
+	if db.expire.dictSize() > 0 {
+		db.expireDel(key)
+	}
+	return db.dictDel(key)
 }
 
 func (db *SRedisDB) dictGet(key *SRobj) *SRobj {
