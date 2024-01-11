@@ -22,6 +22,27 @@ OK
 "raw"
 ~~~
 
+- del
+
+**del key [key ...]**
+
+~~~bash
+127.0.0.1:6379> set k1 aaa
+OK
+127.0.0.1:6379> set k2 bbb
+OK
+127.0.0.1:6379> sadd s1 baidu.com google.com
+(integer) 2
+127.0.0.1:6379> zadd zs 12 hello 5 world
+(integer) 2
+127.0.0.1:6379> del k3
+(integer) 0
+127.0.0.1:6379> del k1
+(integer) 1
+127.0.0.1:6379> del k1 k2 s1 zs
+(integer) 3
+~~~
+
 ## string
 
 - set

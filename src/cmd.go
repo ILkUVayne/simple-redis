@@ -59,6 +59,7 @@ func processCommand(c *SRedisClient) {
 var commandTable = []SRedisCommand{
 	{"expire", expireCommand, 3},
 	{"object", objectCommand, 3},
+	{"del", delCommand, -2},
 	// string
 	{"get", getCommand, 2},
 	{"set", setCommand, 3},
@@ -69,6 +70,10 @@ var commandTable = []SRedisCommand{
 	{"sadd", sAddCommand, -3},
 	// more
 }
+
+//-----------------------------------------------------------------------------
+// db commands
+//-----------------------------------------------------------------------------
 
 func expireCommand(c *SRedisClient) {
 	key := c.args[1]
@@ -97,4 +102,14 @@ func objectCommand(c *SRedisClient) {
 		return
 	}
 	c.addReplyBulk(value.getEncoding())
+}
+
+func delCommand(c *SRedisClient) {
+	deleted := 0
+	for i := 1; i < len(c.args); i++ {
+		if server.db.dbDel(c.args[i]) == REDIS_OK {
+			deleted++
+		}
+	}
+	c.addReplyLongLong(deleted)
 }
