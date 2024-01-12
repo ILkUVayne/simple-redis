@@ -126,7 +126,7 @@ func keysCommand(c *SRedisClient) {
 	di := server.db.data.dictGetIterator()
 	for de := di.dictNext(); de != nil; de = di.dictNext() {
 		key := de.getKey()
-		if allKeys {
+		if allKeys || utils.StringMatch(pattern, key.strVal(), false) {
 			if !server.db.expireIfNeeded(key) {
 
 				c.addReplyBulk(key)
