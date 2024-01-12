@@ -43,6 +43,34 @@ OK
 (integer) 3
 ~~~
 
+- keys
+
+**keys pattern**
+
+~~~bash
+127.0.0.1:6379> set name asdsa
+OK
+127.0.0.1:6379> set nnme asda
+OK
+127.0.0.1:6379> keys *
+1) "name"       
+2) "nnme"       
+127.0.0.1:6379> keys n*
+1) "name"
+2) "nnme"
+127.0.0.1:6379> keys nn*
+1) "nnme"
+127.0.0.1:6379> keys n*e
+1) "name"
+2) "nnme"
+127.0.0.1:6379> keys n[af]me
+1) "name"
+127.0.0.1:6379> keys na?e
+1) "name"
+127.0.0.1:6379> keys nv?e
+(empty array)
+~~~
+
 ## string
 
 - set

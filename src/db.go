@@ -44,18 +44,19 @@ func (db *SRedisDB) dictSet(key *SRobj, val *SRobj) {
 	server.db.data.dictSet(key, val)
 }
 
-func (db *SRedisDB) expireIfNeeded(key *SRobj) {
+func (db *SRedisDB) expireIfNeeded(key *SRobj) bool {
 	e := db.expireGet(key)
 	if e == nil {
-		return
+		return false
 	}
 
 	intVal, _ := e.intVal()
 	if when := intVal; when > utils.GetMsTime() {
-		return
+		return false
 	}
 	db.expireDel(key)
 	db.dictDel(key)
+	return true
 }
 
 func (db *SRedisDB) lookupKey(key *SRobj) *SRobj {

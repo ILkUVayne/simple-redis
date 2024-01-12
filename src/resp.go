@@ -98,7 +98,7 @@ func respParseBulk(buf []byte, length int) (string, error) {
 	if sLen == -1 {
 		return "(nil)", nil
 	}
-	if sLen == 0 && len(buf) == 6 {
+	if sLen == 0 && length == 4 {
 		return "empty string", nil
 	}
 	buf = buf[idx+2:]
@@ -132,8 +132,8 @@ func respParseArrays(buf []byte, length int) (string, error) {
 	if aLen == -1 {
 		return "(nil)", nil
 	}
-	if aLen == 0 && len(buf) == 6 {
-		return "empty arrays", nil
+	if aLen == 0 && length == 4 {
+		return "(empty array)", nil
 	}
 	buf = buf[idx+2:]
 	str := ""
