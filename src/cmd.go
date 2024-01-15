@@ -69,6 +69,9 @@ var commandTable = []SRedisCommand{
 	{"zrange", zRangeCommand, -4},
 	// set
 	{"sadd", sAddCommand, -3},
+	{"smembers", sinterCommand, 2},
+	{"sinter", sinterCommand, -2},
+	{"sinterstore", sinterStoreCommand, -2},
 	// more
 }
 

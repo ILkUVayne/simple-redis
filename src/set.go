@@ -1,7 +1,9 @@
 package src
 
 import (
+	"simple-redis/cgo/qsort"
 	"simple-redis/utils"
+	"sort"
 )
 
 type setTypeIterator struct {
@@ -64,9 +66,7 @@ func setTypeCreate(value *SRobj) *SRobj {
 }
 
 func setTypeAdd(subject, value *SRobj) bool {
-	if subject.encoding != REDIS_ENCODING_INTSET && subject.encoding != REDIS_ENCODING_HT {
-		panic("Unknown set encoding")
-	}
+	checkEncoding(subject)
 	var intVal int64
 	// hashtable
 	if subject.encoding == REDIS_ENCODING_HT {
@@ -104,4 +104,48 @@ func setTypeConvert(setObj *SRobj, enc uint8) {
 
 	setObj.encoding = REDIS_ENCODING_HT
 	setObj.Val = d
+}
+
+func setTypeSize(setObj *SRobj) int64 {
+	if setObj.encoding == REDIS_ENCODING_HT {
+		return setObj.Val.(*dict).dictSize()
+	}
+	if setObj.encoding == REDIS_ENCODING_INTSET {
+		return int64(setObj.Val.(*intSet).intSetLen())
+	}
+	panic("Unknown set encoding")
+}
+
+func setTypeIsMember(setObj, value *SRobj) bool {
+	var intVal int64
+	checkEncoding(setObj)
+	if setObj.encoding == REDIS_ENCODING_HT {
+		_, e := setObj.Val.(*dict).dictFind(value)
+		return e != nil
+	}
+	if value.isObjectRepresentableAsInt64(&intVal) == REDIS_OK {
+		return setObj.Val.(*intSet).intSetFind(intVal)
+	}
+	return false
+}
+
+// qSortSet use c qsort function
+// has err: cgo argument has Go pointer to Go pointer
+// need set env: export GODEBUG=cgocheck=0
+func qSortSet(set []*SRobj) {
+	qsort.Slice(set, func(a, b int) bool {
+		return setTypeSize(set[a]) < setTypeSize(set[b])
+	})
+}
+
+func sortSet(set []*SRobj) {
+	sort.Slice(set, func(a, b int) bool {
+		return setTypeSize(set[a]) < setTypeSize(set[b])
+	})
+}
+
+func checkEncoding(subject *SRobj) {
+	if subject.encoding != REDIS_ENCODING_INTSET && subject.encoding != REDIS_ENCODING_HT {
+		panic("Unknown set encoding")
+	}
 }

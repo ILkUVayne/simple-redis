@@ -163,6 +163,10 @@ func (c *SRedisClient) addReplyBulk(data *SRobj) {
 	c.addReply(shared.crlf)
 }
 
+func (c *SRedisClient) addReplyBulkInt(ll int64) {
+	c.addReplyBulk(createSRobj(SR_STR, strconv.FormatInt(ll, 10)))
+}
+
 func (c *SRedisClient) addDeferredMultiBulkLength() *node {
 	c.replyReady = false
 	c.reply.rPush(createSRobj(SR_STR, nil))
