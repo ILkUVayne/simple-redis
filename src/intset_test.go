@@ -54,3 +54,22 @@ func TestIntSetRemove(t *testing.T) {
 		t.Error("intSetRemove err: is.length = ", is.length)
 	}
 }
+
+func TestIntSetFind(t *testing.T) {
+	var success bool
+	is := intSetNew()
+	is.intSetAdd(2, &success)
+	is.intSetAdd(28, &success)
+	is.intSetAdd(5, &success)
+	is.intSetAdd(9, &success)
+	is.intSetAdd(10, &success)
+	is.intSetAdd(13, &success)
+	res := is.intSetFind(28)
+	if !res {
+		t.Error("intSetFind err: res = ", res)
+	}
+	res = is.intSetFind(2811)
+	if res {
+		t.Error("intSetFind err: res = ", res)
+	}
+}

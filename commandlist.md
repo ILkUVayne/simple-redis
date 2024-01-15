@@ -98,14 +98,60 @@ OK
 **add key member [member ...]**
 
 ~~~bash
-127.0.0.1:6379> sadd s1 12 51 789 13 456
+127.0.0.1:6379> sadd s1 12
+(integer) 1
+127.0.0.1:6379> sadd s2 12 c
+(integer) 2
+127.0.0.1:6379> sadd s3 12 c php
+(integer) 3
+127.0.0.1:6379> sadd s4 c php java
+(integer) 3
+127.0.0.1:6379> sadd s10 12 51 789 13 456
 (integer) 5
-127.0.0.1:6379> object encoding s1
+127.0.0.1:6379> object encoding s10
 "intset"
-127.0.0.1:6379> sadd s2 12 51 789 13 456 asd
-(integer) 6
-127.0.0.1:6379> object encoding s2
+127.0.0.1:6379> object encoding s4
 "hashtable"
+~~~
+
+- smembers
+
+**smembers key**
+
+~~~bash
+127.0.0.1:6379> smembers s10
+1) "12"
+2) "13"
+3) "51"
+4) "456"
+5) "789"
+127.0.0.1:6379> smembers s4
+1) "c"
+2) "java"
+3) "php"
+~~~
+
+- sinter
+
+**sinter key [key ...]**
+
+~~~bash
+127.0.0.1:6379> sinter s1 s2
+1) "12"
+127.0.0.1:6379> sinter s1 s4
+(empty array)
+~~~
+
+- sinterstore
+
+**sinterstore key [key ...]**
+
+~~~bash
+127.0.0.1:6379> sinterstore s6 s3 s4
+(integer) 2
+127.0.0.1:6379> smembers s6
+1) "c"
+2) "php"
 ~~~
 
 ## zset

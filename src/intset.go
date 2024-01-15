@@ -62,6 +62,14 @@ func (is *intSet) intSetSearch(value int64, pos *uint32) uint8 {
 	return 0
 }
 
+func (is *intSet) intSetFind(value int64) bool {
+	var pos uint32
+	if is.intSetSearch(value, &pos) == 0 {
+		return false
+	}
+	return true
+}
+
 func (is *intSet) intSetResize() {
 	length := is.length * 2
 	newContents := make([]int64, length, length)
