@@ -1,5 +1,7 @@
 # simple-redis
 
+Mainly for learning, for reference only
+
 ## Building
 
 - build
