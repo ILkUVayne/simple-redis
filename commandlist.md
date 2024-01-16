@@ -91,6 +91,52 @@ OK
 "hello"
 ~~~
 
+## list
+
+- lpush
+
+**lpush key value [value ...]**
+
+~~~bash
+127.0.0.1:6379> lpush l1 baidu.com google.com 4399.com 7k7k.com
+(integer) 4
+127.0.0.1:6379> object encoding l1
+"linkedlist"
+~~~
+
+- rpush
+
+**rpush key value [value ...]**
+
+~~~bash
+127.0.0.1:6379> rpush l2 baidu.com google.com 4399.com 7k7k.com
+(integer) 4
+127.0.0.1:6379> object encoding l2
+"linkedlist"
+~~~
+
+- lpop
+
+**lpop key**
+
+~~~bash
+127.0.0.1:6379> lpop l1
+"7k7k.com"
+127.0.0.1:6379> lpop l2
+"baidu.com"
+~~~
+
+- rpop
+
+**rpop key**
+
+~~~bash
+127.0.0.1:6379> rpop l1
+"baidu.com"
+127.0.0.1:6379> rpop l2
+"7k7k.com"
+~~~
+
 ## set
 
 - sadd

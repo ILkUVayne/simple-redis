@@ -10,6 +10,9 @@ const (
 	DEFAULT_RH_NN_STEP = 10
 	REDIS_OK           = 0
 	REDIS_ERR          = 1
+
+	REDIS_HEAD = 0
+	REDIS_TAIL = 1
 )
 
 const SREDIS_MAX_BULK = 1024 * 4

@@ -266,3 +266,10 @@ func createSetObject() *SRobj {
 	o.encoding = REDIS_ENCODING_HT
 	return o
 }
+
+func createListObject() *SRobj {
+	l := listCreate(&lType)
+	o := createSRobj(SR_LIST, l)
+	o.encoding = REDIS_ENCODING_LINKEDLIST
+	return o
+}
