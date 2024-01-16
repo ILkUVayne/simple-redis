@@ -4,6 +4,8 @@ type listType struct {
 	keyCompare func(key1, key2 *SRobj) bool
 }
 
+var lType = listType{keyCompare: SRStrCompare}
+
 type node struct {
 	data *SRobj
 	prev *node
