@@ -77,6 +77,9 @@ var commandTable = []SRedisCommand{
 	{"lpush", lPushCommand, -3},
 	{"rpop", rPopCommand, 2},
 	{"lpop", lPopCommand, 2},
+	// hash
+	{"hset", hSetCommand, 4},
+	{"hget", hGetCommand, 3},
 	// more
 }
 

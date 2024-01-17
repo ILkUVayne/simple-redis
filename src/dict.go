@@ -10,6 +10,9 @@ import (
 // LOAD_FACTOR 负载因子
 // BG_PERSISTENCE_LOAD_FACTOR bgsave或者bgrewriteaof 的负载因子
 const (
+	DICT_SET = 0
+	DICT_REP = 1
+
 	EXPIRE_CHECK_COUNT   int   = 100
 	DICK_OK                    = 0
 	DICK_ERR                   = 1
@@ -325,9 +328,9 @@ func (d *dict) dictAdd(key, val *SRobj) bool {
 	return true
 }
 
-func (d *dict) dictSet(key, val *SRobj) {
+func (d *dict) dictSet(key, val *SRobj) int {
 	if d.dictAdd(key, val) {
-		return
+		return DICT_SET
 	}
 	_, entry := d.dictFind(key)
 	if entry.val != nil {
@@ -337,6 +340,7 @@ func (d *dict) dictSet(key, val *SRobj) {
 	if entry.val != nil {
 		entry.val.incrRefCount()
 	}
+	return DICT_REP
 }
 
 func (d *dict) dictGet(key *SRobj) *SRobj {

@@ -273,3 +273,10 @@ func createListObject() *SRobj {
 	o.encoding = REDIS_ENCODING_LINKEDLIST
 	return o
 }
+
+func createHashObject() *SRobj {
+	h := dictCreate(&dbDictType)
+	o := createSRobj(SR_DICT, h)
+	o.encoding = REDIS_ENCODING_HT
+	return o
+}
