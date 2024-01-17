@@ -2,6 +2,7 @@ package src
 
 import (
 	"simple-redis/utils"
+	"strings"
 )
 
 const (
@@ -34,6 +35,8 @@ func lookupCommand(cmdStr string) *SRedisCommand {
 func processCommand(c *SRedisClient) {
 	cmdStr := c.args[0].strVal()
 	utils.Info("process command: ", cmdStr)
+	// Case-insensitive
+	cmdStr = strings.ToLower(cmdStr)
 	if cmdStr == "quit" {
 		freeClient(c)
 		return
