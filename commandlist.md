@@ -137,6 +137,32 @@ OK
 "7k7k.com"
 ~~~
 
+## hash
+
+- hset
+
+**hset key field value**
+
+~~~bash
+127.0.0.1:6379> hset h1 k1 baidu.com
+(integer) 1
+127.0.0.1:6379> hset h1 k2 100
+(integer) 1
+127.0.0.1:6379> object encoding h1
+"hashtable"
+~~~
+
+- hget
+
+**hget key field**
+
+~~~bash
+127.0.0.1:6379> hget h1 k1
+"baidu.com"
+127.0.0.1:6379> hget h1 k2
+"100"
+~~~
+
 ## set
 
 - sadd

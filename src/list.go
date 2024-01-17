@@ -1,5 +1,9 @@
 package src
 
+//-----------------------------------------------------------------------------
+// List commands API
+//-----------------------------------------------------------------------------
+
 func listTypePush(subject, value *SRobj, where int) {
 	if subject.encoding == REDIS_ENCODING_LINKEDLIST {
 		l := subject.Val.(*list)
