@@ -1,5 +1,9 @@
 package src
 
+//-----------------------------------------------------------------------------
+// Hash type commands API
+//-----------------------------------------------------------------------------
+
 func hashTypeLookupWriteOrCreate(c *SRedisClient, key *SRobj) *SRobj {
 	o := c.db.lookupKeyWrite(key)
 	if o == nil {
