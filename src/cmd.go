@@ -41,19 +41,25 @@ func processCommand(c *SRedisClient) {
 		freeClient(c)
 		return
 	}
-	cmd := lookupCommand(cmdStr)
-	if cmd == nil {
+	c.cmd = lookupCommand(cmdStr)
+	if c.cmd == nil {
 		c.addReply(shared.unknowErr)
 		resetClient(c)
 		return
 	}
-	if (cmd.arity > 0 && cmd.arity != len(c.args)) || -cmd.arity > len(c.args) {
+	if (c.cmd.arity > 0 && c.cmd.arity != len(c.args)) || -c.cmd.arity > len(c.args) {
 		c.addReply(shared.argsNumErr)
 		resetClient(c)
 		return
 	}
-	cmd.proc(c)
+	call(c)
 	resetClient(c)
+}
+
+// call is the core of Redis execution of a command
+func call(c *SRedisClient) {
+	c.cmd.proc(c)
+	// aof
 }
 
 // =================================== command ====================================

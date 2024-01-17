@@ -48,6 +48,8 @@ type SRedisServer struct {
 	el             *aeEventLoop
 	loadFactor     int64
 	rehashNullStep int64
+	// aof
+	aofBuf string
 }
 
 var server SRedisServer

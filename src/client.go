@@ -15,6 +15,7 @@ type SRedisClient struct {
 	queryBuf   []byte
 	queryLen   int
 	sentLen    int
+	cmd        *SRedisCommand
 	cmdTyp     CmdType
 	bulkNum    int
 	bulkLen    int
@@ -80,6 +81,7 @@ func freeClient(c *SRedisClient) {
 
 func resetClient(c *SRedisClient) {
 	freeArgs(c)
+	c.cmd = nil
 	c.cmdTyp = CMD_UNKNOWN
 	c.bulkLen = 0
 	c.bulkNum = 0
