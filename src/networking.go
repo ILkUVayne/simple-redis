@@ -108,7 +108,7 @@ func (c *SRedisClient) addReply(data *SRobj) {
 		c.reply.rPush(data)
 		data.incrRefCount()
 	}
-	if c.replyReady {
+	if c.replyReady && c.fd > 0 {
 		server.el.addFileEvent(c.fd, AE_WRITEABLE, SendReplyToClient, c)
 	}
 }

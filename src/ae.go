@@ -108,7 +108,7 @@ func (el *aeEventLoop) addFileEvent(fd int, mask FeType, proc aeFileProc, client
 	fileEvent.mask = mask
 	fileEvent.clientData = clientData
 	el.fileEvent[feKey(fd, mask)] = fileEvent
-	utils.InfoF("simple-redis server: add fileEvent fd %d,mask %d: ", fd, mask)
+	//utils.InfoF("simple-redis server: add fileEvent fd %d,mask %d: ", fd, mask)
 }
 
 func (el *aeEventLoop) removeFileEvent(fd int, mask FeType) {
@@ -128,7 +128,7 @@ func (el *aeEventLoop) removeFileEvent(fd int, mask FeType) {
 	}
 	// ae ctl
 	el.fileEvent[feKey(fd, mask)] = nil
-	utils.InfoF("simple-redis server: remove fileEvent fd %d,mask %d: ", fd, mask)
+	//utils.InfoF("simple-redis server: remove fileEvent fd %d,mask %d: ", fd, mask)
 }
 
 func (el *aeEventLoop) addTimeEvent(mask TeType, interval int64, proc aeTimeProc, clientData any) int {

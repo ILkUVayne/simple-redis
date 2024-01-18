@@ -34,7 +34,10 @@ func lookupCommand(cmdStr string) *SRedisCommand {
 // 执行命令
 func processCommand(c *SRedisClient) {
 	cmdStr := c.args[0].strVal()
-	utils.Info("process command: ", cmdStr)
+	if c.fd > 0 {
+		utils.Info("process command: ", cmdStr)
+	}
+
 	// Case-insensitive
 	cmdStr = strings.ToLower(cmdStr)
 	if cmdStr == "quit" {
