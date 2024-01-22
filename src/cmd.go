@@ -111,6 +111,11 @@ func expireCommand(c *SRedisClient) {
 		c.addReply(shared.typeErr)
 		return
 	}
+
+	if c.db.lookupKeyReadOrReply(c, key, nil) == nil {
+		return
+	}
+
 	eval, _ := val.intVal()
 	expire := eval
 	if eval < MAX_EXPIRE {
@@ -130,9 +135,8 @@ func objectCommand(c *SRedisClient) {
 		c.addReply(shared.typeErr)
 		return
 	}
-	value := server.db.data.dictGet(val)
+	value := c.db.lookupKeyReadOrReply(c, val, nil)
 	if value == nil {
-		c.addReply(shared.nullBulk)
 		return
 	}
 	c.addReplyBulk(value.getEncoding())
