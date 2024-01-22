@@ -93,6 +93,8 @@ func activeExpireCycle() {
 func serverCron(el *aeEventLoop, id int, clientData any) {
 	// check expire key
 	activeExpireCycle()
+	// flush aof_buf on disk
+	flushAppendOnlyFile()
 }
 
 // ================================ addReply =================================
@@ -104,6 +106,9 @@ func (c *SRedisClient) doReply() {
 
 // 将查询结果添加到c.reply中,并创建SendReplyToClient事件
 func (c *SRedisClient) addReply(data *SRobj) {
+	if c.fd < 0 {
+		return
+	}
 	if data != nil {
 		c.reply.rPush(data)
 		data.incrRefCount()
@@ -115,6 +120,9 @@ func (c *SRedisClient) addReply(data *SRobj) {
 
 // 查询结果添加到c.reply中
 func (c *SRedisClient) addReplyStr(s string) {
+	if c.fd < 0 {
+		return
+	}
 	data := createSRobj(SR_STR, s)
 	c.addReply(data)
 	data.decrRefCount()
@@ -168,12 +176,18 @@ func (c *SRedisClient) addReplyBulkInt(ll int64) {
 }
 
 func (c *SRedisClient) addDeferredMultiBulkLength() *node {
+	if c.fd < 0 {
+		return nil
+	}
 	c.replyReady = false
 	c.reply.rPush(createSRobj(SR_STR, nil))
 	return c.reply.first()
 }
 
 func (c *SRedisClient) setDeferredMultiBulkLength(n *node, length int) {
+	if c.fd < 0 {
+		return
+	}
 	if n == nil {
 		return
 	}

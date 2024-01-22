@@ -5,10 +5,6 @@ import (
 	"fmt"
 )
 
-const (
-	NIL_STR = "(nil)"
-)
-
 type sRedisReply struct {
 	typ    int
 	buf    []byte

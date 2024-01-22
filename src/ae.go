@@ -5,28 +5,11 @@ import (
 	"simple-redis/utils"
 )
 
-const (
-	AE_OK  = 0
-	AE_ERR = -1
-)
-
 // FeType fileEvent type
 type FeType int
 
-const (
-	AE_READABLE FeType = iota + 1
-	AE_WRITEABLE
-)
-
 // TeType timeEvent type
 type TeType int
-
-// AE_NORMAL 周期执行的事件事件
-// AE_ONCE 只执行一次
-const (
-	AE_NORMAL TeType = iota
-	AE_ONCE
-)
 
 type aeFileProc func(el *aeEventLoop, fd int, clientData any)
 type aeTimeProc func(el *aeEventLoop, id int, clientData any)

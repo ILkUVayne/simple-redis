@@ -6,33 +6,6 @@ import (
 	"strings"
 )
 
-const (
-	RESP_NIL_VAL = "$-1\r\n"
-
-	RESP_OK  = "+OK\r\n"
-	RESP_ERR = "-ERR: %s\r\n"
-
-	RESP_BULK = "$%d\r\n%v\r\n"
-)
-
-const (
-	SIMPLE_STR   = iota + 1 // +OK\r\n
-	SIMPLE_ERROR            // -Error message\r\n
-	INTEGERS                // :[<+|->]<value>\r\n
-	BULK_STR                // $<length>\r\n<data>\r\n
-	ARRAYS                  // *<number-of-elements>\r\n<element-1>...<element-n>
-	NULLS                   // _\r\n
-	BOOLEANS                // #<t|f>\r\n
-	DOUBLE                  // ,[<+|->]<integral>[.<fractional>][<E|e>[sign]<exponent>]\r\n e.g. ,1.23\r\n
-	BIG_NUMBERS             // ([+|-]<number>\r\n
-	BULK_ERR                // !<length>\r\n<error>\r\n
-	VERBATIM_STR            // =<length>\r\n<encoding>:<data>\r\n
-	MAPS                    // %<number-of-entries>\r\n<key-1><value-1>...<key-n><value-n>
-	SETS                    // ~<number-of-elements>\r\n<element-1>...<element-n>
-	PUSHES                  // ><number-of-elements>\r\n<element-1>...<element-n>
-	// more
-)
-
 type respParseFunc func([]byte, int) (string, error)
 
 var respType = map[byte]int{

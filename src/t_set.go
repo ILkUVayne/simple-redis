@@ -24,7 +24,7 @@ func sAddCommand(c *SRedisClient) {
 		}
 	}
 	c.addReplyLongLong(added)
-	server.dirty += int64(added)
+	server.incrDirtyCount(c, int64(added))
 }
 
 func sinterGenericCommand(c *SRedisClient, setKeys []*SRobj, setNum int64, dstKey *SRobj) {
@@ -48,7 +48,7 @@ func sinterGenericCommand(c *SRedisClient, setKeys []*SRobj, setNum int64, dstKe
 			set = nil
 			if dstKey != nil {
 				if c.db.dbDel(dstKey) == REDIS_OK {
-					server.dirty++
+					server.incrDirtyCount(c, 1)
 				}
 				c.addReply(shared.czero)
 				return
@@ -136,7 +136,7 @@ func sinterGenericCommand(c *SRedisClient, setKeys []*SRobj, setNum int64, dstKe
 		dstSet.decrRefCount()
 		c.addReply(shared.czero)
 	}
-	server.dirty++
+	server.incrDirtyCount(c, 1)
 }
 
 func sinterCommand(c *SRedisClient) {

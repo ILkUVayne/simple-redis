@@ -6,25 +6,6 @@ import (
 	"simple-redis/utils"
 )
 
-const (
-	DEFAULT_PORT       = 6379
-	DEFAULT_RH_NN_STEP = 10
-	REDIS_OK           = 0
-	REDIS_ERR          = 1
-
-	REDIS_HEAD = 0
-	REDIS_TAIL = 1
-
-	REDIS_AOF_OFF = 0 /* AOF is off */
-	REDIS_AOF_ON  = 1
-
-	REDIS_AOF_DEFAULT = "appendonly.aof"
-)
-
-const SREDIS_MAX_BULK = 1024 * 4
-const SREDIS_MAX_INLINE = 1024 * 4
-const SREDIS_IO_BUF = 1024 * 16
-
 type sharedObjects struct {
 	crlf, ok, err, czero, cone, emptyMultiBulk, nullBulk, syntaxErr, typeErr, unknowErr, argsNumErr, wrongTypeErr *SRobj
 }
@@ -73,6 +54,12 @@ type SRedisServer struct {
 	aofState    int
 	// RDB persistence
 	dirty int64
+}
+
+func (s *SRedisServer) incrDirtyCount(c *SRedisClient, num int64) {
+	if c.fd > 0 {
+		s.dirty += num
+	}
 }
 
 var server SRedisServer

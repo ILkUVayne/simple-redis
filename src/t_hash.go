@@ -16,7 +16,7 @@ func hSetCommand(c *SRedisClient) {
 	} else {
 		c.addReply(shared.czero)
 	}
-	server.dirty++
+	server.incrDirtyCount(c, 1)
 }
 
 func hGetCommand(c *SRedisClient) {

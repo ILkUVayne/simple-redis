@@ -23,7 +23,7 @@ func pushGenericCommand(c *SRedisClient, where int) {
 		pushed++
 	}
 	c.addReplyLongLong(lObj.Val.(*list).len())
-	server.dirty += pushed
+	server.incrDirtyCount(c, pushed)
 }
 
 func lPushCommand(c *SRedisClient) {
@@ -50,7 +50,7 @@ func popGenericCommand(c *SRedisClient, where int) {
 	if lObj.Val.(*list).len() == 0 {
 		c.db.dbDel(c.args[1])
 	}
-	server.dirty++
+	server.incrDirtyCount(c, 1)
 }
 
 func lPopCommand(c *SRedisClient) {

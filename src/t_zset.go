@@ -51,14 +51,14 @@ func zAddGenericCommand(c *SRedisClient, incr bool) {
 				zNode := zs.zsl.insert(curscore, curobj)
 				curobj.incrRefCount()
 				zs.d.dictSet(curobj, createFloatSRobj(SR_STR, zNode.score))
-				server.dirty++
+				server.incrDirtyCount(c, 1)
 			}
 		} else {
 			zNode := zs.zsl.insert(score, ele)
 			ele.incrRefCount()
 			zs.d.dictSet(ele, createFloatSRobj(SR_STR, zNode.score))
 			ele.incrRefCount()
-			server.dirty++
+			server.incrDirtyCount(c, 1)
 			if !incr {
 				added++
 			}

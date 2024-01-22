@@ -7,13 +7,6 @@ import (
 	"strings"
 )
 
-const (
-	CLI_OK  = 0
-	CLI_ERR = 1
-
-	REDIS_CLI_HISTFILE_DEFAULT = ".srediscli_history"
-)
-
 var context *sRedisContext
 
 /*------------------------------------------------------------------------------

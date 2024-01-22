@@ -10,11 +10,6 @@ import (
 // Sorted set commands API
 //-----------------------------------------------------------------------------
 
-const (
-	ZSKIPLIST_MAXLEVEL = 32
-	ZSKIPLIST_P        = 0.25
-)
-
 type zRangeSpec struct {
 	min, max     float64
 	minex, maxex int
