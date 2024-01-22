@@ -3,7 +3,9 @@ package src
 import (
 	"fmt"
 	"os"
+	"os/signal"
 	"simple-redis/utils"
+	"syscall"
 )
 
 type sharedObjects struct {
@@ -37,6 +39,30 @@ func loadDataFromDisk() {
 		loadAppendOnlyFile(server.aofFilename)
 		utils.InfoF("DB loaded from append only file: %.3f seconds", float64(utils.GetMsTime()-start)/1000)
 	}
+}
+
+func SetupSignalHandler(shutdownFunc func(os.Signal)) {
+	closeSignalChan := make(chan os.Signal, 1)
+	signal.Notify(closeSignalChan,
+		os.Kill,
+		syscall.SIGHUP,
+		syscall.SIGINT,
+		syscall.SIGTERM,
+		syscall.SIGQUIT,
+		syscall.SIGUSR1,
+		syscall.SIGUSR2,
+	)
+	go func() {
+		sig := <-closeSignalChan
+		shutdownFunc(sig)
+	}()
+}
+
+func shutdown(sig os.Signal) {
+	utils.InfoF("signal-handler Received %s scheduling shutdown...", sig.String())
+	// todo do something before exit
+	utils.Info("Simple-Redis is now ready to exit, bye bye...")
+	os.Exit(0)
 }
 
 type SRedisServer struct {
@@ -115,6 +141,8 @@ func ServerStart() {
 	utils.Info("* Server initialized")
 	// load data
 	loadDataFromDisk()
+
+	SetupSignalHandler(shutdown)
 	// aeMain
 	utils.InfoF("* server started, The server is now ready to accept connections on port %d", server.port)
 	aeMain(server.el)
