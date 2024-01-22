@@ -2,6 +2,7 @@ package src
 
 import (
 	"errors"
+	"simple-redis/utils"
 	"strconv"
 	"strings"
 )
@@ -76,7 +77,9 @@ func freeClient(c *SRedisClient) {
 	server.el.removeFileEvent(c.fd, AE_READABLE)
 	server.el.removeFileEvent(c.fd, AE_WRITEABLE)
 	freeReplyList(c)
-	Close(c.fd)
+	if c.fd > 0 {
+		Close(c.fd)
+	}
 }
 
 func resetClient(c *SRedisClient) {
@@ -196,4 +199,19 @@ func processQueryBuf(c *SRedisClient) error {
 		processCommand(c)
 	}
 	return nil
+}
+
+func (c *SRedisClient) pushReply(data *SRobj, typ string) {
+	if c.fd < 0 || data == nil {
+		return
+	}
+	switch typ {
+	case "r":
+		c.reply.rPush(data)
+	case "l":
+		c.reply.lPush(data)
+	default:
+		utils.Error("invalid push type: ", typ)
+	}
+	data.incrRefCount()
 }

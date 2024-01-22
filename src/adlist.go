@@ -1,5 +1,10 @@
 package src
 
+type Pusher interface {
+	rPush(data *SRobj)
+	lPush(data *SRobj)
+}
+
 type listType struct {
 	keyCompare func(key1, key2 *SRobj) bool
 }
@@ -18,6 +23,8 @@ type list struct {
 	tail   *node
 	length int
 }
+
+var _ Pusher = (*list)(nil)
 
 func (l *list) len() int {
 	return l.length

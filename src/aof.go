@@ -76,6 +76,7 @@ func loadAppendOnlyFile(name string) {
 			args = nil
 		}
 	}
+	freeClient(fakeClient)
 }
 
 //-----------------------------------------------------------------------------
