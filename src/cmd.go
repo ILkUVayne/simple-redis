@@ -112,11 +112,16 @@ func expireCommand(c *SRedisClient) {
 		return
 	}
 
+	eval, res := val.intVal()
+	if res == REDIS_ERR {
+		c.addReply(shared.syntaxErr)
+		return
+	}
+
 	if c.db.lookupKeyReadOrReply(c, key, nil) == nil {
 		return
 	}
 
-	eval, _ := val.intVal()
 	expire := eval
 	if eval < MAX_EXPIRE {
 		expire = utils.GetMsTime() + (eval * 1000)
