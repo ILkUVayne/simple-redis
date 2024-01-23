@@ -50,7 +50,7 @@ func cliRefreshPrompt() {
 
 func printPrompt() {
 	if context.err != nil {
-		fmt.Println(context.err.Error())
+		fmt.Printf("(error) ERR: " + context.err.Error())
 	}
 	reader := context.reader.(*sRedisReply)
 	if reader.fStr != "" {

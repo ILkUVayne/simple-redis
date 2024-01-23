@@ -105,6 +105,7 @@ const (
 	OBJECT       = "object"
 	DEL          = "del"
 	KEYS         = "keys"
+	BGREWRITEAOF = "bgrewriteaof"
 	GET          = "get"
 	SET          = "set"
 	Z_ADD        = "zadd"

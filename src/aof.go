@@ -151,3 +151,40 @@ func aofUpdateCurrentSize() {
 	}
 	server.aofCurrentSize = fInfo.Size()
 }
+
+func rewriteAppendOnlyFile(filename string) {
+	utils.Info("rewriteAppendOnlyFile started")
+	// todo aof rewrite
+}
+
+func rewriteAppendOnlyFileBackground() int {
+	var childPid int
+
+	if server.aofChildPid != -1 {
+		return REDIS_ERR
+	}
+	if childPid = fork(); childPid == 0 {
+		// child process
+		rewriteAppendOnlyFile("xxx.aof")
+		os.Exit(0)
+	} else {
+		utils.Info("Background append only file rewriting started by pid %d", childPid)
+		// todo Parent process do something
+		server.aofChildPid = childPid
+		return REDIS_OK
+	}
+	return REDIS_OK
+}
+
+// aof rewrite command
+func bgRewriteAofCommand(c *SRedisClient) {
+	if server.aofChildPid != -1 {
+		c.addReplyError("Background append only file rewriting already in progress")
+		return
+	}
+	if rewriteAppendOnlyFileBackground() == REDIS_OK {
+		c.addReplyStatus("Background append only file rewriting started")
+		return
+	}
+	c.addReply(shared.err)
+}

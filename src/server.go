@@ -75,6 +75,7 @@ type SRedisServer struct {
 	rehashNullStep int64
 	// AOF persistence
 	aofFd              *os.File
+	aofChildPid        int
 	aofFilename        string
 	aofBuf             string
 	aofState           int
@@ -123,6 +124,7 @@ func initServer() {
 	// add timeEvent
 	server.el.addTimeEvent(AE_NORMAL, 100, serverCron, nil)
 	// AOF fd
+	server.aofChildPid = -1
 	if server.aofState == REDIS_AOF_ON {
 		server.aofFilename = aofFile(REDIS_AOF_DEFAULT)
 		fd, err := os.OpenFile(server.aofFilename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
