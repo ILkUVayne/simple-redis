@@ -76,6 +76,8 @@ func loadAppendOnlyFile(name string) {
 			args = nil
 		}
 	}
+	aofUpdateCurrentSize()
+	server.aofRewriteBaseSize = server.aofCurrentSize
 	freeClient(fakeClient)
 }
 
@@ -87,10 +89,11 @@ func flushAppendOnlyFile() {
 	if len(server.aofBuf) == 0 {
 		return
 	}
-	_, err := io.WriteString(server.aofFd, server.aofBuf)
+	n, err := io.WriteString(server.aofFd, server.aofBuf)
 	if err != nil {
 		utils.Error("flushAppendOnlyFile err: ", err)
 	}
+	server.aofCurrentSize += int64(n)
 	server.aofBuf = ""
 }
 
@@ -135,4 +138,16 @@ func (cmd *SRedisCommand) feedAppendOnlyFile(args []*SRobj, argc int) {
 	if server.aofState == REDIS_AOF_ON {
 		server.aofBuf += buf
 	}
+}
+
+// ----------------------------------------------------------------------------
+// AOF rewrite
+// ----------------------------------------------------------------------------
+
+func aofUpdateCurrentSize() {
+	fInfo, err := server.aofFd.Stat()
+	if err != nil {
+		utils.Error("Unable to obtain the AOF file length. stat: ", err)
+	}
+	server.aofCurrentSize = fInfo.Size()
 }
