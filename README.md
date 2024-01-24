@@ -2,7 +2,7 @@
 
 Mainly for learning, for reference only
 
-![](http://g.recordit.co/7oRlt3NOYc.gif)
+![](https://github.com/ILkUVayne/simple-redis/blob/dev/demonstrate.gif)
 
 ## Building
 
