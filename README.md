@@ -2,8 +2,6 @@
 
 Mainly for learning, for reference only
 
-![](https://github.com/ILkUVayne/simple-redis/blob/dev/demonstrate.gif)
-
 ## Building
 
 - build
