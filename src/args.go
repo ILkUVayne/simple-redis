@@ -2,10 +2,6 @@ package src
 
 import "flag"
 
-const (
-	CONFIG = "./sredis.conf"
-)
-
 // ----------------------------- server args -------------------------
 type serverArgs struct {
 	confPath string

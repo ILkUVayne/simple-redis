@@ -2,6 +2,7 @@ package src
 
 import (
 	"fmt"
+	"golang.org/x/sys/unix"
 	"simple-redis/utils"
 	"strconv"
 )
@@ -93,6 +94,33 @@ func activeExpireCycle() {
 func serverCron(el *aeEventLoop, id int, clientData any) {
 	// check expire key
 	activeExpireCycle()
+	// flush aof_buf on disk
+	flushAppendOnlyFile()
+	// Check if a background saving or AOF rewrite in progress terminated.
+	if server.aofChildPid != -1 {
+		pid, _ := wait4(-1, unix.WNOHANG)
+		if pid != 0 {
+			if pid == server.aofChildPid {
+				backgroundRewriteDoneHandler()
+			}
+		}
+	} else {
+		// If there is not a background saving/rewrite in progress check if
+		// we have to save/rewrite now
+		if server.aofChildPid == -1 &&
+			server.aofRewritePerc > 0 &&
+			server.aofCurrentSize > server.aofRewriteMinSize {
+			base := int64(1)
+			if server.aofRewriteBaseSize > 0 {
+				base = server.aofRewriteBaseSize
+			}
+			growth := (server.aofCurrentSize*100)/base - 100
+			if growth > int64(server.aofRewritePerc) {
+				utils.InfoF("Starting automatic rewriting of AOF on %d% growth", growth)
+				rewriteAppendOnlyFileBackground()
+			}
+		}
+	}
 }
 
 // ================================ addReply =================================
@@ -104,11 +132,8 @@ func (c *SRedisClient) doReply() {
 
 // 将查询结果添加到c.reply中,并创建SendReplyToClient事件
 func (c *SRedisClient) addReply(data *SRobj) {
-	if data != nil {
-		c.reply.rPush(data)
-		data.incrRefCount()
-	}
-	if c.replyReady {
+	c.pushReply(data, "r")
+	if c.replyReady && c.fd > 0 {
 		server.el.addFileEvent(c.fd, AE_WRITEABLE, SendReplyToClient, c)
 	}
 }
@@ -167,9 +192,13 @@ func (c *SRedisClient) addReplyBulkInt(ll int64) {
 	c.addReplyBulk(createSRobj(SR_STR, strconv.FormatInt(ll, 10)))
 }
 
+func (c *SRedisClient) addReplyStatus(s string) {
+	c.addReplyStr(fmt.Sprintf("+%s\r\n", s))
+}
+
 func (c *SRedisClient) addDeferredMultiBulkLength() *node {
 	c.replyReady = false
-	c.reply.rPush(createSRobj(SR_STR, nil))
+	c.pushReply(createSRobj(SR_STR, nil), "r")
 	return c.reply.first()
 }
 

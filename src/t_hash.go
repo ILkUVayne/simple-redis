@@ -13,9 +13,10 @@ func hSetCommand(c *SRedisClient) {
 	update := hashTypeSet(o, c.args[2], c.args[3])
 	if update == DICT_SET {
 		c.addReply(shared.cone)
-		return
+	} else {
+		c.addReply(shared.czero)
 	}
-	c.addReply(shared.czero)
+	server.incrDirtyCount(c, 1)
 }
 
 func hGetCommand(c *SRedisClient) {

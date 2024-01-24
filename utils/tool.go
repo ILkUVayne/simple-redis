@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bytes"
+	"encoding/binary"
 	"errors"
 	"github.com/mattn/go-isatty"
 	"os"
@@ -17,23 +18,9 @@ const (
 	REDIS_ERR = 1
 )
 
-// StrToHost string type host to []byte host
-// e.g. "127.0.0.1" -> []byte{127,0,0,1}
-func StrToHost(host string) [4]byte {
-	hosts := strings.Split(host, ".")
-	if len(hosts) != 4 {
-		Error("str2host error: host is bad, host == ", host)
-	}
-	var h [4]byte
-	for idx, v := range hosts {
-		i, err := strconv.Atoi(v)
-		if err != nil {
-			Error("str2host error: host is bad: ", host)
-		}
-		h[idx] = uint8(i)
-	}
-	return h
-}
+//-----------------------------------------------------------------------------
+// sys function
+//-----------------------------------------------------------------------------
 
 // Home returns the home directory for the executing user.
 //
@@ -105,6 +92,28 @@ func Exit(code int) {
 	os.Exit(code)
 }
 
+//-----------------------------------------------------------------------------
+// transform function
+//-----------------------------------------------------------------------------
+
+// StrToHost string type host to []byte host
+// e.g. "127.0.0.1" -> []byte{127,0,0,1}
+func StrToHost(host string) [4]byte {
+	hosts := strings.Split(host, ".")
+	if len(hosts) != 4 {
+		Error("str2host error: host is bad, host == ", host)
+	}
+	var h [4]byte
+	for idx, v := range hosts {
+		i, err := strconv.Atoi(v)
+		if err != nil {
+			Error("str2host error: host is bad: ", host)
+		}
+		h[idx] = uint8(i)
+	}
+	return h
+}
+
 func String2Int64(s *string, intVal *int64) int {
 	i, err := strconv.ParseInt(*s, 10, 64)
 	if err != nil {
@@ -130,6 +139,29 @@ func String2Float64(s *string, intVal *float64) int {
 func uint8ToLower(n uint8) uint8 {
 	return []byte(strings.ToLower(string(n)))[0]
 }
+
+func Int2Bytes(i int) []byte {
+	buf := bytes.NewBuffer([]byte{})
+	err := binary.Write(buf, binary.BigEndian, int64(i))
+	if err != nil {
+		Error("Int2Bytes err: ", err)
+	}
+	return buf.Bytes()
+}
+
+func Bytes2Int64(buff []byte) int64 {
+	var i int64
+	buf := bytes.NewBuffer(buff)
+	err := binary.Read(buf, binary.BigEndian, &i)
+	if err != nil {
+		Error("Bytes2Int64 err: ", err)
+	}
+	return i
+}
+
+//-----------------------------------------------------------------------------
+// match function
+//-----------------------------------------------------------------------------
 
 func StringMatchLen(pattern, str string, patternLen, strLen int, noCase bool) bool {
 	pIdx, sIdx := 0, 0

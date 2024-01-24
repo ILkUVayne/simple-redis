@@ -5,10 +5,6 @@ import (
 	"fmt"
 )
 
-const (
-	NIL_STR = "(nil)"
-)
-
 type sRedisReply struct {
 	typ    int
 	buf    []byte
@@ -66,7 +62,7 @@ func getReply(c *sRedisContext, reply *sRedisReply) int {
 	if reply.typ == 0 {
 		typ := getRespType(reply.buf[0])
 		if typ == -1 {
-			c.err = errors.New("invalid resp type")
+			c.err = errors.New("invalid response from server, invalid resp type")
 			return CLI_ERR
 		}
 		reply.typ = typ
@@ -111,7 +107,9 @@ func sRedisGetReply(c *sRedisContext, reply *sRedisReply) int {
 		if (len(reply.buf) - reply.length) < SREDIS_MAX_BULK {
 			reply.buf = append(reply.buf, make([]byte, SREDIS_MAX_BULK)...)
 		}
-		getReply(c, reply)
+		if getReply(c, reply) == CLI_ERR {
+			return CLI_ERR
+		}
 	}
 	return CLI_OK
 }

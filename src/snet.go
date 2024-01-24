@@ -5,8 +5,6 @@ import (
 	"simple-redis/utils"
 )
 
-const BACKLOG int = 64
-
 func Accept(fd int) int {
 	nfd, _, err := unix.Accept(fd)
 	if err != nil {

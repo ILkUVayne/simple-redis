@@ -2,22 +2,9 @@ package src
 
 import (
 	"fmt"
+	"os"
 	"simple-redis/utils"
 )
-
-const (
-	DEFAULT_PORT       = 6379
-	DEFAULT_RH_NN_STEP = 10
-	REDIS_OK           = 0
-	REDIS_ERR          = 1
-
-	REDIS_HEAD = 0
-	REDIS_TAIL = 1
-)
-
-const SREDIS_MAX_BULK = 1024 * 4
-const SREDIS_MAX_INLINE = 1024 * 4
-const SREDIS_IO_BUF = 1024 * 16
 
 type sharedObjects struct {
 	crlf, ok, err, czero, cone, emptyMultiBulk, nullBulk, syntaxErr, typeErr, unknowErr, argsNumErr, wrongTypeErr *SRobj
@@ -40,6 +27,18 @@ func createSharedObjects() {
 	shared.wrongTypeErr = createSRobj(SR_STR, fmt.Sprintf(RESP_ERR, "Operation against a key holding the wrong kind of value"))
 }
 
+func aofFile(file string) string {
+	return getHome() + "/" + file
+}
+
+func loadDataFromDisk() {
+	start := utils.GetMsTime()
+	if server.aofState == REDIS_AOF_ON {
+		loadAppendOnlyFile(server.aofFilename)
+		utils.InfoF("DB loaded from append only file: %.3f seconds", float64(utils.GetMsTime()-start)/1000)
+	}
+}
+
 type SRedisServer struct {
 	port           int
 	fd             int
@@ -48,6 +47,25 @@ type SRedisServer struct {
 	el             *aeEventLoop
 	loadFactor     int64
 	rehashNullStep int64
+	// AOF persistence
+	aofFd               *os.File
+	aofChildPid         int
+	aofFilename         string
+	aofBuf              string
+	aofState            int
+	aofCurrentSize      int64
+	aofRewriteBaseSize  int64
+	aofRewriteBufBlocks string
+	aofRewritePerc      int
+	aofRewriteMinSize   int64
+	// RDB persistence
+	dirty int64
+}
+
+func (s *SRedisServer) incrDirtyCount(c *SRedisClient, num int64) {
+	if c.fd > 0 {
+		s.dirty += num
+	}
 }
 
 var server SRedisServer
@@ -61,6 +79,10 @@ func initServerConfig() {
 	server.rehashNullStep = DEFAULT_RH_NN_STEP
 	if config.RehashNullStep > 0 {
 		server.rehashNullStep = config.RehashNullStep
+	}
+	server.aofState = REDIS_AOF_OFF
+	if config.AppendOnly {
+		server.aofState = REDIS_AOF_ON
 	}
 }
 
@@ -78,6 +100,18 @@ func initServer() {
 	server.el.addFileEvent(server.fd, AE_READABLE, acceptTcpHandler, nil)
 	// add timeEvent
 	server.el.addTimeEvent(AE_NORMAL, 100, serverCron, nil)
+	// AOF fd
+	server.aofChildPid = -1
+	if server.aofState == REDIS_AOF_ON {
+		server.aofFilename = aofFile(REDIS_AOF_DEFAULT)
+		fd, err := os.OpenFile(server.aofFilename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+		if err != nil {
+			utils.Error("Can't open the append-only file: ", err)
+		}
+		server.aofFd = fd
+		server.aofRewritePerc = REDIS_AOF_REWRITE_PERC
+		server.aofRewriteMinSize = REDIS_AOF_REWRITE_MIN_SIZE
+	}
 }
 
 func ServerStart() {
@@ -87,7 +121,12 @@ func ServerStart() {
 	initServerConfig()
 	// init server
 	initServer()
+	utils.Info("* Server initialized")
+	// load data
+	loadDataFromDisk()
+
+	SetupSignalHandler(serverShutdown)
 	// aeMain
-	utils.Info("server starting ...")
+	utils.InfoF("* server started, The server is now ready to accept connections on port %d", server.port)
 	aeMain(server.el)
 }

@@ -10,11 +10,6 @@ import (
 // Sorted set commands API
 //-----------------------------------------------------------------------------
 
-const (
-	ZSKIPLIST_MAXLEVEL = 32
-	ZSKIPLIST_P        = 0.25
-)
-
 type zRangeSpec struct {
 	min, max     float64
 	minex, maxex int
@@ -246,4 +241,11 @@ func zslCreate() *zSkipList {
 	zsl.header.backward = nil
 	zsl.tail = nil
 	return zsl
+}
+
+func zSetLength(o *SRobj) uint {
+	if o.encoding == REDIS_ENCODING_SKIPLIST {
+		return o.Val.(*zSet).zSetLength()
+	}
+	panic("Unknown sorted set encoding")
 }

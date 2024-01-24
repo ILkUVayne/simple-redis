@@ -2,8 +2,6 @@ package src
 
 import "math/rand"
 
-const DEFAULT_INTSET_BUF = 4
-
 type intSet struct {
 	length   uint32
 	contents []int64

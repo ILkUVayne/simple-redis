@@ -7,13 +7,6 @@ import (
 	"strings"
 )
 
-const (
-	CLI_OK  = 0
-	CLI_ERR = 1
-
-	REDIS_CLI_HISTFILE_DEFAULT = ".srediscli_history"
-)
-
 var context *sRedisContext
 
 /*------------------------------------------------------------------------------
@@ -57,7 +50,7 @@ func cliRefreshPrompt() {
 
 func printPrompt() {
 	if context.err != nil {
-		fmt.Println(context.err.Error())
+		fmt.Printf("(error) ERR: " + context.err.Error())
 	}
 	reader := context.reader.(*sRedisReply)
 	if reader.fStr != "" {

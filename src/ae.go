@@ -5,28 +5,11 @@ import (
 	"simple-redis/utils"
 )
 
-const (
-	AE_OK  = 0
-	AE_ERR = -1
-)
-
 // FeType fileEvent type
 type FeType int
 
-const (
-	AE_READABLE FeType = iota + 1
-	AE_WRITEABLE
-)
-
 // TeType timeEvent type
 type TeType int
-
-// AE_NORMAL 周期执行的事件事件
-// AE_ONCE 只执行一次
-const (
-	AE_NORMAL TeType = iota
-	AE_ONCE
-)
 
 type aeFileProc func(el *aeEventLoop, fd int, clientData any)
 type aeTimeProc func(el *aeEventLoop, id int, clientData any)
@@ -108,7 +91,7 @@ func (el *aeEventLoop) addFileEvent(fd int, mask FeType, proc aeFileProc, client
 	fileEvent.mask = mask
 	fileEvent.clientData = clientData
 	el.fileEvent[feKey(fd, mask)] = fileEvent
-	utils.InfoF("simple-redis server: add fileEvent fd %d,mask %d: ", fd, mask)
+	//utils.InfoF("simple-redis server: add fileEvent fd %d,mask %d: ", fd, mask)
 }
 
 func (el *aeEventLoop) removeFileEvent(fd int, mask FeType) {
@@ -128,7 +111,7 @@ func (el *aeEventLoop) removeFileEvent(fd int, mask FeType) {
 	}
 	// ae ctl
 	el.fileEvent[feKey(fd, mask)] = nil
-	utils.InfoF("simple-redis server: remove fileEvent fd %d,mask %d: ", fd, mask)
+	//utils.InfoF("simple-redis server: remove fileEvent fd %d,mask %d: ", fd, mask)
 }
 
 func (el *aeEventLoop) addTimeEvent(mask TeType, interval int64, proc aeTimeProc, clientData any) int {

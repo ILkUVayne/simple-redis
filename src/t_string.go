@@ -29,4 +29,5 @@ func setCommand(c *SRedisClient) {
 	server.db.dictSet(key, val)
 	server.db.expireDel(key)
 	c.addReply(shared.ok)
+	server.incrDirtyCount(c, 1)
 }

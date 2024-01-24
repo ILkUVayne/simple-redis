@@ -37,3 +37,10 @@ func listTypePop(subject *SRobj, where int) *SRobj {
 	}
 	panic("Unknown list encoding")
 }
+
+func listTypeLength(subject *SRobj) int {
+	if subject.encoding == REDIS_ENCODING_LINKEDLIST {
+		return subject.Val.(*list).len()
+	}
+	panic("Unknown list encoding")
+}

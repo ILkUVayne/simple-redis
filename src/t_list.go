@@ -5,6 +5,7 @@ package src
 //-----------------------------------------------------------------------------
 
 func pushGenericCommand(c *SRedisClient, where int) {
+	var pushed int64
 	lObj := c.db.lookupKeyWrite(c.args[1])
 
 	if lObj != nil && lObj.Typ != SR_LIST {
@@ -19,8 +20,10 @@ func pushGenericCommand(c *SRedisClient, where int) {
 			c.db.dictSet(c.args[1], lObj)
 		}
 		listTypePush(lObj, c.args[i], where)
+		pushed++
 	}
 	c.addReplyLongLong(lObj.Val.(*list).len())
+	server.incrDirtyCount(c, pushed)
 }
 
 func lPushCommand(c *SRedisClient) {
@@ -47,6 +50,7 @@ func popGenericCommand(c *SRedisClient, where int) {
 	if lObj.Val.(*list).len() == 0 {
 		c.db.dbDel(c.args[1])
 	}
+	server.incrDirtyCount(c, 1)
 }
 
 func lPopCommand(c *SRedisClient) {

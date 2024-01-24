@@ -5,12 +5,6 @@ import (
 	"strings"
 )
 
-const (
-	CMD_UNKNOWN CmdType = iota
-	CMD_INLINE
-	CMD_BULK
-)
-
 type CmdType = byte
 
 type CommandProc func(c *SRedisClient)
@@ -19,6 +13,12 @@ type SRedisCommand struct {
 	name  string
 	proc  CommandProc
 	arity int
+}
+
+func (cmd *SRedisCommand) propagate(args []*SRobj) {
+	if server.aofState == REDIS_AOF_ON {
+		cmd.feedAppendOnlyFile(args, len(args))
+	}
 }
 
 // 查询需要执行的命令
@@ -34,55 +34,70 @@ func lookupCommand(cmdStr string) *SRedisCommand {
 // 执行命令
 func processCommand(c *SRedisClient) {
 	cmdStr := c.args[0].strVal()
-	utils.Info("process command: ", cmdStr)
+	if c.fd > 0 {
+		utils.Info("process command: ", cmdStr)
+	}
+
 	// Case-insensitive
 	cmdStr = strings.ToLower(cmdStr)
 	if cmdStr == "quit" {
 		freeClient(c)
 		return
 	}
-	cmd := lookupCommand(cmdStr)
-	if cmd == nil {
+	c.cmd = lookupCommand(cmdStr)
+	if c.cmd == nil {
 		c.addReply(shared.unknowErr)
 		resetClient(c)
 		return
 	}
-	if (cmd.arity > 0 && cmd.arity != len(c.args)) || -cmd.arity > len(c.args) {
+	if (c.cmd.arity > 0 && c.cmd.arity != len(c.args)) || -c.cmd.arity > len(c.args) {
 		c.addReply(shared.argsNumErr)
 		resetClient(c)
 		return
 	}
-	cmd.proc(c)
+	call(c)
 	resetClient(c)
+}
+
+// call is the core of Redis execution of a command
+func call(c *SRedisClient) {
+	dirty := server.dirty
+	c.cmd.proc(c)
+	// aof
+	dirty = server.dirty - dirty
+	if dirty > 0 {
+		c.cmd.propagate(c.args)
+	}
 }
 
 // =================================== command ====================================
 
 // commandTable 命令列表
 var commandTable = []SRedisCommand{
-	{"expire", expireCommand, 3},
-	{"object", objectCommand, 3},
-	{"del", delCommand, -2},
-	{"keys", keysCommand, 2},
+	{EXPIRE, expireCommand, 3},
+	{OBJECT, objectCommand, 3},
+	{DEL, delCommand, -2},
+	{KEYS, keysCommand, 2},
+	{BGREWRITEAOF, bgRewriteAofCommand, 1},
 	// string
-	{"get", getCommand, 2},
-	{"set", setCommand, 3},
+	{GET, getCommand, 2},
+	{SET, setCommand, 3},
 	// zset
-	{"zadd", zAddCommand, -4},
-	{"zrange", zRangeCommand, -4},
+	{Z_ADD, zAddCommand, -4},
+	{Z_RANGE, zRangeCommand, -4},
 	// set
-	{"sadd", sAddCommand, -3},
-	{"smembers", sinterCommand, 2},
-	{"sinter", sinterCommand, -2},
-	{"sinterstore", sinterStoreCommand, -2},
+	{S_ADD, sAddCommand, -3},
+	{SMEMBERS, sinterCommand, 2},
+	{SINTER, sinterCommand, -2},
+	{SINTER_STORE, sinterStoreCommand, -2},
 	// list
-	{"rpush", rPushCommand, -3},
-	{"lpush", lPushCommand, -3},
-	{"rpop", rPopCommand, 2},
-	{"lpop", lPopCommand, 2},
+	{R_PUSH, rPushCommand, -3},
+	{L_PUSH, lPushCommand, -3},
+	{R_POP, rPopCommand, 2},
+	{L_POP, lPopCommand, 2},
 	// hash
-	{"hset", hSetCommand, 4},
-	{"hget", hGetCommand, 3},
+	{H_SET, hSetCommand, 4},
+	{H_GET, hGetCommand, 3},
 	// more
 }
 
@@ -97,12 +112,27 @@ func expireCommand(c *SRedisClient) {
 		c.addReply(shared.typeErr)
 		return
 	}
-	eval, _ := val.intVal()
-	expire := utils.GetMsTime() + (eval * 1000)
+
+	eval, res := val.intVal()
+	if res == REDIS_ERR {
+		c.addReply(shared.syntaxErr)
+		return
+	}
+
+	if c.db.lookupKeyReadOrReply(c, key, nil) == nil {
+		return
+	}
+
+	expire := eval
+	if eval < MAX_EXPIRE {
+		expire = utils.GetMsTime() + (eval * 1000)
+	}
+
 	expireObj := createFromInt(expire)
 	server.db.expire.dictSet(key, expireObj)
 	expireObj.decrRefCount()
 	c.addReply(shared.ok)
+	server.incrDirtyCount(c, 1)
 }
 
 func objectCommand(c *SRedisClient) {
@@ -111,9 +141,8 @@ func objectCommand(c *SRedisClient) {
 		c.addReply(shared.typeErr)
 		return
 	}
-	value := server.db.data.dictGet(val)
+	value := c.db.lookupKeyReadOrReply(c, val, nil)
 	if value == nil {
-		c.addReply(shared.nullBulk)
 		return
 	}
 	c.addReplyBulk(value.getEncoding())

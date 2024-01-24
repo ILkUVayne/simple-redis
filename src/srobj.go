@@ -6,17 +6,6 @@ import (
 	"strings"
 )
 
-const (
-	REDIS_ENCODING_RAW        uint8 = iota // Raw representation
-	REDIS_ENCODING_INT                     // Encoded as integer
-	REDIS_ENCODING_HT                      // Encoded as hash table
-	REDIS_ENCODING_ZIPMAP                  // Encoded as zipmap
-	REDIS_ENCODING_LINKEDLIST              // Encoded as regular linked list
-	REDIS_ENCODING_ZIPLIST                 // Encoded as ziplist
-	REDIS_ENCODING_INTSET                  // Encoded as intset
-	REDIS_ENCODING_SKIPLIST                // Encoded as skiplist
-)
-
 var encodingMaps = map[uint8]string{
 	REDIS_ENCODING_RAW:        "raw",
 	REDIS_ENCODING_INT:        "int",
@@ -29,19 +18,6 @@ var encodingMaps = map[uint8]string{
 }
 
 type SRType uint8
-
-// SR_STR 字符串类型
-// SR_LIST 列表类型
-// SR_SET 集合类型
-// SR_ZSET 有序集合类型
-// SR_DICT 字典类型
-const (
-	SR_STR SRType = iota
-	SR_LIST
-	SR_SET
-	SR_ZSET
-	SR_DICT
-)
 
 type SRVal any
 
@@ -143,6 +119,22 @@ func (s *SRobj) tryObjectEncoding() {
 	}
 	s.encoding = REDIS_ENCODING_INT
 	s.Val = i
+}
+
+func (s *SRobj) getDecodedObject() *SRobj {
+	if s.encoding == REDIS_ENCODING_RAW {
+		s.incrRefCount()
+		return s
+	}
+	if s.Typ == SR_STR && s.encoding == REDIS_ENCODING_INT {
+		var intVal int64
+		str := s.strVal()
+		if utils.String2Int64(&str, &intVal) == REDIS_ERR {
+			utils.Error("getDecodedObject err")
+		}
+		return createFromInt(intVal)
+	}
+	panic("Unknown encoding type")
 }
 
 func (s *SRobj) getLongLongFromObject(target *int64) int {
