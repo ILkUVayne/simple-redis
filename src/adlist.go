@@ -5,6 +5,23 @@ type Pusher interface {
 	lPush(data *SRobj)
 }
 
+type listIter struct {
+	next      *node
+	direction int
+}
+
+func (li *listIter) listNext() *node {
+	curr := li.next
+	if curr != nil {
+		if li.direction == AL_START_HEAD {
+			li.next = curr.next
+		} else {
+			li.next = curr.prev
+		}
+	}
+	return curr
+}
+
 type listType struct {
 	keyCompare func(key1, key2 *SRobj) bool
 }
@@ -15,6 +32,18 @@ type node struct {
 	data *SRobj
 	prev *node
 	next *node
+}
+
+func (n *node) nodeValue() *SRobj {
+	return n.data
+}
+
+func (n *node) nodeNext() *node {
+	return n.next
+}
+
+func (n *node) nodePrev() *node {
+	return n.prev
 }
 
 type list struct {
@@ -28,12 +57,6 @@ var _ Pusher = (*list)(nil)
 
 func (l *list) len() int {
 	return l.length
-}
-
-func listCreate(lType *listType) *list {
-	l := new(list)
-	l.lType = lType
-	return l
 }
 
 func (l *list) first() *node {
@@ -128,4 +151,24 @@ func (l *list) delNode(n *node) {
 
 func (l *list) del(data *SRobj) {
 	l.delNode(l.find(data))
+}
+
+func (l *list) listRewind() *listIter {
+	li := new(listIter)
+	li.next = l.head
+	li.direction = AL_START_HEAD
+	return li
+}
+
+func (l *list) listRewindTail() *listIter {
+	li := new(listIter)
+	li.next = l.tail
+	li.direction = AL_START_TAIL
+	return li
+}
+
+func listCreate(lType *listType) *list {
+	l := new(list)
+	l.lType = lType
+	return l
 }

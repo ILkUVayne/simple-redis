@@ -3,9 +3,7 @@ package src
 import (
 	"fmt"
 	"os"
-	"os/signal"
 	"simple-redis/utils"
-	"syscall"
 )
 
 type sharedObjects struct {
@@ -41,30 +39,6 @@ func loadDataFromDisk() {
 	}
 }
 
-func SetupSignalHandler(shutdownFunc func(os.Signal)) {
-	closeSignalChan := make(chan os.Signal, 1)
-	signal.Notify(closeSignalChan,
-		os.Kill,
-		syscall.SIGHUP,
-		syscall.SIGINT,
-		syscall.SIGTERM,
-		syscall.SIGQUIT,
-		syscall.SIGUSR1,
-		syscall.SIGUSR2,
-	)
-	go func() {
-		sig := <-closeSignalChan
-		shutdownFunc(sig)
-	}()
-}
-
-func shutdown(sig os.Signal) {
-	utils.InfoF("signal-handler Received %s scheduling shutdown...", sig.String())
-	// todo do something before exit
-	utils.Info("Simple-Redis is now ready to exit, bye bye...")
-	os.Exit(0)
-}
-
 type SRedisServer struct {
 	port           int
 	fd             int
@@ -74,13 +48,16 @@ type SRedisServer struct {
 	loadFactor     int64
 	rehashNullStep int64
 	// AOF persistence
-	aofFd              *os.File
-	aofChildPid        int
-	aofFilename        string
-	aofBuf             string
-	aofState           int
-	aofCurrentSize     int64
-	aofRewriteBaseSize int64
+	aofFd               *os.File
+	aofChildPid         int
+	aofFilename         string
+	aofBuf              string
+	aofState            int
+	aofCurrentSize      int64
+	aofRewriteBaseSize  int64
+	aofRewriteBufBlocks string
+	aofRewritePerc      int
+	aofRewriteMinSize   int64
 	// RDB persistence
 	dirty int64
 }
@@ -132,6 +109,8 @@ func initServer() {
 			utils.Error("Can't open the append-only file: ", err)
 		}
 		server.aofFd = fd
+		server.aofRewritePerc = REDIS_AOF_REWRITE_PERC
+		server.aofRewriteMinSize = REDIS_AOF_REWRITE_MIN_SIZE
 	}
 }
 
@@ -146,7 +125,7 @@ func ServerStart() {
 	// load data
 	loadDataFromDisk()
 
-	SetupSignalHandler(shutdown)
+	SetupSignalHandler(serverShutdown)
 	// aeMain
 	utils.InfoF("* server started, The server is now ready to accept connections on port %d", server.port)
 	aeMain(server.el)

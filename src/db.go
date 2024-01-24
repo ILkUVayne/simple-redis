@@ -40,6 +40,16 @@ func (db *SRedisDB) expireGet(key *SRobj) *SRobj {
 	return db.expire.dictGet(key)
 }
 
+// Return the expire time of the specified key, or -1 if no expire is associated with this key
+func (db *SRedisDB) expireTime(key *SRobj) int64 {
+	expire := db.expireGet(key)
+	if expire == nil {
+		return -1
+	}
+	t, _ := expire.intVal()
+	return t
+}
+
 func (db *SRedisDB) dictSet(key *SRobj, val *SRobj) {
 	server.db.data.dictSet(key, val)
 }
@@ -76,7 +86,11 @@ func (db *SRedisDB) lookupKeyRead(key *SRobj) *SRobj {
 func (db *SRedisDB) lookupKeyReadOrReply(c *SRedisClient, key *SRobj, reply *SRobj) *SRobj {
 	o := db.lookupKeyRead(key)
 	if o == nil {
-		c.addReply(shared.nullBulk)
+		if reply != nil {
+			c.addReply(reply)
+		} else {
+			c.addReply(shared.nullBulk)
+		}
 	}
 	return o
 }

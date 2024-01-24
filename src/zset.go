@@ -242,3 +242,10 @@ func zslCreate() *zSkipList {
 	zsl.tail = nil
 	return zsl
 }
+
+func zSetLength(o *SRobj) uint {
+	if o.encoding == REDIS_ENCODING_SKIPLIST {
+		return o.Val.(*zSet).zSetLength()
+	}
+	panic("Unknown sorted set encoding")
+}

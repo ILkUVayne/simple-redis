@@ -67,3 +67,10 @@ func addHashFieldToReply(c *SRedisClient, o, field *SRobj) {
 
 	panic("Unknown hash encoding")
 }
+
+func hashTypeLength(o *SRobj) int64 {
+	if o.encoding == REDIS_ENCODING_HT {
+		return o.Val.(*dict).dictSize()
+	}
+	panic("Unknown hash encoding")
+}

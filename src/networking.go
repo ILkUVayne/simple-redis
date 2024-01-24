@@ -2,6 +2,7 @@ package src
 
 import (
 	"fmt"
+	"golang.org/x/sys/unix"
 	"simple-redis/utils"
 	"strconv"
 )
@@ -95,6 +96,31 @@ func serverCron(el *aeEventLoop, id int, clientData any) {
 	activeExpireCycle()
 	// flush aof_buf on disk
 	flushAppendOnlyFile()
+	// Check if a background saving or AOF rewrite in progress terminated.
+	if server.aofChildPid != -1 {
+		pid, _ := wait4(-1, unix.WNOHANG)
+		if pid != 0 {
+			if pid == server.aofChildPid {
+				backgroundRewriteDoneHandler()
+			}
+		}
+	} else {
+		// If there is not a background saving/rewrite in progress check if
+		// we have to save/rewrite now
+		if server.aofChildPid == -1 &&
+			server.aofRewritePerc > 0 &&
+			server.aofCurrentSize > server.aofRewriteMinSize {
+			base := int64(1)
+			if server.aofRewriteBaseSize > 0 {
+				base = server.aofRewriteBaseSize
+			}
+			growth := (server.aofCurrentSize*100)/base - 100
+			if growth > int64(server.aofRewritePerc) {
+				utils.InfoF("Starting automatic rewriting of AOF on %d% growth", growth)
+				rewriteAppendOnlyFileBackground()
+			}
+		}
+	}
 }
 
 // ================================ addReply =================================
