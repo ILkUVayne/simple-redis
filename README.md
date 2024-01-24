@@ -2,7 +2,7 @@
 
 Mainly for learning, for reference only
 
-![](https://recordit.co/7oRlt3NOYc)
+![](http://g.recordit.co/7oRlt3NOYc.gif)
 
 ## Building
 
