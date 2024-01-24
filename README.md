@@ -2,6 +2,10 @@
 
 Mainly for learning, for reference only
 
+<video id="video" controls="" preload="none">
+<source id="mp4" src="demonstrate.mp4" type="video/mp4">
+</video>
+
 ## Building
 
 - build
