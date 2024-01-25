@@ -186,14 +186,14 @@ const (
 	DICT_SET = 0
 	DICT_REP = 1
 
-	EXPIRE_CHECK_COUNT   int   = 100
-	DICK_OK                    = 0
-	DICK_ERR                   = 1
-	DEFAULT_REHASH_STEP        = 1
-	DICT_HT_INITIAL_SIZE int64 = 4
-	EXPEND_RATIO         int64 = 2
-	LOAD_FACTOR                = 1
-	//BG_PERSISTENCE_LOAD_FACTOR       = 5
+	EXPIRE_CHECK_COUNT         int   = 100
+	DICK_OK                          = 0
+	DICK_ERR                         = 1
+	DEFAULT_REHASH_STEP              = 1
+	DICT_HT_INITIAL_SIZE       int64 = 4
+	EXPEND_RATIO               int64 = 2
+	LOAD_FACTOR                      = 1
+	BG_PERSISTENCE_LOAD_FACTOR       = 5
 )
 
 //-----------------------------------------------------------------------------

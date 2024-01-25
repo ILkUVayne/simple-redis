@@ -71,6 +71,15 @@ OK
 (empty array)
 ~~~
 
+- BGREWRITEAOF
+
+**BGREWRITEAOF**
+
+~~~bash
+127.0.0.2:6379> BGREWRITEAOF
+Background append only file rewriting started
+~~~
+
 ## string
 
 - set

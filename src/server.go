@@ -68,6 +68,24 @@ func (s *SRedisServer) incrDirtyCount(c *SRedisClient, num int64) {
 	}
 }
 
+func (s *SRedisServer) changeLoadFactor(lf int) {
+	if s.loadFactor == int64(lf) {
+		return
+	}
+	if lf == LOAD_FACTOR {
+		if s.aofChildPid == -1 {
+			s.loadFactor = int64(lf)
+			return
+		}
+	}
+	if lf == BG_PERSISTENCE_LOAD_FACTOR {
+		if s.aofChildPid != -1 {
+			s.loadFactor = int64(lf)
+			return
+		}
+	}
+}
+
 var server SRedisServer
 
 func initServerConfig() {

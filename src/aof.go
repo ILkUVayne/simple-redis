@@ -18,8 +18,22 @@ func aofRewriteBufferWrite(f *os.File) int {
 		utils.ErrorP("aofRewriteBufferWrite err: ", err)
 		return -1
 	}
-	server.aofRewriteBufBlocks = ""
+	server.aofRewriteBufferReset()
 	return n
+}
+
+func (s *SRedisServer) aofBufReset() {
+	if len(s.aofBuf) == 0 {
+		return
+	}
+	s.aofBuf = ""
+}
+
+func (s *SRedisServer) aofRewriteBufferReset() {
+	if len(s.aofRewriteBufBlocks) == 0 {
+		return
+	}
+	s.aofRewriteBufBlocks = ""
 }
 
 //-----------------------------------------------------------------------------
@@ -108,7 +122,7 @@ func flushAppendOnlyFile() {
 		utils.Error("flushAppendOnlyFile err: ", err)
 	}
 	server.aofCurrentSize += int64(n)
-	server.aofBuf = ""
+	server.aofBufReset()
 }
 
 func catAppendOnlyGenericCommand(argc int, args []*SRobj) string {
@@ -408,6 +422,7 @@ func rewriteAppendOnlyFileBackground() int {
 	} else {
 		utils.Info("Background append only file rewriting started by pid %d", childPid)
 		server.aofChildPid = childPid
+		server.changeLoadFactor(BG_PERSISTENCE_LOAD_FACTOR)
 		return REDIS_OK
 	}
 	return REDIS_OK
@@ -435,12 +450,16 @@ func backgroundRewriteDoneHandler() {
 	} else {
 		server.aofFd = newFd
 		aofUpdateCurrentSize()
+		server.aofRewriteBaseSize = server.aofCurrentSize
+		server.aofBufReset()
 	}
+	utils.Info("Background AOF rewrite finished successfully")
 
 cleanup:
-	server.aofRewriteBufBlocks = ""
+	server.aofRewriteBufferReset()
 	_ = os.Remove(tmpFile)
 	server.aofChildPid = -1
+	server.changeLoadFactor(LOAD_FACTOR)
 }
 
 // aof rewrite command
