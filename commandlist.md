@@ -1,5 +1,7 @@
 # command list
 
+> command Case-insensitive, but key and values Case-sensitive
+
 ## db
 
 - expire
