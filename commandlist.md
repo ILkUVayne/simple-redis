@@ -1,5 +1,7 @@
 # command list
 
+> command Case-insensitive, but key and values Case-sensitive
+
 ## db
 
 - expire
@@ -69,6 +71,15 @@ OK
 1) "name"
 127.0.0.1:6379> keys nv?e
 (empty array)
+~~~
+
+- BGREWRITEAOF
+
+**BGREWRITEAOF**
+
+~~~bash
+127.0.0.2:6379> BGREWRITEAOF
+Background append only file rewriting started
 ~~~
 
 ## string
