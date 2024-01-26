@@ -4,7 +4,7 @@
 
 ## db
 
-- expire
+### expire
 
 **expire key value**
 
@@ -13,7 +13,7 @@
 OK
 ~~~
 
-- object encoding
+### object encoding
 
 **object encoding key**
 
@@ -24,7 +24,7 @@ OK
 "raw"
 ~~~
 
-- del
+### del
 
 **del key [key ...]**
 
@@ -45,7 +45,7 @@ OK
 (integer) 3
 ~~~
 
-- keys
+### keys
 
 **keys pattern**
 
@@ -73,7 +73,7 @@ OK
 (empty array)
 ~~~
 
-- BGREWRITEAOF
+### BGREWRITEAOF
 
 **BGREWRITEAOF**
 
@@ -84,7 +84,7 @@ Background append only file rewriting started
 
 ## string
 
-- set
+### set
 
 **set key value**
 
@@ -93,7 +93,7 @@ Background append only file rewriting started
 OK
 ~~~
 
-- get 
+### get 
 
 **get key**
 
@@ -104,7 +104,7 @@ OK
 
 ## list
 
-- lpush
+### lpush
 
 **lpush key value [value ...]**
 
@@ -115,7 +115,7 @@ OK
 "linkedlist"
 ~~~
 
-- rpush
+### rpush
 
 **rpush key value [value ...]**
 
@@ -126,7 +126,7 @@ OK
 "linkedlist"
 ~~~
 
-- lpop
+### lpop
 
 **lpop key**
 
@@ -137,7 +137,7 @@ OK
 "baidu.com"
 ~~~
 
-- rpop
+### rpop
 
 **rpop key**
 
@@ -150,7 +150,7 @@ OK
 
 ## hash
 
-- hset
+### hset
 
 **hset key field value**
 
@@ -163,7 +163,7 @@ OK
 "hashtable"
 ~~~
 
-- hget
+### hget
 
 **hget key field**
 
@@ -176,7 +176,7 @@ OK
 
 ## set
 
-- sadd
+### sadd
 
 **add key member [member ...]**
 
@@ -197,7 +197,7 @@ OK
 "hashtable"
 ~~~
 
-- smembers
+### smembers
 
 **smembers key**
 
@@ -214,7 +214,7 @@ OK
 3) "php"
 ~~~
 
-- sinter
+### sinter
 
 **sinter key [key ...]**
 
@@ -225,7 +225,7 @@ OK
 (empty array)
 ~~~
 
-- sinterstore
+### sinterstore
 
 **sinterstore key [key ...]**
 
@@ -239,7 +239,7 @@ OK
 
 ## zset
 
-- zadd
+### zadd
 
 **zadd key score member [score member ...]**
 
@@ -248,7 +248,7 @@ OK
 (integer) 4
 ~~~
 
-- zrange
+### zrange
 
 **zrange key min max [withscores]**
 

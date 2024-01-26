@@ -325,11 +325,9 @@ func rewriteDictObject(f *os.File, key, val *SRobj) {
 	if val.encoding == REDIS_ENCODING_HT {
 		di := val.Val.(*dict).dictGetIterator()
 		for de := di.dictNext(); de != nil; de = di.dictNext() {
-			eleKey := de.getKey()
-			eleVal := de.getVal()
 			cmd := fmt.Sprintf(RESP_HASH_HSET, 4)
 			// add key hashKey hashVal
-			rewriteObject(f, &cmd, key, eleKey, eleVal)
+			rewriteObject(f, &cmd, key, de.getKey(), de.getVal())
 		}
 		di.dictReleaseIterator()
 		return
