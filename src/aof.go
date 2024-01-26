@@ -195,22 +195,45 @@ func rewriteBulkObject(f *os.File, val *SRobj) {
 	rewrite(f, &cmd)
 }
 
+func rewriteObject(f *os.File, cmd *string, val ...*SRobj) {
+	if cmd != nil {
+		rewrite(f, cmd)
+	}
+
+	if len(val) == 0 {
+		return
+	}
+	for _, v := range val {
+		rewriteBulkObject(f, v)
+	}
+}
+
+func getItems(items int) int {
+	cmdItems := items
+	if items > REDIS_AOF_REWRITE_ITEMS_PER_CMD {
+		cmdItems = REDIS_AOF_REWRITE_ITEMS_PER_CMD
+	}
+	return cmdItems
+}
+
+func checkItems(count, items *int) {
+	*count++
+	if *count == REDIS_AOF_REWRITE_ITEMS_PER_CMD {
+		*count = 0
+	}
+	*items--
+}
+
 func rewriteStringObject(f *os.File, key, val *SRobj) {
-	cmd := "*3\r\n$3\r\nSET\r\n"
-	rewrite(f, &cmd)
-	// add key
-	rewriteBulkObject(f, key)
-	// add val
-	rewriteBulkObject(f, val)
+	cmd := RESP_STR
+	// set key value
+	rewriteObject(f, &cmd, key, val)
 }
 
 func rewriteExpireObject(f *os.File, key, val *SRobj) {
-	cmd := "*3\r\n$6\r\nEXPIRE\r\n"
-	rewrite(f, &cmd)
-	// add key
-	rewriteBulkObject(f, key)
-	// add val
-	rewriteBulkObject(f, val)
+	cmd := RESP_EXPIRE
+	// expire key expireTime
+	rewriteObject(f, &cmd, key, val)
 }
 
 func rewriteListObject(f *os.File, key, val *SRobj) {
@@ -222,22 +245,13 @@ func rewriteListObject(f *os.File, key, val *SRobj) {
 		for ln := li.listNext(); ln != nil; ln = li.listNext() {
 			eleObj := ln.nodeValue()
 			if count == 0 {
-				cmdItems := items
-				if items > REDIS_AOF_REWRITE_ITEMS_PER_CMD {
-					cmdItems = REDIS_AOF_REWRITE_ITEMS_PER_CMD
-				}
-				cmd := fmt.Sprintf("*%d\r\n$5\r\nRPUSH\r\n", 2+cmdItems)
-				rewrite(f, &cmd)
+				cmd := fmt.Sprintf(RESP_LIST_RPUSH, 2+getItems(items))
 				// add key
-				rewriteBulkObject(f, key)
+				rewriteObject(f, &cmd, key)
 			}
 			// add val
-			rewriteBulkObject(f, eleObj)
-			count++
-			if count == REDIS_AOF_REWRITE_ITEMS_PER_CMD {
-				count = 0
-			}
-			items--
+			rewriteObject(f, nil, eleObj)
+			checkItems(&count, &items)
 		}
 		return
 	}
@@ -245,28 +259,19 @@ func rewriteListObject(f *os.File, key, val *SRobj) {
 }
 
 func rewriteSetObject(f *os.File, key, val *SRobj) {
-	count, items := 0, setTypeSize(val)
+	count, items := 0, int(setTypeSize(val))
 
 	if val.encoding == REDIS_ENCODING_INTSET {
 		var intVal int64
 		for ii := 0; val.Val.(*intSet).intSetGet(uint32(ii), &intVal); ii++ {
 			if count == 0 {
-				cmdItems := int(items)
-				if items > REDIS_AOF_REWRITE_ITEMS_PER_CMD {
-					cmdItems = REDIS_AOF_REWRITE_ITEMS_PER_CMD
-				}
-				cmd := fmt.Sprintf("*%d\r\n$4\r\nSADD\r\n", 2+cmdItems)
-				rewrite(f, &cmd)
+				cmd := fmt.Sprintf(RESP_SET, 2+getItems(items))
 				// add key
-				rewriteBulkObject(f, key)
+				rewriteObject(f, &cmd, key)
 			}
 			// add val
-			rewriteBulkObject(f, createFromInt(intVal))
-			count++
-			if count == REDIS_AOF_REWRITE_ITEMS_PER_CMD {
-				count = 0
-			}
-			items--
+			rewriteObject(f, nil, createFromInt(intVal))
+			checkItems(&count, &items)
 		}
 		return
 	}
@@ -275,22 +280,13 @@ func rewriteSetObject(f *os.File, key, val *SRobj) {
 		for de := di.dictNext(); de != nil; de = di.dictNext() {
 			eleObj := de.getKey()
 			if count == 0 {
-				cmdItems := int(items)
-				if items > REDIS_AOF_REWRITE_ITEMS_PER_CMD {
-					cmdItems = REDIS_AOF_REWRITE_ITEMS_PER_CMD
-				}
-				cmd := fmt.Sprintf("*%d\r\n$4\r\nSADD\r\n", 2+cmdItems)
-				rewrite(f, &cmd)
+				cmd := fmt.Sprintf(RESP_SET, 2+getItems(items))
 				// add key
-				rewriteBulkObject(f, key)
+				rewriteObject(f, &cmd, key)
 			}
 			// add val
-			rewriteBulkObject(f, eleObj)
-			count++
-			if count == REDIS_AOF_REWRITE_ITEMS_PER_CMD {
-				count = 0
-			}
-			items--
+			rewriteObject(f, nil, eleObj)
+			checkItems(&count, &items)
 		}
 		di.dictReleaseIterator()
 		return
@@ -299,7 +295,7 @@ func rewriteSetObject(f *os.File, key, val *SRobj) {
 }
 
 func rewriteZSetObject(f *os.File, key, val *SRobj) {
-	count, items := 0, zSetLength(val)
+	count, items := 0, int(zSetLength(val))
 
 	if val.encoding == REDIS_ENCODING_SKIPLIST {
 		zs := val.Val.(*zSet)
@@ -309,24 +305,15 @@ func rewriteZSetObject(f *os.File, key, val *SRobj) {
 			score := de.getVal()
 
 			if count == 0 {
-				cmdItems := int(items)
-				if items > REDIS_AOF_REWRITE_ITEMS_PER_CMD {
-					cmdItems = REDIS_AOF_REWRITE_ITEMS_PER_CMD
-				}
-				cmd := fmt.Sprintf("*%d\r\n$4\r\nZADD\r\n", 2+cmdItems*2)
-				rewrite(f, &cmd)
+				cmd := fmt.Sprintf(RESP_ZSET, 2+getItems(items)*2)
 				// add key
-				rewriteBulkObject(f, key)
+				rewriteObject(f, &cmd, key)
 			}
 			sf, _ := score.floatVal()
 			str := strconv.FormatFloat(sf, 'f', 2, 64)
-			rewriteBulkObject(f, createSRobj(SR_STR, str))
-			rewriteBulkObject(f, eleObj)
-			count++
-			if count == REDIS_AOF_REWRITE_ITEMS_PER_CMD {
-				count = 0
-			}
-			items--
+			// add zSetScore and zSetVal
+			rewriteObject(f, nil, createSRobj(SR_STR, str), eleObj)
+			checkItems(&count, &items)
 		}
 		di.dictReleaseIterator()
 		return
@@ -340,14 +327,9 @@ func rewriteDictObject(f *os.File, key, val *SRobj) {
 		for de := di.dictNext(); de != nil; de = di.dictNext() {
 			eleKey := de.getKey()
 			eleVal := de.getVal()
-			cmd := fmt.Sprintf("*%d\r\n$4\r\nHSET\r\n", 4)
-			rewrite(f, &cmd)
-			// add key
-			rewriteBulkObject(f, key)
-			// add hash key
-			rewriteBulkObject(f, eleKey)
-			// add hash val
-			rewriteBulkObject(f, eleVal)
+			cmd := fmt.Sprintf(RESP_HASH_HSET, 4)
+			// add key hashKey hashVal
+			rewriteObject(f, &cmd, key, eleKey, eleVal)
 		}
 		di.dictReleaseIterator()
 		return
