@@ -48,8 +48,14 @@ const (
 	RESP_OK  = "+OK\r\n"
 	RESP_ERR = "-ERR: %s\r\n"
 
-	RESP_BULK  = "$%d\r\n%v\r\n"
-	RESP_ARRAY = "*%d\r\n"
+	RESP_BULK       = "$%d\r\n%v\r\n"
+	RESP_ARRAY      = "*%d\r\n"
+	RESP_STR        = "*3\r\n$3\r\nSET\r\n"
+	RESP_EXPIRE     = "*3\r\n$6\r\nEXPIRE\r\n"
+	RESP_LIST_RPUSH = "*%d\r\n$5\r\nRPUSH\r\n"
+	RESP_SET        = "*%d\r\n$4\r\nSADD\r\n"
+	RESP_ZSET       = "*%d\r\n$4\r\nZADD\r\n"
+	RESP_HASH_HSET  = "*%d\r\n$4\r\nHSET\r\n"
 )
 
 const (
