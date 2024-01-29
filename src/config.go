@@ -16,7 +16,7 @@ type saveParam struct {
 	changes int
 }
 
-// rdb save conf
+// rdb append save conf
 func appendServerSaveParams(val string) {
 	firstIdx := strings.IndexAny(val, " ")
 	if val == "\"\"" {
@@ -79,7 +79,6 @@ func SetupConf(confName string) {
 		}
 	}(f)
 
-	//config = parse(f)
 	parse(f)
 }
 
@@ -95,7 +94,6 @@ func complexConfHandle(key, val string) bool {
 }
 
 func parse(f *os.File) {
-	//conf := &configVal{}
 	newConfig()
 	scanner := bufio.NewScanner(f)
 	rawMap := make(map[string]string)
@@ -150,5 +148,4 @@ func parse(f *os.File) {
 			}
 		}
 	}
-	//return conf
 }
