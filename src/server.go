@@ -59,7 +59,8 @@ type SRedisServer struct {
 	aofRewritePerc      int
 	aofRewriteMinSize   int64
 	// RDB persistence
-	dirty int64
+	dirty      int64
+	saveParams []*saveParam
 }
 
 func (s *SRedisServer) incrDirtyCount(c *SRedisClient, num int64) {
@@ -98,9 +99,14 @@ func initServerConfig() {
 	if config.RehashNullStep > 0 {
 		server.rehashNullStep = config.RehashNullStep
 	}
+	// aof
 	server.aofState = REDIS_AOF_OFF
 	if config.AppendOnly {
 		server.aofState = REDIS_AOF_ON
+	}
+	// rdb
+	if config.saveParams != nil && len(config.saveParams) != 0 {
+		server.saveParams = config.saveParams
 	}
 }
 

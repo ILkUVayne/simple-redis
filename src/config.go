@@ -9,14 +9,62 @@ import (
 	"strings"
 )
 
+type complexConfFunc func(val string)
+
+type saveParam struct {
+	seconds int
+	changes int
+}
+
+// rdb save conf
+func appendServerSaveParams(val string) {
+	firstIdx := strings.IndexAny(val, " ")
+	if val == "\"\"" {
+		return
+	}
+	if firstIdx <= 0 || firstIdx >= len(val)-1 {
+		utils.Error("Invalid save parameters: ", val)
+	}
+
+	seconds, changes := val[0:firstIdx], val[firstIdx+1:]
+
+	var intVal int64
+	sp := new(saveParam)
+	if utils.String2Int64(&seconds, &intVal) == REDIS_ERR {
+		utils.Error("Invalid save seconds parameters: ", seconds)
+	}
+	sp.seconds = int(intVal)
+	if utils.String2Int64(&changes, &intVal) == REDIS_ERR {
+		utils.Error("Invalid save changes parameters: ", changes)
+	}
+	sp.changes = int(intVal)
+
+	if config.saveParams == nil {
+		config.saveParams = make([]*saveParam, 1)
+		config.saveParams[0] = sp
+		return
+	}
+	config.saveParams = append(config.saveParams, sp)
+}
+
+var complexConfFuncMaps = map[string]complexConfFunc{
+	"save": appendServerSaveParams,
+}
+
 type configVal struct {
 	Bind           string `cfg:"bind"`
 	Port           int    `cfg:"port"`
 	AppendOnly     bool   `cfg:"appendOnly"`
 	RehashNullStep int64  `cfg:"rehashNullStep"`
+	// complex conf
+	saveParams []*saveParam
 }
 
 var config *configVal
+
+func newConfig() {
+	config = new(configVal)
+}
 
 func SetupConf(confName string) {
 	f, err := os.Open(confName)
@@ -31,11 +79,24 @@ func SetupConf(confName string) {
 		}
 	}(f)
 
-	config = parse(f)
+	//config = parse(f)
+	parse(f)
 }
 
-func parse(f *os.File) *configVal {
-	conf := &configVal{}
+// return true complexConf,or false simpleConf
+func complexConfHandle(key, val string) bool {
+	fn, ok := complexConfFuncMaps[strings.ToLower(key)]
+	// simpleConf return false
+	if !ok {
+		return false
+	}
+	fn(val)
+	return true
+}
+
+func parse(f *os.File) {
+	//conf := &configVal{}
+	newConfig()
 	scanner := bufio.NewScanner(f)
 	rawMap := make(map[string]string)
 
@@ -48,12 +109,17 @@ func parse(f *os.File) *configVal {
 		}
 		firstIdx := strings.IndexAny(line, " ")
 		if firstIdx > 0 && firstIdx < lLen-1 {
-			rawMap[strings.ToLower(line[0:firstIdx])] = strings.Trim(line[firstIdx+1:], " ")
+			key := strings.ToLower(line[0:firstIdx])
+			val := strings.Trim(line[firstIdx+1:], " ")
+			if complexConfHandle(key, val) {
+				continue
+			}
+			rawMap[key] = val
 		}
 	}
 
-	confType := reflect.TypeOf(conf)
-	confValue := reflect.ValueOf(conf)
+	confType := reflect.TypeOf(config)
+	confValue := reflect.ValueOf(config)
 
 	for i := 0; i < confType.Elem().NumField(); i++ {
 		field := confType.Elem().Field(i)
@@ -84,5 +150,5 @@ func parse(f *os.File) *configVal {
 			}
 		}
 	}
-	return conf
+	//return conf
 }
