@@ -27,7 +27,7 @@ func createSharedObjects() {
 	shared.wrongTypeErr = createSRobj(SR_STR, fmt.Sprintf(RESP_ERR, "Operation against a key holding the wrong kind of value"))
 }
 
-func aofFile(file string) string {
+func persistenceFile(file string) string {
 	return getHome() + "/" + file
 }
 
@@ -127,7 +127,7 @@ func initServer() {
 	// AOF fd
 	server.aofChildPid = -1
 	if server.aofState == REDIS_AOF_ON {
-		server.aofFilename = aofFile(REDIS_AOF_DEFAULT)
+		server.aofFilename = persistenceFile(REDIS_AOF_DEFAULT)
 		fd, err := os.OpenFile(server.aofFilename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 		if err != nil {
 			utils.Error("Can't open the append-only file: ", err)
