@@ -112,6 +112,8 @@ const (
 	DEL          = "del"
 	KEYS         = "keys"
 	BGREWRITEAOF = "bgrewriteaof"
+	BGSAVE       = "bgsave"
+	SAVE         = "save"
 	GET          = "get"
 	SET          = "set"
 	Z_ADD        = "zadd"

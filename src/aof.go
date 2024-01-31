@@ -448,6 +448,10 @@ func bgRewriteAofCommand(c *SRedisClient) {
 		c.addReplyError("Background append only file rewriting already in progress")
 		return
 	}
+	if server.rdbChildPid != -1 {
+		c.addReplyError("Background save already in progress")
+		return
+	}
 	if rewriteAppendOnlyFileBackground() == REDIS_OK {
 		c.addReplyStatus("Background append only file rewriting started")
 		return

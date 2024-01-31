@@ -59,8 +59,10 @@ type SRedisServer struct {
 	aofRewritePerc      int
 	aofRewriteMinSize   int64
 	// RDB persistence
-	dirty      int64
-	saveParams []*saveParam
+	dirty       int64
+	saveParams  []*saveParam
+	rdbChildPid int
+	rdbFilename string
 }
 
 func (s *SRedisServer) incrDirtyCount(c *SRedisClient, num int64) {
@@ -136,6 +138,9 @@ func initServer() {
 		server.aofRewritePerc = REDIS_AOF_REWRITE_PERC
 		server.aofRewriteMinSize = REDIS_AOF_REWRITE_MIN_SIZE
 	}
+	// rdb
+	server.rdbChildPid = -1
+	server.rdbFilename = persistenceFile("dump.rdb")
 }
 
 func ServerStart() {
