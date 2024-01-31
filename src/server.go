@@ -63,6 +63,7 @@ type SRedisServer struct {
 	saveParams  []*saveParam
 	rdbChildPid int
 	rdbFilename string
+	lastSave    int64
 }
 
 func (s *SRedisServer) incrDirtyCount(c *SRedisClient, num int64) {

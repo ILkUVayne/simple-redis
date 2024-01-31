@@ -42,7 +42,7 @@ func serverShutdown(sig os.Signal) {
 		backgroundRewriteDoneHandler()
 	}
 	utils.Info("Simple-Redis is now ready to exit, bye bye...")
-	os.Exit(0)
+	utils.Exit(0)
 }
 
 //-----------------------------------------------------------------------------

@@ -340,7 +340,8 @@ func rewriteAppendOnlyFile(filename string) int {
 	now := utils.GetMsTime()
 	f, err := os.Create(tmpFile)
 	if err != nil {
-		utils.Error("Opening the temp file for AOF rewrite in rewriteAppendOnlyFile(): ", err)
+		utils.ErrorP("Opening the temp file for AOF rewrite in rewriteAppendOnlyFile(): ", err)
+		return REDIS_ERR
 	}
 	defer func() { _ = f.Close() }()
 
@@ -396,9 +397,9 @@ func rewriteAppendOnlyFileBackground() int {
 		}
 		tmpFile := persistenceFile(fmt.Sprintf("temp-rewriteaof-bg-%d.aof", os.Getpid()))
 		if rewriteAppendOnlyFile(tmpFile) == REDIS_OK {
-			os.Exit(0)
+			utils.Exit(0)
 		}
-		os.Exit(1)
+		utils.Exit(1)
 	} else {
 		utils.Info("Background append only file rewriting started by pid %d", childPid)
 		server.aofChildPid = childPid
