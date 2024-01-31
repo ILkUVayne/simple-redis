@@ -36,6 +36,9 @@ func loadDataFromDisk() {
 	if server.aofState == REDIS_AOF_ON {
 		loadAppendOnlyFile(server.aofFilename)
 		utils.InfoF("DB loaded from append only file: %.3f seconds", float64(utils.GetMsTime()-start)/1000)
+	} else {
+		rdbLoad(&server.rdbFilename)
+		utils.InfoF("DB loaded from disk: %.3f seconds", float64(utils.GetMsTime()-start)/1000)
 	}
 }
 
