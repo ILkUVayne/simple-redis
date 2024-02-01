@@ -22,6 +22,8 @@ const (
 	SREDIS_MAX_INLINE = 1024 * 4
 	SREDIS_IO_BUF     = 1024 * 16
 
+	REDIS_BGSAVE_RETRY_DELAY = 5
+
 	CONFIG = "./sredis.conf"
 )
 

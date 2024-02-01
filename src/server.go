@@ -62,11 +62,14 @@ type SRedisServer struct {
 	aofRewritePerc      int
 	aofRewriteMinSize   int64
 	// RDB persistence
-	dirty       int64
-	saveParams  []*saveParam
-	rdbChildPid int
-	rdbFilename string
-	lastSave    int64
+	dirty             int64
+	dirtyBeforeBgSave int64
+	lastBgSaveTry     int64
+	lastBgSaveStatus  int
+	saveParams        []*saveParam
+	rdbChildPid       int
+	rdbFilename       string
+	lastSave          int64
 }
 
 func (s *SRedisServer) incrDirtyCount(c *SRedisClient, num int64) {

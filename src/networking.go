@@ -97,14 +97,31 @@ func serverCron(el *aeEventLoop, id int, clientData any) {
 	// flush aof_buf on disk
 	flushAppendOnlyFile()
 	// Check if a background saving or AOF rewrite in progress terminated.
-	if server.aofChildPid != -1 {
+	if server.aofChildPid != -1 || server.rdbChildPid != -1 {
 		pid, _ := wait4(-1, unix.WNOHANG)
-		if pid != 0 {
+		if pid != 0 && pid != -1 {
 			if pid == server.aofChildPid {
 				backgroundRewriteDoneHandler()
 			}
+			if pid == server.rdbChildPid {
+				backgroundSaveDoneHandler()
+			}
 		}
 	} else {
+		// If there is not a background saving/rewrite in progress check if
+		// we have to save/rewrite now
+		for _, v := range server.saveParams {
+			now := utils.GetMsTime()
+			if server.dirty > int64(v.changes) &&
+				now-server.lastSave > int64(v.seconds) &&
+				(now-server.lastBgSaveTry > REDIS_BGSAVE_RETRY_DELAY ||
+					server.lastBgSaveStatus == REDIS_OK) {
+				utils.InfoF("%d changes in %d seconds. Saving...", v.changes, v.seconds)
+				rdbSaveBackground()
+				break
+			}
+		}
+
 		// If there is not a background saving/rewrite in progress check if
 		// we have to save/rewrite now
 		if server.aofChildPid == -1 &&

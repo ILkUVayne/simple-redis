@@ -51,7 +51,7 @@ func createFakeClient() *SRedisClient {
 	return c
 }
 
-func checkExpire(args []*SRobj) int {
+func aofCheckExpire(args []*SRobj) int {
 	if args[0].strVal() != EXPIRE {
 		return REDIS_OK
 	}
@@ -94,7 +94,7 @@ func loadAppendOnlyFile(name string) {
 		args = append(args, createSRobj(SR_STR, str))
 		aLen--
 		if aLen == 0 {
-			if checkExpire(args) == REDIS_ERR {
+			if aofCheckExpire(args) == REDIS_ERR {
 				args = nil
 				continue
 			}
