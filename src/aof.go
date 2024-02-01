@@ -51,7 +51,7 @@ func createFakeClient() *SRedisClient {
 	return c
 }
 
-func checkExpire(args []*SRobj) int {
+func aofCheckExpire(args []*SRobj) int {
 	if args[0].strVal() != EXPIRE {
 		return REDIS_OK
 	}
@@ -94,7 +94,7 @@ func loadAppendOnlyFile(name string) {
 		args = append(args, createSRobj(SR_STR, str))
 		aLen--
 		if aLen == 0 {
-			if checkExpire(args) == REDIS_ERR {
+			if aofCheckExpire(args) == REDIS_ERR {
 				args = nil
 				continue
 			}
@@ -336,11 +336,12 @@ func rewriteDictObject(f *os.File, key, val *SRobj) {
 }
 
 func rewriteAppendOnlyFile(filename string) int {
-	tmpFile := aofFile(fmt.Sprintf("temp-rewriteaof-%d.aof", os.Getpid()))
+	tmpFile := persistenceFile(fmt.Sprintf("temp-rewriteaof-%d.aof", os.Getpid()))
 	now := utils.GetMsTime()
 	f, err := os.Create(tmpFile)
 	if err != nil {
-		utils.Error("Opening the temp file for AOF rewrite in rewriteAppendOnlyFile(): ", err)
+		utils.ErrorP("Opening the temp file for AOF rewrite in rewriteAppendOnlyFile(): ", err)
+		return REDIS_ERR
 	}
 	defer func() { _ = f.Close() }()
 
@@ -394,11 +395,11 @@ func rewriteAppendOnlyFileBackground() int {
 		if server.fd > 0 {
 			Close(server.fd)
 		}
-		tmpFile := aofFile(fmt.Sprintf("temp-rewriteaof-bg-%d.aof", os.Getpid()))
+		tmpFile := persistenceFile(fmt.Sprintf("temp-rewriteaof-bg-%d.aof", os.Getpid()))
 		if rewriteAppendOnlyFile(tmpFile) == REDIS_OK {
-			os.Exit(0)
+			utils.Exit(0)
 		}
-		os.Exit(1)
+		utils.Exit(1)
 	} else {
 		utils.Info("Background append only file rewriting started by pid %d", childPid)
 		server.aofChildPid = childPid
@@ -409,7 +410,7 @@ func rewriteAppendOnlyFileBackground() int {
 }
 
 func backgroundRewriteDoneHandler() {
-	tmpFile := aofFile(fmt.Sprintf("temp-rewriteaof-bg-%d.aof", server.aofChildPid))
+	tmpFile := persistenceFile(fmt.Sprintf("temp-rewriteaof-bg-%d.aof", server.aofChildPid))
 	newFd, err := os.OpenFile(tmpFile, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 	if err != nil {
 		utils.ErrorP("Unable to open the temporary AOF produced by the child: ", err)
@@ -446,6 +447,10 @@ cleanup:
 func bgRewriteAofCommand(c *SRedisClient) {
 	if server.aofChildPid != -1 {
 		c.addReplyError("Background append only file rewriting already in progress")
+		return
+	}
+	if server.rdbChildPid != -1 {
+		c.addReplyError("Background save already in progress")
 		return
 	}
 	if rewriteAppendOnlyFileBackground() == REDIS_OK {

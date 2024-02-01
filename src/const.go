@@ -22,6 +22,8 @@ const (
 	SREDIS_MAX_INLINE = 1024 * 4
 	SREDIS_IO_BUF     = 1024 * 16
 
+	REDIS_BGSAVE_RETRY_DELAY = 5
+
 	CONFIG = "./sredis.conf"
 )
 
@@ -112,6 +114,8 @@ const (
 	DEL          = "del"
 	KEYS         = "keys"
 	BGREWRITEAOF = "bgrewriteaof"
+	BGSAVE       = "bgsave"
+	SAVE         = "save"
 	GET          = "get"
 	SET          = "set"
 	Z_ADD        = "zadd"
@@ -144,6 +148,15 @@ const (
 	REDIS_AOF_REWRITE_ITEMS_PER_CMD = 64
 	REDIS_AOF_REWRITE_PERC          = 100
 	REDIS_AOF_REWRITE_MIN_SIZE      = 102 * 1024
+)
+
+//-----------------------------------------------------------------------------
+// rdb
+//-----------------------------------------------------------------------------
+
+const (
+	REDIS_RDB_VERSION = "6"
+	REDIS_RDB_BITS    = "64"
 )
 
 //-----------------------------------------------------------------------------

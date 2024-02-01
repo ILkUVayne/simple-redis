@@ -27,7 +27,7 @@ func createSharedObjects() {
 	shared.wrongTypeErr = createSRobj(SR_STR, fmt.Sprintf(RESP_ERR, "Operation against a key holding the wrong kind of value"))
 }
 
-func aofFile(file string) string {
+func persistenceFile(file string) string {
 	return getHome() + "/" + file
 }
 
@@ -36,6 +36,9 @@ func loadDataFromDisk() {
 	if server.aofState == REDIS_AOF_ON {
 		loadAppendOnlyFile(server.aofFilename)
 		utils.InfoF("DB loaded from append only file: %.3f seconds", float64(utils.GetMsTime()-start)/1000)
+	} else {
+		rdbLoad(&server.rdbFilename)
+		utils.InfoF("DB loaded from disk: %.3f seconds", float64(utils.GetMsTime()-start)/1000)
 	}
 }
 
@@ -59,7 +62,14 @@ type SRedisServer struct {
 	aofRewritePerc      int
 	aofRewriteMinSize   int64
 	// RDB persistence
-	dirty int64
+	dirty             int64
+	dirtyBeforeBgSave int64
+	lastBgSaveTry     int64
+	lastBgSaveStatus  int
+	saveParams        []*saveParam
+	rdbChildPid       int
+	rdbFilename       string
+	lastSave          int64
 }
 
 func (s *SRedisServer) incrDirtyCount(c *SRedisClient, num int64) {
@@ -98,9 +108,14 @@ func initServerConfig() {
 	if config.RehashNullStep > 0 {
 		server.rehashNullStep = config.RehashNullStep
 	}
+	// aof
 	server.aofState = REDIS_AOF_OFF
 	if config.AppendOnly {
 		server.aofState = REDIS_AOF_ON
+	}
+	// rdb
+	if config.saveParams != nil && len(config.saveParams) != 0 {
+		server.saveParams = config.saveParams
 	}
 }
 
@@ -121,7 +136,7 @@ func initServer() {
 	// AOF fd
 	server.aofChildPid = -1
 	if server.aofState == REDIS_AOF_ON {
-		server.aofFilename = aofFile(REDIS_AOF_DEFAULT)
+		server.aofFilename = persistenceFile(REDIS_AOF_DEFAULT)
 		fd, err := os.OpenFile(server.aofFilename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 		if err != nil {
 			utils.Error("Can't open the append-only file: ", err)
@@ -130,6 +145,9 @@ func initServer() {
 		server.aofRewritePerc = REDIS_AOF_REWRITE_PERC
 		server.aofRewriteMinSize = REDIS_AOF_REWRITE_MIN_SIZE
 	}
+	// rdb
+	server.rdbChildPid = -1
+	server.rdbFilename = persistenceFile("dump.rdb")
 }
 
 func ServerStart() {

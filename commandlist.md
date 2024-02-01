@@ -73,13 +73,29 @@ OK
 (empty array)
 ~~~
 
-### BGREWRITEAOF
+## AOF
 
-**BGREWRITEAOF**
+### BGREWRITEAOF
 
 ~~~bash
 127.0.0.2:6379> BGREWRITEAOF
 Background append only file rewriting started
+~~~
+
+## RDB
+
+### BGSAVE
+
+~~~bash
+127.0.0.1:6379> bgsave
+Background saving started
+~~~
+
+### SAVE
+
+~~~bash
+127.0.0.1:6379> save
+OK
 ~~~
 
 ## string

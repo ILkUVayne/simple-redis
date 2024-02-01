@@ -78,7 +78,11 @@ var commandTable = []SRedisCommand{
 	{OBJECT, objectCommand, 3},
 	{DEL, delCommand, -2},
 	{KEYS, keysCommand, 2},
+	// aof
 	{BGREWRITEAOF, bgRewriteAofCommand, 1},
+	// rdb
+	{SAVE, saveCommand, 1},
+	{BGSAVE, bgSaveCommand, 1},
 	// string
 	{GET, getCommand, 2},
 	{SET, setCommand, 3},
