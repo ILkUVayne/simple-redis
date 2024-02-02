@@ -48,6 +48,24 @@ func rdbBeforeWrite(enc *core.Encoder) int {
 // rdb loading
 //-----------------------------------------------------------------------------
 
+type rdbLoadObjectFunc func(obj parser.RedisObject)
+
+var rdbLoadObjectMaps = map[string]rdbLoadObjectFunc{
+	parser.StringType: rdbLoadStringObject,
+	parser.ListType:   rdbLoadListObject,
+	parser.HashType:   rdbLoadHashObject,
+	parser.ZSetType:   rdbLoadZSetObject,
+	parser.SetType:    rdbLoadSetObject,
+}
+
+func rdbLoadObject(obj parser.RedisObject) {
+	fn, ok := rdbLoadObjectMaps[obj.GetType()]
+	if !ok {
+		utils.Error("Unknown object type: ", obj.GetType())
+	}
+	fn(obj)
+}
+
 // return Ms time,return -1 when Expired, return 0 when persistent object
 func rdbCheckExpire(obj parser.RedisObject) int64 {
 	expire := obj.GetExpiration()
@@ -214,18 +232,7 @@ func rdbLoad(filename *string) {
 
 	decoder := parser.NewDecoder(fd)
 	err = decoder.Parse(func(o parser.RedisObject) bool {
-		switch o.GetType() {
-		case parser.StringType:
-			rdbLoadStringObject(o)
-		case parser.ListType:
-			rdbLoadListObject(o)
-		case parser.HashType:
-			rdbLoadHashObject(o)
-		case parser.ZSetType:
-			rdbLoadZSetObject(o)
-		case parser.SetType:
-			rdbLoadSetObject(o)
-		}
+		rdbLoadObject(o)
 		// return true to continue, return false to stop the iteration
 		return true
 	})
@@ -238,6 +245,25 @@ func rdbLoad(filename *string) {
 // -----------------------------------------------------------------------------
 // rdb file implementation
 // -----------------------------------------------------------------------------
+
+type rdbSaveObjectFunc func(enc *core.Encoder, key, val *SRobj, expire int64) int
+
+var rdbSaveMaps = map[SRType]rdbSaveObjectFunc{
+	SR_STR:  writeStringObject,
+	SR_LIST: writeListObject,
+	SR_SET:  writeSetObject,
+	SR_ZSET: writeZSetObject,
+	SR_DICT: writeDictObject,
+}
+
+func rdbWriteObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
+	fn, ok := rdbSaveMaps[val.Typ]
+	if !ok {
+		utils.ErrorP("Unknown object type: ", val.Typ)
+		return REDIS_ERR
+	}
+	return fn(enc, key, val, expire)
+}
 
 func writeStringObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 	var err error
@@ -405,30 +431,8 @@ func rdbSave(filename *string) int {
 		key := de.getKey()
 		val := de.getVal()
 		expireTime := server.db.expireTime(key)
-
-		switch val.Typ {
-		case SR_STR:
-			if writeStringObject(enc, key, val, expireTime) == REDIS_ERR {
-				goto werr
-			}
-		case SR_LIST:
-			if writeListObject(enc, key, val, expireTime) == REDIS_ERR {
-				goto werr
-			}
-		case SR_SET:
-			if writeSetObject(enc, key, val, expireTime) == REDIS_ERR {
-				goto werr
-			}
-		case SR_ZSET:
-			if writeZSetObject(enc, key, val, expireTime) == REDIS_ERR {
-				goto werr
-			}
-		case SR_DICT:
-			if writeDictObject(enc, key, val, expireTime) == REDIS_ERR {
-				goto werr
-			}
-		default:
-			panic("Unknown object type")
+		if rdbWriteObject(enc, key, val, expireTime) == REDIS_ERR {
+			goto werr
 		}
 	}
 	di.dictReleaseIterator()
