@@ -283,7 +283,7 @@ func rewriteSetObject(f *os.File, key, val *SRobj) {
 
 	if val.encoding == REDIS_ENCODING_INTSET {
 		var intVal int64
-		for ii := 0; val.Val.(*intSet).intSetGet(uint32(ii), &intVal); ii++ {
+		for ii := 0; assertIntSet(val).intSetGet(uint32(ii), &intVal); ii++ {
 			if count == 0 {
 				cmd := fmt.Sprintf(RESP_SET, 2+getItems(items))
 				// add key

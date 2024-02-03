@@ -78,7 +78,7 @@ func sinterGenericCommand(c *SRedisClient, setKeys []*SRobj, setNum int64, dstKe
 				continue
 			}
 			if uint8(encoding) == REDIS_ENCODING_INTSET {
-				if set[j].encoding == REDIS_ENCODING_INTSET && !set[j].Val.(*intSet).intSetFind(intObj) {
+				if set[j].encoding == REDIS_ENCODING_INTSET && !assertIntSet(set[j]).intSetFind(intObj) {
 					break
 				}
 				if set[j].encoding == REDIS_ENCODING_HT {
@@ -93,7 +93,7 @@ func sinterGenericCommand(c *SRedisClient, setKeys []*SRobj, setNum int64, dstKe
 			if uint8(encoding) == REDIS_ENCODING_HT {
 				if eleObj.encoding == REDIS_ENCODING_INT && set[j].encoding == REDIS_ENCODING_INTSET {
 					iVal, _ := eleObj.intVal()
-					if !set[j].Val.(*intSet).intSetFind(iVal) {
+					if !assertIntSet(set[j]).intSetFind(iVal) {
 						break
 					}
 				}
