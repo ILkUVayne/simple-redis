@@ -318,7 +318,7 @@ func rewriteZSetObject(f *os.File, key, val *SRobj) {
 	count, items := 0, int(zSetLength(val))
 
 	if val.encoding == REDIS_ENCODING_SKIPLIST {
-		zs := val.Val.(*zSet)
+		zs := assertZSet(val)
 		di := zs.d.dictGetIterator()
 		for de := di.dictNext(); de != nil; de = di.dictNext() {
 			eleObj := de.getKey()

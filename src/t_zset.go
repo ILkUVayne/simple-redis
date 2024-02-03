@@ -38,7 +38,7 @@ func zAddGenericCommand(c *SRedisClient, incr bool) {
 		score = scores[i]
 		ele := c.args[3+i*2]
 		ele.tryObjectEncoding()
-		zs := zobj.Val.(*zSet)
+		zs := assertZSet(zobj)
 		_, de := zs.d.dictFind(ele)
 		if de != nil {
 			curobj := de.key
@@ -100,7 +100,7 @@ func zRangeGenericCommand(c *SRedisClient, reverse bool) {
 		return
 	}
 
-	zs := zobj.Val.(*zSet)
+	zs := assertZSet(zobj)
 	llen := int64(zs.zSetLength())
 	if start < 0 {
 		start = llen + start

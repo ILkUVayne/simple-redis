@@ -176,7 +176,7 @@ func rdbLoadZSetObject(obj parser.RedisObject) {
 		ZSobj = createZsetSRobj()
 		server.db.dictSet(key, ZSobj)
 	}
-	zs := ZSobj.Val.(*zSet)
+	zs := assertZSet(ZSobj)
 	for _, v := range o.Entries {
 		ele := createSRobj(SR_STR, v.Member)
 		zNode := zs.zsl.insert(v.Score, ele)
@@ -384,7 +384,7 @@ func writeZSetObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 		panic("Unknown sorted zset encoding")
 	}
 	if val.encoding == REDIS_ENCODING_SKIPLIST {
-		zs := val.Val.(*zSet)
+		zs := assertZSet(val)
 		di := zs.d.dictGetIterator()
 		for de := di.dictNext(); de != nil; de = di.dictNext() {
 			eleObj := de.getKey()
