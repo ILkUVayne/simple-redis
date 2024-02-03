@@ -296,7 +296,7 @@ func rewriteSetObject(f *os.File, key, val *SRobj) {
 		return
 	}
 	if val.encoding == REDIS_ENCODING_HT {
-		di := val.Val.(*dict).dictGetIterator()
+		di := assertDict(val).dictGetIterator()
 		for de := di.dictNext(); de != nil; de = di.dictNext() {
 			eleObj := de.getKey()
 			if count == 0 {
@@ -343,7 +343,7 @@ func rewriteZSetObject(f *os.File, key, val *SRobj) {
 
 func rewriteDictObject(f *os.File, key, val *SRobj) {
 	if val.encoding == REDIS_ENCODING_HT {
-		di := val.Val.(*dict).dictGetIterator()
+		di := assertDict(val).dictGetIterator()
 		for de := di.dictNext(); de != nil; de = di.dictNext() {
 			cmd := fmt.Sprintf(RESP_HASH_HSET, 4)
 			// add key hashKey hashVal

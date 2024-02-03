@@ -326,7 +326,7 @@ func writeSetObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 		}
 	}
 	if val.encoding == REDIS_ENCODING_HT {
-		di := val.Val.(*dict).dictGetIterator()
+		di := assertDict(val).dictGetIterator()
 		for de := di.dictNext(); de != nil; de = di.dictNext() {
 			eleObj := de.getKey()
 			values = append(values, []byte(eleObj.strVal()))
@@ -355,7 +355,7 @@ func writeDictObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 	}
 	values := make(map[string][]byte)
 	if val.encoding == REDIS_ENCODING_HT {
-		di := val.Val.(*dict).dictGetIterator()
+		di := assertDict(val).dictGetIterator()
 		for de := di.dictNext(); de != nil; de = di.dictNext() {
 			values[de.getKey().strVal()] = []byte(de.getVal().strVal())
 		}
