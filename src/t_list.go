@@ -22,7 +22,7 @@ func pushGenericCommand(c *SRedisClient, where int) {
 		listTypePush(lObj, c.args[i], where)
 		pushed++
 	}
-	c.addReplyLongLong(lObj.Val.(*list).len())
+	c.addReplyLongLong(assertList(lObj).len())
 	server.incrDirtyCount(c, pushed)
 }
 
@@ -47,7 +47,7 @@ func popGenericCommand(c *SRedisClient, where int) {
 	}
 	c.addReplyBulk(value)
 	value.decrRefCount()
-	if lObj.Val.(*list).len() == 0 {
+	if assertList(lObj).len() == 0 {
 		c.db.dbDel(c.args[1])
 	}
 	server.incrDirtyCount(c, 1)

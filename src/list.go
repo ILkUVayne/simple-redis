@@ -6,7 +6,7 @@ package src
 
 func listTypePush(subject, value *SRobj, where int) {
 	if subject.encoding == REDIS_ENCODING_LINKEDLIST {
-		l := subject.Val.(*list)
+		l := assertList(subject)
 		if where == REDIS_HEAD {
 			l.lPush(value)
 		} else {
@@ -21,7 +21,7 @@ func listTypePush(subject, value *SRobj, where int) {
 func listTypePop(subject *SRobj, where int) *SRobj {
 	var value *SRobj
 	if subject.encoding == REDIS_ENCODING_LINKEDLIST {
-		l := subject.Val.(*list)
+		l := assertList(subject)
 		var ln *node
 		if where == REDIS_HEAD {
 			ln = l.first()
@@ -40,7 +40,7 @@ func listTypePop(subject *SRobj, where int) *SRobj {
 
 func listTypeLength(subject *SRobj) int {
 	if subject.encoding == REDIS_ENCODING_LINKEDLIST {
-		return subject.Val.(*list).len()
+		return assertList(subject).len()
 	}
 	panic("Unknown list encoding")
 }

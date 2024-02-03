@@ -290,7 +290,7 @@ func writeListObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 	}
 
 	if val.encoding == REDIS_ENCODING_LINKEDLIST {
-		l := val.Val.(*list)
+		l := assertList(val)
 		li := l.listRewind()
 		for ln := li.listNext(); ln != nil; ln = li.listNext() {
 			eleObj := ln.nodeValue()

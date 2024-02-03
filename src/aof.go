@@ -260,7 +260,7 @@ func rewriteListObject(f *os.File, key, val *SRobj) {
 	count, items := 0, listTypeLength(val)
 
 	if val.encoding == REDIS_ENCODING_LINKEDLIST {
-		l := val.Val.(*list)
+		l := assertList(val)
 		li := l.listRewind()
 		for ln := li.listNext(); ln != nil; ln = li.listNext() {
 			eleObj := ln.nodeValue()
