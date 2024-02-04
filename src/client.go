@@ -46,6 +46,21 @@ func (c *SRedisClient) getQueryNum(start, end int) (int, error) {
 	return n, err
 }
 
+func (c *SRedisClient) pushReply(data *SRobj, typ string) {
+	if c.fd < 0 || data == nil {
+		return
+	}
+	switch typ {
+	case "r":
+		c.reply.rPush(data)
+	case "l":
+		c.reply.lPush(data)
+	default:
+		utils.Error("invalid push type: ", typ)
+	}
+	data.incrRefCount()
+}
+
 func createSRClient(fd int) *SRedisClient {
 	c := new(SRedisClient)
 	c.fd = fd
@@ -201,17 +216,10 @@ func processQueryBuf(c *SRedisClient) error {
 	return nil
 }
 
-func (c *SRedisClient) pushReply(data *SRobj, typ string) {
-	if c.fd < 0 || data == nil {
-		return
+func assertClient(o any) *SRedisClient {
+	c, ok := o.(*SRedisClient)
+	if !ok {
+		utils.Error("assertClient err")
 	}
-	switch typ {
-	case "r":
-		c.reply.rPush(data)
-	case "l":
-		c.reply.lPush(data)
-	default:
-		utils.Error("invalid push type: ", typ)
-	}
-	data.incrRefCount()
+	return c
 }
