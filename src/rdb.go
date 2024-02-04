@@ -48,6 +48,24 @@ func rdbBeforeWrite(enc *core.Encoder) int {
 // rdb loading
 //-----------------------------------------------------------------------------
 
+type rdbLoadObjectFunc func(obj parser.RedisObject)
+
+var rdbLoadObjectMaps = map[string]rdbLoadObjectFunc{
+	parser.StringType: rdbLoadStringObject,
+	parser.ListType:   rdbLoadListObject,
+	parser.HashType:   rdbLoadHashObject,
+	parser.ZSetType:   rdbLoadZSetObject,
+	parser.SetType:    rdbLoadSetObject,
+}
+
+func rdbLoadObject(obj parser.RedisObject) {
+	fn, ok := rdbLoadObjectMaps[obj.GetType()]
+	if !ok {
+		utils.Error("Unknown object type: ", obj.GetType())
+	}
+	fn(obj)
+}
+
 // return Ms time,return -1 when Expired, return 0 when persistent object
 func rdbCheckExpire(obj parser.RedisObject) int64 {
 	expire := obj.GetExpiration()
@@ -158,7 +176,7 @@ func rdbLoadZSetObject(obj parser.RedisObject) {
 		ZSobj = createZsetSRobj()
 		server.db.dictSet(key, ZSobj)
 	}
-	zs := ZSobj.Val.(*zSet)
+	zs := assertZSet(ZSobj)
 	for _, v := range o.Entries {
 		ele := createSRobj(SR_STR, v.Member)
 		zNode := zs.zsl.insert(v.Score, ele)
@@ -214,18 +232,7 @@ func rdbLoad(filename *string) {
 
 	decoder := parser.NewDecoder(fd)
 	err = decoder.Parse(func(o parser.RedisObject) bool {
-		switch o.GetType() {
-		case parser.StringType:
-			rdbLoadStringObject(o)
-		case parser.ListType:
-			rdbLoadListObject(o)
-		case parser.HashType:
-			rdbLoadHashObject(o)
-		case parser.ZSetType:
-			rdbLoadZSetObject(o)
-		case parser.SetType:
-			rdbLoadSetObject(o)
-		}
+		rdbLoadObject(o)
 		// return true to continue, return false to stop the iteration
 		return true
 	})
@@ -238,6 +245,25 @@ func rdbLoad(filename *string) {
 // -----------------------------------------------------------------------------
 // rdb file implementation
 // -----------------------------------------------------------------------------
+
+type rdbSaveObjectFunc func(enc *core.Encoder, key, val *SRobj, expire int64) int
+
+var rdbSaveMaps = map[SRType]rdbSaveObjectFunc{
+	SR_STR:  writeStringObject,
+	SR_LIST: writeListObject,
+	SR_SET:  writeSetObject,
+	SR_ZSET: writeZSetObject,
+	SR_DICT: writeDictObject,
+}
+
+func rdbWriteObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
+	fn, ok := rdbSaveMaps[val.Typ]
+	if !ok {
+		utils.ErrorP("Unknown object type: ", val.Typ)
+		return REDIS_ERR
+	}
+	return fn(enc, key, val, expire)
+}
 
 func writeStringObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 	var err error
@@ -264,7 +290,7 @@ func writeListObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 	}
 
 	if val.encoding == REDIS_ENCODING_LINKEDLIST {
-		l := val.Val.(*list)
+		l := assertList(val)
 		li := l.listRewind()
 		for ln := li.listNext(); ln != nil; ln = li.listNext() {
 			eleObj := ln.nodeValue()
@@ -295,12 +321,12 @@ func writeSetObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 
 	if val.encoding == REDIS_ENCODING_INTSET {
 		var intVal int64
-		for ii := 0; val.Val.(*intSet).intSetGet(uint32(ii), &intVal); ii++ {
+		for ii := 0; assertIntSet(val).intSetGet(uint32(ii), &intVal); ii++ {
 			values = append(values, []byte(strconv.FormatInt(intVal, 10)))
 		}
 	}
 	if val.encoding == REDIS_ENCODING_HT {
-		di := val.Val.(*dict).dictGetIterator()
+		di := assertDict(val).dictGetIterator()
 		for de := di.dictNext(); de != nil; de = di.dictNext() {
 			eleObj := de.getKey()
 			values = append(values, []byte(eleObj.strVal()))
@@ -329,7 +355,7 @@ func writeDictObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 	}
 	values := make(map[string][]byte)
 	if val.encoding == REDIS_ENCODING_HT {
-		di := val.Val.(*dict).dictGetIterator()
+		di := assertDict(val).dictGetIterator()
 		for de := di.dictNext(); de != nil; de = di.dictNext() {
 			values[de.getKey().strVal()] = []byte(de.getVal().strVal())
 		}
@@ -358,7 +384,7 @@ func writeZSetObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 		panic("Unknown sorted zset encoding")
 	}
 	if val.encoding == REDIS_ENCODING_SKIPLIST {
-		zs := val.Val.(*zSet)
+		zs := assertZSet(val)
 		di := zs.d.dictGetIterator()
 		for de := di.dictNext(); de != nil; de = di.dictNext() {
 			eleObj := de.getKey()
@@ -405,30 +431,8 @@ func rdbSave(filename *string) int {
 		key := de.getKey()
 		val := de.getVal()
 		expireTime := server.db.expireTime(key)
-
-		switch val.Typ {
-		case SR_STR:
-			if writeStringObject(enc, key, val, expireTime) == REDIS_ERR {
-				goto werr
-			}
-		case SR_LIST:
-			if writeListObject(enc, key, val, expireTime) == REDIS_ERR {
-				goto werr
-			}
-		case SR_SET:
-			if writeSetObject(enc, key, val, expireTime) == REDIS_ERR {
-				goto werr
-			}
-		case SR_ZSET:
-			if writeZSetObject(enc, key, val, expireTime) == REDIS_ERR {
-				goto werr
-			}
-		case SR_DICT:
-			if writeDictObject(enc, key, val, expireTime) == REDIS_ERR {
-				goto werr
-			}
-		default:
-			panic("Unknown object type")
+		if rdbWriteObject(enc, key, val, expireTime) == REDIS_ERR {
+			goto werr
 		}
 	}
 	di.dictReleaseIterator()

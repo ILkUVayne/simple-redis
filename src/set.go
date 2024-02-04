@@ -19,7 +19,7 @@ type setTypeIterator struct {
 
 func (si *setTypeIterator) setTypeNext(objEle **SRobj, llEle *int64) int {
 	if si.encoding == REDIS_ENCODING_INTSET {
-		if !si.subject.Val.(*intSet).intSetGet(uint32(si.ii), llEle) {
+		if !assertIntSet(si.subject).intSetGet(uint32(si.ii), llEle) {
 			return -1
 		}
 		si.ii++
@@ -47,7 +47,7 @@ func setTypeInitIterator(subject *SRobj) *setTypeIterator {
 	si.subject = subject
 	si.encoding = subject.encoding
 	if si.encoding == REDIS_ENCODING_HT {
-		si.di = subject.Val.(*dict).dictGetIterator()
+		si.di = assertDict(subject).dictGetIterator()
 		return si
 	}
 	if si.encoding == REDIS_ENCODING_INTSET {
@@ -74,17 +74,17 @@ func setTypeAdd(subject, value *SRobj) bool {
 	var intVal int64
 	// hashtable
 	if subject.encoding == REDIS_ENCODING_HT {
-		return subject.Val.(*dict).dictAdd(value, nil)
+		return assertDict(subject).dictAdd(value, nil)
 	}
 	// intSet
 	if value.isObjectRepresentableAsInt64(&intVal) == REDIS_OK {
 		var success bool
-		subject.Val.(*intSet).intSetAdd(intVal, &success)
+		assertIntSet(subject).intSetAdd(intVal, &success)
 		return success
 	}
 	// change to ht
 	setTypeConvert(subject, REDIS_ENCODING_HT)
-	return subject.Val.(*dict).dictAdd(value, nil)
+	return assertDict(subject).dictAdd(value, nil)
 }
 
 func setTypeConvert(setObj *SRobj, enc uint8) {
@@ -96,7 +96,7 @@ func setTypeConvert(setObj *SRobj, enc uint8) {
 	}
 
 	d := dictCreate(&setDictType)
-	d.dictExpand(int64(setObj.Val.(*intSet).intSetLen()))
+	d.dictExpand(int64(assertIntSet(setObj).intSetLen()))
 	si := setTypeInitIterator(setObj)
 	var intEle int64
 	for si.setTypeNext(nil, &intEle) != -1 {
@@ -112,10 +112,10 @@ func setTypeConvert(setObj *SRobj, enc uint8) {
 
 func setTypeSize(setObj *SRobj) int64 {
 	if setObj.encoding == REDIS_ENCODING_HT {
-		return setObj.Val.(*dict).dictSize()
+		return assertDict(setObj).dictSize()
 	}
 	if setObj.encoding == REDIS_ENCODING_INTSET {
-		return int64(setObj.Val.(*intSet).intSetLen())
+		return int64(assertIntSet(setObj).intSetLen())
 	}
 	panic("Unknown set encoding")
 }
@@ -124,11 +124,11 @@ func setTypeIsMember(setObj, value *SRobj) bool {
 	var intVal int64
 	checkEncoding(setObj)
 	if setObj.encoding == REDIS_ENCODING_HT {
-		_, e := setObj.Val.(*dict).dictFind(value)
+		_, e := assertDict(setObj).dictFind(value)
 		return e != nil
 	}
 	if value.isObjectRepresentableAsInt64(&intVal) == REDIS_OK {
-		return setObj.Val.(*intSet).intSetFind(intVal)
+		return assertIntSet(setObj).intSetFind(intVal)
 	}
 	return false
 }

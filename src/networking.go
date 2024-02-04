@@ -21,7 +21,7 @@ func acceptTcpHandler(el *aeEventLoop, fd int, clientData any) {
 
 // read client query and process
 func readQueryFromClient(el *aeEventLoop, fd int, clientData any) {
-	c := clientData.(*SRedisClient)
+	c := assertClient(clientData)
 	if (len(c.queryBuf) - c.queryLen) < SREDIS_MAX_BULK {
 		c.queryBuf = append(c.queryBuf, make([]byte, SREDIS_MAX_BULK)...)
 	}
@@ -42,7 +42,7 @@ func readQueryFromClient(el *aeEventLoop, fd int, clientData any) {
 
 // SendReplyToClient send query result to client
 func SendReplyToClient(el *aeEventLoop, fd int, clientData any) {
-	c := clientData.(*SRedisClient)
+	c := assertClient(clientData)
 	for c.reply.len() > 0 {
 		resp := c.reply.first()
 		buf := []byte(resp.data.strVal())

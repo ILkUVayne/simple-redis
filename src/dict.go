@@ -412,3 +412,11 @@ func (d *dict) dictGetRandomKey() *dictEntry {
 	}
 	return he
 }
+
+func assertDict(o *SRobj) *dict {
+	d, ok := o.Val.(*dict)
+	if !ok {
+		utils.Error("assertDict err: ", o.Typ)
+	}
+	return d
+}

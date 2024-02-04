@@ -32,7 +32,7 @@ func hashTypeTryObjectEncoding(subject, o1, o2 *SRobj) {
 
 func hashTypeSet(o, field, value *SRobj) int {
 	if o.encoding == REDIS_ENCODING_HT {
-		return o.Val.(*dict).dictSet(field, value)
+		return assertDict(o).dictSet(field, value)
 	}
 	panic("Unknown hash encoding")
 }
@@ -41,7 +41,7 @@ func hashTypeGetFromHashTable(o, field *SRobj, value **SRobj) bool {
 	if o.encoding != REDIS_ENCODING_HT {
 		panic("Unknown hash encoding")
 	}
-	v := o.Val.(*dict).dictGet(field)
+	v := assertDict(o).dictGet(field)
 	if v == nil {
 		return false
 	}
@@ -70,7 +70,7 @@ func addHashFieldToReply(c *SRedisClient, o, field *SRobj) {
 
 func hashTypeLength(o *SRobj) int64 {
 	if o.encoding == REDIS_ENCODING_HT {
-		return o.Val.(*dict).dictSize()
+		return assertDict(o).dictSize()
 	}
 	panic("Unknown hash encoding")
 }

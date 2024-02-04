@@ -245,7 +245,15 @@ func zslCreate() *zSkipList {
 
 func zSetLength(o *SRobj) uint {
 	if o.encoding == REDIS_ENCODING_SKIPLIST {
-		return o.Val.(*zSet).zSetLength()
+		return assertZSet(o).zSetLength()
 	}
 	panic("Unknown sorted set encoding")
+}
+
+func assertZSet(o *SRobj) *zSet {
+	zs, ok := o.Val.(*zSet)
+	if !ok {
+		utils.Error("assertZSet err: ", o.Typ)
+	}
+	return zs
 }

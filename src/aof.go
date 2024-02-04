@@ -174,6 +174,26 @@ func (cmd *SRedisCommand) feedAppendOnlyFile(args []*SRobj, argc int) {
 // AOF rewrite
 // ----------------------------------------------------------------------------
 
+type aofRWObjectFunc func(f *os.File, key, val *SRobj)
+
+var aofRWObjectMaps = map[SRType]aofRWObjectFunc{
+	SR_STR:  rewriteStringObject,
+	SR_LIST: rewriteListObject,
+	SR_SET:  rewriteSetObject,
+	SR_ZSET: rewriteZSetObject,
+	SR_DICT: rewriteDictObject,
+}
+
+func aofRWObject(f *os.File, key, val *SRobj) int {
+	fn, ok := aofRWObjectMaps[val.Typ]
+	if !ok {
+		utils.ErrorP("Unknown object type: ", val.Typ)
+		return REDIS_ERR
+	}
+	fn(f, key, val)
+	return REDIS_OK
+}
+
 func aofUpdateCurrentSize() {
 	fInfo, err := server.aofFd.Stat()
 	if err != nil {
@@ -240,7 +260,7 @@ func rewriteListObject(f *os.File, key, val *SRobj) {
 	count, items := 0, listTypeLength(val)
 
 	if val.encoding == REDIS_ENCODING_LINKEDLIST {
-		l := val.Val.(*list)
+		l := assertList(val)
 		li := l.listRewind()
 		for ln := li.listNext(); ln != nil; ln = li.listNext() {
 			eleObj := ln.nodeValue()
@@ -263,7 +283,7 @@ func rewriteSetObject(f *os.File, key, val *SRobj) {
 
 	if val.encoding == REDIS_ENCODING_INTSET {
 		var intVal int64
-		for ii := 0; val.Val.(*intSet).intSetGet(uint32(ii), &intVal); ii++ {
+		for ii := 0; assertIntSet(val).intSetGet(uint32(ii), &intVal); ii++ {
 			if count == 0 {
 				cmd := fmt.Sprintf(RESP_SET, 2+getItems(items))
 				// add key
@@ -276,7 +296,7 @@ func rewriteSetObject(f *os.File, key, val *SRobj) {
 		return
 	}
 	if val.encoding == REDIS_ENCODING_HT {
-		di := val.Val.(*dict).dictGetIterator()
+		di := assertDict(val).dictGetIterator()
 		for de := di.dictNext(); de != nil; de = di.dictNext() {
 			eleObj := de.getKey()
 			if count == 0 {
@@ -298,7 +318,7 @@ func rewriteZSetObject(f *os.File, key, val *SRobj) {
 	count, items := 0, int(zSetLength(val))
 
 	if val.encoding == REDIS_ENCODING_SKIPLIST {
-		zs := val.Val.(*zSet)
+		zs := assertZSet(val)
 		di := zs.d.dictGetIterator()
 		for de := di.dictNext(); de != nil; de = di.dictNext() {
 			eleObj := de.getKey()
@@ -323,7 +343,7 @@ func rewriteZSetObject(f *os.File, key, val *SRobj) {
 
 func rewriteDictObject(f *os.File, key, val *SRobj) {
 	if val.encoding == REDIS_ENCODING_HT {
-		di := val.Val.(*dict).dictGetIterator()
+		di := assertDict(val).dictGetIterator()
 		for de := di.dictNext(); de != nil; de = di.dictNext() {
 			cmd := fmt.Sprintf(RESP_HASH_HSET, 4)
 			// add key hashKey hashVal
@@ -353,19 +373,9 @@ func rewriteAppendOnlyFile(filename string) int {
 		if expireTime != -1 && expireTime < now {
 			continue
 		}
-		switch val.Typ {
-		case SR_STR:
-			rewriteStringObject(f, key, val)
-		case SR_LIST:
-			rewriteListObject(f, key, val)
-		case SR_SET:
-			rewriteSetObject(f, key, val)
-		case SR_ZSET:
-			rewriteZSetObject(f, key, val)
-		case SR_DICT:
-			rewriteDictObject(f, key, val)
-		default:
-			panic("Unknown object type")
+		if aofRWObject(f, key, val) == REDIS_ERR {
+			di.dictReleaseIterator()
+			return REDIS_ERR
 		}
 		// Save the expireTime
 		if expireTime != -1 {
