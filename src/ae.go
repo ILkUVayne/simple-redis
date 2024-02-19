@@ -1,6 +1,6 @@
 // Package src
 //
-// Package ae provides the creation and management of file events and time events based on epoll IO reuse
+// lib ae provides the creation and management of file events and time events based on epoll IO reuse
 package src
 
 import (

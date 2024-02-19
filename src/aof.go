@@ -1,3 +1,6 @@
+// Package src
+//
+// Lib AOF provides AOF file loading and persistence methods
 package src
 
 import (
@@ -9,6 +12,7 @@ import (
 	"strconv"
 )
 
+// Write the contents of the AOF rewrite buffer into a file
 func aofRewriteBufferWrite(f *os.File) int {
 	if len(server.aofRewriteBufBlocks) == 0 {
 		return 0
@@ -22,6 +26,7 @@ func aofRewriteBufferWrite(f *os.File) int {
 	return n
 }
 
+// reset aof buffer
 func (s *SRedisServer) aofBufReset() {
 	if len(s.aofBuf) == 0 {
 		return
@@ -29,6 +34,7 @@ func (s *SRedisServer) aofBufReset() {
 	s.aofBuf = ""
 }
 
+// reset aof rewrite buffer
 func (s *SRedisServer) aofRewriteBufferReset() {
 	if len(s.aofRewriteBufBlocks) == 0 {
 		return
@@ -36,10 +42,11 @@ func (s *SRedisServer) aofRewriteBufferReset() {
 	s.aofRewriteBufBlocks = ""
 }
 
-//-----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // aof loading
-//-----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
+// return a fake client,client.fd == -1
 func createFakeClient() *SRedisClient {
 	c := new(SRedisClient)
 	c.fd = -1
@@ -51,6 +58,7 @@ func createFakeClient() *SRedisClient {
 	return c
 }
 
+// if expired,del key
 func aofCheckExpire(args []*SRobj) int {
 	if args[0].strVal() != EXPIRE {
 		return REDIS_OK
@@ -64,6 +72,7 @@ func aofCheckExpire(args []*SRobj) int {
 	return REDIS_OK
 }
 
+// read aof file and load data
 func loadAppendOnlyFile(name string) {
 	fp, err := os.Open(name)
 	if err != nil {
@@ -71,6 +80,7 @@ func loadAppendOnlyFile(name string) {
 	}
 	defer func() { _ = fp.Close() }()
 
+	// read aof file
 	scanner := bufio.NewScanner(fp)
 	fakeClient := createFakeClient()
 	var args []*SRobj
@@ -93,6 +103,7 @@ func loadAppendOnlyFile(name string) {
 		}
 		args = append(args, createSRobj(SR_STR, str))
 		aLen--
+		// call command
 		if aLen == 0 {
 			if aofCheckExpire(args) == REDIS_ERR {
 				args = nil
@@ -109,10 +120,11 @@ func loadAppendOnlyFile(name string) {
 	freeClient(fakeClient)
 }
 
-//-----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // AOF file implementation
-//-----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
+// Flush the data from the AOF buffer to the AOF persistence file
 func flushAppendOnlyFile() {
 	if len(server.aofBuf) == 0 {
 		return
@@ -125,6 +137,10 @@ func flushAppendOnlyFile() {
 	server.aofBufReset()
 }
 
+// build Persistence Command.
+//
+// argc is numbers of args.
+// args is Command arrays
 func catAppendOnlyGenericCommand(argc int, args []*SRobj) string {
 	buf := fmt.Sprintf(RESP_ARRAY, argc)
 	for i := 0; i < argc; i++ {
@@ -135,6 +151,7 @@ func catAppendOnlyGenericCommand(argc int, args []*SRobj) string {
 	return buf
 }
 
+// build expire Persistence Command.
 func (cmd *SRedisCommand) catAppendOnlyExpireAtCommand(buf string, key *SRobj) string {
 	val := server.db.expireGet(key)
 	// key expire
@@ -152,6 +169,7 @@ func (cmd *SRedisCommand) catAppendOnlyExpireAtCommand(buf string, key *SRobj) s
 	return buf
 }
 
+// append aof Persistence Command to aof buffer
 func (cmd *SRedisCommand) feedAppendOnlyFile(args []*SRobj, argc int) {
 	var buf string
 
@@ -164,7 +182,7 @@ func (cmd *SRedisCommand) feedAppendOnlyFile(args []*SRobj, argc int) {
 	if server.aofState == REDIS_AOF_ON {
 		server.aofBuf += buf
 	}
-
+	// If AOF rewriting is in progress, append the AOF rewriting buffer
 	if server.aofChildPid != -1 {
 		server.aofRewriteBufBlocks += buf
 	}
@@ -174,8 +192,10 @@ func (cmd *SRedisCommand) feedAppendOnlyFile(args []*SRobj, argc int) {
 // AOF rewrite
 // ----------------------------------------------------------------------------
 
+// aof rewriteObjectFunc type
 type aofRWObjectFunc func(f *os.File, key, val *SRobj)
 
+// aof rewriteObjectFunc maps
 var aofRWObjectMaps = map[SRType]aofRWObjectFunc{
 	SR_STR:  rewriteStringObject,
 	SR_LIST: rewriteListObject,
@@ -184,16 +204,19 @@ var aofRWObjectMaps = map[SRType]aofRWObjectFunc{
 	SR_DICT: rewriteDictObject,
 }
 
+// // aof rewriteObjectFunc factory
 func aofRWObject(f *os.File, key, val *SRobj) int {
 	fn, ok := aofRWObjectMaps[val.Typ]
 	if !ok {
 		utils.ErrorP("Unknown object type: ", val.Typ)
 		return REDIS_ERR
 	}
+	// call
 	fn(f, key, val)
 	return REDIS_OK
 }
 
+// update current aof file size (server.aofCurrentSize)
 func aofUpdateCurrentSize() {
 	fInfo, err := server.aofFd.Stat()
 	if err != nil {
@@ -202,6 +225,9 @@ func aofUpdateCurrentSize() {
 	server.aofCurrentSize = fInfo.Size()
 }
 
+// rewrite command to file.
+//
+// s is command string
 func rewrite(f *os.File, s *string) {
 	_, err := io.WriteString(f, *s)
 	if err != nil {
@@ -209,12 +235,17 @@ func rewrite(f *os.File, s *string) {
 	}
 }
 
+// e.g. if val == "get" while write "$3\r\nget\r\n"
 func rewriteBulkObject(f *os.File, val *SRobj) {
 	strVal := val.strVal()
 	cmd := fmt.Sprintf(RESP_BULK, len(strVal), strVal)
 	rewrite(f, &cmd)
 }
 
+// e.g. if cmd == "*3\r\n$3\r\nSET\r\n"
+// val == ["name", "hello world"]
+//
+// while write "*3\r\n$3\r\nSET\r\n$4\r\nname\r\n$11\r\nhello world\r\n"
 func rewriteObject(f *os.File, cmd *string, val ...*SRobj) {
 	if cmd != nil {
 		rewrite(f, cmd)
@@ -228,6 +259,9 @@ func rewriteObject(f *os.File, cmd *string, val ...*SRobj) {
 	}
 }
 
+// Obtain the number of items, which cannot exceed REDIS_AOF_REWRITE_ITEMS_PER_CMD
+//
+// e.g. rpush key value [value ...],items is numbers of values
 func getItems(items int) int {
 	cmdItems := items
 	if items > REDIS_AOF_REWRITE_ITEMS_PER_CMD {
@@ -244,21 +278,24 @@ func checkItems(count, items *int) {
 	*items--
 }
 
+// rewrite string object to file
 func rewriteStringObject(f *os.File, key, val *SRobj) {
 	cmd := RESP_STR
 	// set key value
 	rewriteObject(f, &cmd, key, val)
 }
 
+// rewrite expire object to file
 func rewriteExpireObject(f *os.File, key, val *SRobj) {
 	cmd := RESP_EXPIRE
 	// expire key expireTime
 	rewriteObject(f, &cmd, key, val)
 }
 
+// rewrite list object to file
 func rewriteListObject(f *os.File, key, val *SRobj) {
 	count, items := 0, listTypeLength(val)
-
+	// encoding is linked list
 	if val.encoding == REDIS_ENCODING_LINKEDLIST {
 		l := assertList(val)
 		li := l.listRewind()
@@ -278,9 +315,10 @@ func rewriteListObject(f *os.File, key, val *SRobj) {
 	panic("Unknown list encoding")
 }
 
+// rewrite set object to file
 func rewriteSetObject(f *os.File, key, val *SRobj) {
 	count, items := 0, int(setTypeSize(val))
-
+	// encoding is intSet
 	if val.encoding == REDIS_ENCODING_INTSET {
 		var intVal int64
 		for ii := 0; assertIntSet(val).intSetGet(uint32(ii), &intVal); ii++ {
@@ -295,6 +333,7 @@ func rewriteSetObject(f *os.File, key, val *SRobj) {
 		}
 		return
 	}
+	// encoding is hash table
 	if val.encoding == REDIS_ENCODING_HT {
 		di := assertDict(val).dictGetIterator()
 		for de := di.dictNext(); de != nil; de = di.dictNext() {
@@ -314,9 +353,10 @@ func rewriteSetObject(f *os.File, key, val *SRobj) {
 	panic("Unknown set encoding")
 }
 
+// rewrite zSet object to file
 func rewriteZSetObject(f *os.File, key, val *SRobj) {
 	count, items := 0, int(zSetLength(val))
-
+	// encoding is skip list
 	if val.encoding == REDIS_ENCODING_SKIPLIST {
 		zs := assertZSet(val)
 		di := zs.d.dictGetIterator()
@@ -341,7 +381,9 @@ func rewriteZSetObject(f *os.File, key, val *SRobj) {
 	panic("Unknown sorted zset encoding")
 }
 
+// rewrite hash object to file
 func rewriteDictObject(f *os.File, key, val *SRobj) {
+	// encoding is hash table
 	if val.encoding == REDIS_ENCODING_HT {
 		di := assertDict(val).dictGetIterator()
 		for de := di.dictNext(); de != nil; de = di.dictNext() {
@@ -355,6 +397,7 @@ func rewriteDictObject(f *os.File, key, val *SRobj) {
 	panic("Unknown hash encoding")
 }
 
+// Iterator dict and append rewrite command to temp aof file
 func rewriteAppendOnlyFile(filename string) int {
 	tmpFile := persistenceFile(fmt.Sprintf("temp-rewriteaof-%d.aof", os.Getpid()))
 	now := utils.GetMsTime()
@@ -370,6 +413,7 @@ func rewriteAppendOnlyFile(filename string) int {
 		key := de.getKey()
 		val := de.getVal()
 		expireTime := server.db.expireTime(key)
+		// if expired, skip
 		if expireTime != -1 && expireTime < now {
 			continue
 		}
@@ -394,6 +438,7 @@ func rewriteAppendOnlyFile(filename string) int {
 	return REDIS_OK
 }
 
+// fork child process to rewrite aof
 func rewriteAppendOnlyFileBackground() int {
 	var childPid int
 
@@ -419,7 +464,9 @@ func rewriteAppendOnlyFileBackground() int {
 	return REDIS_OK
 }
 
+// aof child process success handler
 func backgroundRewriteDoneHandler() {
+	// Get the temporary AOF file name generated by the child process
 	tmpFile := persistenceFile(fmt.Sprintf("temp-rewriteaof-bg-%d.aof", server.aofChildPid))
 	newFd, err := os.OpenFile(tmpFile, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 	if err != nil {
@@ -430,6 +477,7 @@ func backgroundRewriteDoneHandler() {
 		utils.ErrorP("Error trying to flush the parent diff to the rewritten AOF: ", err)
 		goto cleanup
 	}
+	// Replace temporary AOF file name to AOF file name
 	if err = os.Rename(tmpFile, server.aofFilename); err != nil {
 		utils.ErrorP("Error trying to rename the temporary AOF file: ", err)
 		_ = newFd.Close()
@@ -449,7 +497,9 @@ func backgroundRewriteDoneHandler() {
 cleanup:
 	server.aofRewriteBufferReset()
 	_ = os.Remove(tmpFile)
+	// reset aofChildPid == -1
 	server.aofChildPid = -1
+	// Recovery load factor
 	server.changeLoadFactor(LOAD_FACTOR)
 }
 

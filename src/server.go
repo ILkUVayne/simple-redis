@@ -51,13 +51,15 @@ type SRedisServer struct {
 	loadFactor     int64
 	rehashNullStep int64
 	// AOF persistence
-	aofFd               *os.File
-	aofChildPid         int
-	aofFilename         string
-	aofBuf              string
-	aofState            int
-	aofCurrentSize      int64
-	aofRewriteBaseSize  int64
+	aofFd       *os.File
+	aofChildPid int
+	aofFilename string
+	// AOF buffer
+	aofBuf             string
+	aofState           int
+	aofCurrentSize     int64
+	aofRewriteBaseSize int64
+	// AOF rewrite buffer
 	aofRewriteBufBlocks string
 	aofRewritePerc      int
 	aofRewriteMinSize   int64

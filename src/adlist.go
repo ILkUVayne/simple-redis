@@ -1,6 +1,6 @@
 // Package src
 //
-// Package list provides methods for creating linked lists and adding/deleting queries
+// lib list provides methods for creating linked lists and adding/deleting queries
 package src
 
 import "simple-redis/utils"
