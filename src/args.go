@@ -1,10 +1,15 @@
+// Package src
+//
+// Lib args provides server-side and client-side parameter parsing
 package src
 
 import "flag"
 
 // ----------------------------- server args -------------------------
+
+// server args
 type serverArgs struct {
-	confPath string
+	confPath string // config file path
 }
 
 var ServerArgs serverArgs
@@ -15,10 +20,11 @@ func ParseServerArgs() {
 }
 
 // ------------------------------- cli args ---------------------------
+
 type cliArgs struct {
 	hostIp string
 	port   int
-	prompt string
+	prompt string // client cli prompt
 }
 
 var CliArgs cliArgs
