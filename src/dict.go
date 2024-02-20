@@ -108,6 +108,7 @@ func SRStrCompare(key1, key2 *SRobj) bool {
 
 // -------------------------------- api ----------------------------
 
+// return dict current size
 func (d *dict) dictSlots() int64 {
 	s := d.ht[0].size
 	if d.ht[1] != nil {
@@ -116,6 +117,7 @@ func (d *dict) dictSlots() int64 {
 	return s
 }
 
+// return dict current used
 func (d *dict) dictSize() int64 {
 	s := d.ht[0].used
 	if d.ht[1] != nil {
@@ -124,6 +126,7 @@ func (d *dict) dictSize() int64 {
 	return s
 }
 
+// return dict iterators
 func (d *dict) dictGetIterator() *dictIterator {
 	di := new(dictIterator)
 	di.d = d
@@ -134,6 +137,7 @@ func (d *dict) dictGetIterator() *dictIterator {
 	return di
 }
 
+// return new dict
 func dictCreate(dType *dictType) *dict {
 	d := new(dict)
 	d.dType = dType
@@ -153,6 +157,7 @@ func freeDictEntry(e *dictEntry) {
 	e.val.decrRefCount()
 }
 
+// check if the current rehash is in progress
 func (d *dict) isRehash() bool {
 	return d.rehashIdx != -1
 }
@@ -199,10 +204,12 @@ func (d *dict) dictRehash(step int) {
 	}
 }
 
+// rehash DEFAULT_REHASH_STEP step
 func (d *dict) dictRehashStep() {
 	d.dictRehash(DEFAULT_REHASH_STEP)
 }
 
+// return dict expand size
 func (d *dict) dictNextPower(size int64) int64 {
 	i := DICT_HT_INITIAL_SIZE
 	if size > math.MaxInt64 {
@@ -281,6 +288,7 @@ func (d *dict) dictFind(key *SRobj) (int64, *dictEntry) {
 	return idx, nil
 }
 
+// add key to dict,return dictEntry
 func (d *dict) dictAddRaw(key *SRobj) *dictEntry {
 	var idx int64
 	var entry dictEntry
@@ -371,6 +379,7 @@ func (d *dict) dictDelete(key *SRobj) int {
 	return DICK_ERR
 }
 
+// get a random key
 func (d *dict) dictGetRandomKey() *dictEntry {
 	if d.dictSize() == 0 {
 		return nil

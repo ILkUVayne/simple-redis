@@ -44,7 +44,7 @@ func _cgo_qsort_compare(a, b unsafe.Pointer) C.int {
 	}
 }
 
-func Slice(slice interface{}, less func(a, b int) bool) {
+func Slice(slice any, less func(a, b int) bool) {
 	sv := reflect.ValueOf(slice)
 	if sv.Kind() != reflect.Slice {
 		panic(fmt.Sprintf("qsort called with non-slice value of type %T", slice))

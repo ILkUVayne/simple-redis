@@ -10,14 +10,14 @@ import (
 type SRedisClient struct {
 	fd         int
 	db         *SRedisDB
-	args       []*SRobj
-	reply      *list
+	args       []*SRobj // command args
+	reply      *list    // reply data
 	replyReady bool
 	queryBuf   []byte
 	queryLen   int
 	sentLen    int
 	cmd        *SRedisCommand
-	cmdTyp     CmdType
+	cmdTyp     CmdType // unknown inline bulk
 	bulkNum    int
 	bulkLen    int
 }
@@ -46,6 +46,9 @@ func (c *SRedisClient) getQueryNum(start, end int) (int, error) {
 	return n, err
 }
 
+// append reply data to client.reply,when fake client while do nothing
+//
+// typ: "r" == rPush "l" == lPush
 func (c *SRedisClient) pushReply(data *SRobj, typ string) {
 	if c.fd < 0 || data == nil {
 		return
@@ -61,6 +64,9 @@ func (c *SRedisClient) pushReply(data *SRobj, typ string) {
 	data.incrRefCount()
 }
 
+// return SRClient
+//
+// fd: client accept fd
 func createSRClient(fd int) *SRedisClient {
 	c := new(SRedisClient)
 	c.fd = fd

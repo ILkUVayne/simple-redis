@@ -6,10 +6,10 @@ import (
 )
 
 type sRedisReply struct {
-	typ    int
-	buf    []byte
-	str    string
-	fStr   string
+	typ    int    // respType
+	buf    []byte // server reply buff
+	str    string // server reply string
+	fStr   string // server reply format string
 	length int
 }
 
@@ -27,8 +27,8 @@ func (r *sRedisReply) formatStr() {
 }
 
 type sRedisContext struct {
-	fd     int
-	obuf   []byte
+	fd     int    // cli connect fd
+	oBuf   []byte // cli send args buff
 	reader any
 	err    error
 }
@@ -39,7 +39,7 @@ func sRedisContextInit() *sRedisContext {
 }
 
 func __sRedisAppendCommand(c *sRedisContext, cmd *string) {
-	c.obuf = []byte(*cmd)
+	c.oBuf = []byte(*cmd)
 }
 
 func sRedisAppendCommandArg(c *sRedisContext, args []string) {
@@ -48,6 +48,7 @@ func sRedisAppendCommandArg(c *sRedisContext, args []string) {
 	__sRedisAppendCommand(c, &cmd)
 }
 
+// Format args,Compliant with resp specifications
 func sRedisFormatCommandArg(target *string, args []string) {
 	var cmd string
 	cmd = fmt.Sprintf("*%d\r\n", len(args))
@@ -58,6 +59,7 @@ func sRedisFormatCommandArg(target *string, args []string) {
 	*target = cmd
 }
 
+// parse server response if complete
 func getReply(c *sRedisContext, reply *sRedisReply) int {
 	if reply.typ == 0 {
 		typ := getRespType(reply.buf[0])
@@ -80,12 +82,13 @@ func getReply(c *sRedisContext, reply *sRedisReply) int {
 	return CLI_OK
 }
 
+// send command to server and read response
 func sRedisGetReply(c *sRedisContext, reply *sRedisReply) int {
 	// Write
-	wLen := len(c.obuf)
+	wLen := len(c.oBuf)
 	sendLen := 0
 	for {
-		n, err := Write(c.fd, c.obuf[sendLen:])
+		n, err := Write(c.fd, c.oBuf[sendLen:])
 		if err != nil {
 			c.err = err
 			return CLI_ERR

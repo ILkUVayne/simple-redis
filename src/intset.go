@@ -63,6 +63,7 @@ func (is *intSet) intSetSearch(value int64, pos *uint32) uint8 {
 	return 0
 }
 
+// return true if existed,false non-existent
 func (is *intSet) intSetFind(value int64) bool {
 	var pos uint32
 	if is.intSetSearch(value, &pos) == 0 {

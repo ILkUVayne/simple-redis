@@ -1,3 +1,6 @@
+// Package src
+//
+// lib list provides methods for creating linked lists and adding/deleting queries
 package src
 
 import "simple-redis/utils"
@@ -6,6 +9,16 @@ type Pusher interface {
 	rPush(data *SRobj)
 	lPush(data *SRobj)
 }
+
+type listType struct {
+	keyCompare func(key1, key2 *SRobj) bool
+}
+
+var lType = listType{keyCompare: SRStrCompare}
+
+// -----------------------------------------------------------------------------
+// list iterators
+// -----------------------------------------------------------------------------
 
 type listIter struct {
 	next      *node
@@ -24,11 +37,9 @@ func (li *listIter) listNext() *node {
 	return curr
 }
 
-type listType struct {
-	keyCompare func(key1, key2 *SRobj) bool
-}
-
-var lType = listType{keyCompare: SRStrCompare}
+// -----------------------------------------------------------------------------
+// list node
+// -----------------------------------------------------------------------------
 
 type node struct {
 	data *SRobj
@@ -47,6 +58,10 @@ func (n *node) nodeNext() *node {
 func (n *node) nodePrev() *node {
 	return n.prev
 }
+
+// -----------------------------------------------------------------------------
+// list
+// -----------------------------------------------------------------------------
 
 type list struct {
 	lType  *listType
@@ -155,6 +170,7 @@ func (l *list) del(data *SRobj) {
 	l.delNode(l.find(data))
 }
 
+// return head list iterators
 func (l *list) listRewind() *listIter {
 	li := new(listIter)
 	li.next = l.head
@@ -162,12 +178,17 @@ func (l *list) listRewind() *listIter {
 	return li
 }
 
+// return tail list iterators
 func (l *list) listRewindTail() *listIter {
 	li := new(listIter)
 	li.next = l.tail
 	li.direction = AL_START_TAIL
 	return li
 }
+
+// -----------------------------------------------------------------------------
+// list API
+// -----------------------------------------------------------------------------
 
 func listCreate(lType *listType) *list {
 	l := new(list)

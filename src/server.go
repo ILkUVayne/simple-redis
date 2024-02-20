@@ -54,11 +54,11 @@ type SRedisServer struct {
 	aofFd               *os.File
 	aofChildPid         int
 	aofFilename         string
-	aofBuf              string
+	aofBuf              string // AOF buffer
 	aofState            int
 	aofCurrentSize      int64
 	aofRewriteBaseSize  int64
-	aofRewriteBufBlocks string
+	aofRewriteBufBlocks string // AOF rewrite buffer
 	aofRewritePerc      int
 	aofRewriteMinSize   int64
 	// RDB persistence

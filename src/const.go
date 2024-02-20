@@ -199,8 +199,6 @@ const (
 // dict
 //-----------------------------------------------------------------------------
 
-// LOAD_FACTOR 负载因子
-// BG_PERSISTENCE_LOAD_FACTOR bgsave或者bgrewriteaof 的负载因子
 const (
 	DICT_SET = 0
 	DICT_REP = 1
@@ -211,8 +209,8 @@ const (
 	DEFAULT_REHASH_STEP              = 1
 	DICT_HT_INITIAL_SIZE       int64 = 4
 	EXPEND_RATIO               int64 = 2
-	LOAD_FACTOR                      = 1
-	BG_PERSISTENCE_LOAD_FACTOR       = 5
+	LOAD_FACTOR                      = 1 // LOAD_FACTOR 负载因子
+	BG_PERSISTENCE_LOAD_FACTOR       = 5 // BG_PERSISTENCE_LOAD_FACTOR bgsave或者bgrewriteaof 的负载因子
 )
 
 //-----------------------------------------------------------------------------

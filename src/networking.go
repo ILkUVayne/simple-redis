@@ -72,6 +72,7 @@ func SendReplyToClient(el *aeEventLoop, fd int, clientData any) {
 
 // ======================= Cron: called every 100 ms ========================
 
+// check some random expire key
 func activeExpireCycle() {
 	for i := 0; i < EXPIRE_CHECK_COUNT; i++ {
 		if server.db.expire.dictSize() == 0 {
