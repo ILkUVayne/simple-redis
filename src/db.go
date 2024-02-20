@@ -3,8 +3,8 @@ package src
 import "simple-redis/utils"
 
 type SRedisDB struct {
-	data   *dict
-	expire *dict
+	data   *dict // data dict
+	expire *dict // expire dict
 }
 
 var dbDictType = dictType{
@@ -83,6 +83,7 @@ func (db *SRedisDB) lookupKeyRead(key *SRobj) *SRobj {
 	return db.lookupKey(key)
 }
 
+// return db value,if null while reply error to client
 func (db *SRedisDB) lookupKeyReadOrReply(c *SRedisClient, key *SRobj, reply *SRobj) *SRobj {
 	o := db.lookupKeyRead(key)
 	if o == nil {

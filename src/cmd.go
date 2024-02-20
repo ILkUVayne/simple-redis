@@ -12,7 +12,7 @@ type CommandProc func(c *SRedisClient)
 type SRedisCommand struct {
 	name  string
 	proc  CommandProc
-	arity int
+	arity int // command args,if < 0 like -3 means args >= 3
 }
 
 func (cmd *SRedisCommand) propagate(args []*SRobj) {
@@ -45,11 +45,13 @@ func processCommand(c *SRedisClient) {
 		return
 	}
 	c.cmd = lookupCommand(cmdStr)
+	// non-existent
 	if c.cmd == nil {
 		c.addReply(shared.unknowErr)
 		resetClient(c)
 		return
 	}
+	// check arity
 	if (c.cmd.arity > 0 && c.cmd.arity != len(c.args)) || -c.cmd.arity > len(c.args) {
 		c.addReply(shared.argsNumErr)
 		resetClient(c)
@@ -109,6 +111,7 @@ var commandTable = []SRedisCommand{
 // db commands
 //-----------------------------------------------------------------------------
 
+// expire key value
 func expireCommand(c *SRedisClient) {
 	key := c.args[1]
 	val := c.args[2]
@@ -139,6 +142,7 @@ func expireCommand(c *SRedisClient) {
 	server.incrDirtyCount(c, 1)
 }
 
+// object encoding key
 func objectCommand(c *SRedisClient) {
 	val := c.args[2]
 	if val.Typ != SR_STR {
@@ -152,6 +156,7 @@ func objectCommand(c *SRedisClient) {
 	c.addReplyBulk(value.getEncoding())
 }
 
+// del key [key ...]
 func delCommand(c *SRedisClient) {
 	deleted := 0
 	for i := 1; i < len(c.args); i++ {
@@ -162,6 +167,7 @@ func delCommand(c *SRedisClient) {
 	c.addReplyLongLong(deleted)
 }
 
+// keys pattern
 func keysCommand(c *SRedisClient) {
 	pattern := c.args[1].strVal()
 	numKeys := 0

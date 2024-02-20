@@ -9,8 +9,10 @@ import (
 	"strings"
 )
 
+// complex config parse function
 type complexConfFunc func(val string)
 
+// rdb save param
 type saveParam struct {
 	seconds int
 	changes int
@@ -57,7 +59,8 @@ type configVal struct {
 	AppendOnly     bool   `cfg:"appendOnly"`
 	RehashNullStep int64  `cfg:"rehashNullStep"`
 	// complex conf
-	saveParams []*saveParam
+
+	saveParams []*saveParam // rdb save params
 }
 
 var config *configVal

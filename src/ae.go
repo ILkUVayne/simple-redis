@@ -21,8 +21,7 @@ type aeFileProc func(el *aeEventLoop, fd int, clientData any)
 type aeTimeProc func(el *aeEventLoop, id int, clientData any)
 
 type aeFileEvent struct {
-	// ae file event type, AE_READABLE and AE_WRITEABLE
-	mask       FeType
+	mask       FeType // ae file event type, AE_READABLE and AE_WRITEABLE
 	proc       aeFileProc
 	fd         int
 	clientData any
@@ -35,16 +34,13 @@ type aeTimeEvent struct {
 	proc       aeTimeProc
 	clientData any
 	next       *aeTimeEvent
-	// ae time event type, AE_NORMAL and AE_ONCE
-	mask TeType
+	mask       TeType // ae time event type, AE_NORMAL and AE_ONCE
 }
 
 type aeEventLoop struct {
-	// file event maps
-	fileEvent map[int]*aeFileEvent
-	// time event list
-	timeEvent       *aeTimeEvent
-	ffd             int // epoll fd
+	fileEvent       map[int]*aeFileEvent // file event maps
+	timeEvent       *aeTimeEvent         // time event list
+	ffd             int                  // epoll fd
 	timeEventNextId int
 	stop            bool
 }

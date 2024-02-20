@@ -4,6 +4,7 @@ package src
 // Hash type commands API
 //-----------------------------------------------------------------------------
 
+// return hash obj,create new hash obj if null
 func hashTypeLookupWriteOrCreate(c *SRedisClient, key *SRobj) *SRobj {
 	o := c.db.lookupKeyWrite(key)
 	if o == nil {
@@ -30,6 +31,7 @@ func hashTypeTryObjectEncoding(subject, o1, o2 *SRobj) {
 	}
 }
 
+// hash obj set by encoding type
 func hashTypeSet(o, field, value *SRobj) int {
 	if o.encoding == REDIS_ENCODING_HT {
 		return assertDict(o).dictSet(field, value)
@@ -68,6 +70,7 @@ func addHashFieldToReply(c *SRedisClient, o, field *SRobj) {
 	panic("Unknown hash encoding")
 }
 
+// return hash ogj length by encoding
 func hashTypeLength(o *SRobj) int64 {
 	if o.encoding == REDIS_ENCODING_HT {
 		return assertDict(o).dictSize()
