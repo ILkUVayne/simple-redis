@@ -79,6 +79,7 @@ var commandTable = []SRedisCommand{
 	{EXPIRE, expireCommand, 3},
 	{OBJECT, objectCommand, 3},
 	{DEL, delCommand, -2},
+	{EXISTS, existsCommand, -2},
 	{KEYS, keysCommand, 2},
 	// aof
 	{BGREWRITEAOF, bgRewriteAofCommand, 1},
@@ -136,7 +137,7 @@ func expireCommand(c *SRedisClient) {
 	}
 
 	expireObj := createFromInt(expire)
-	server.db.expire.dictSet(key, expireObj)
+	c.db.expire.dictSet(key, expireObj)
 	expireObj.decrRefCount()
 	c.addReply(shared.ok)
 	server.incrDirtyCount(c, 1)
@@ -160,7 +161,7 @@ func objectCommand(c *SRedisClient) {
 func delCommand(c *SRedisClient) {
 	deleted := 0
 	for i := 1; i < len(c.args); i++ {
-		if server.db.dbDel(c.args[i]) == REDIS_OK {
+		if c.db.dbDel(c.args[i]) == REDIS_OK {
 			deleted++
 		}
 	}
@@ -176,11 +177,11 @@ func keysCommand(c *SRedisClient) {
 		allKeys = true
 	}
 	replyLen := c.addDeferredMultiBulkLength()
-	di := server.db.data.dictGetIterator()
+	di := c.db.data.dictGetIterator()
 	for de := di.dictNext(); de != nil; de = di.dictNext() {
 		key := de.getKey()
 		if allKeys || utils.StringMatch(pattern, key.strVal(), false) {
-			if !server.db.expireIfNeeded(key) {
+			if !c.db.expireIfNeeded(key) {
 
 				c.addReplyBulk(key)
 				numKeys++
@@ -189,4 +190,16 @@ func keysCommand(c *SRedisClient) {
 	}
 	di.dictReleaseIterator()
 	c.setDeferredMultiBulkLength(replyLen, numKeys)
+}
+
+// EXISTS key [key ...]
+func existsCommand(c *SRedisClient) {
+	count := 0
+	for i := 1; i < len(c.args); i++ {
+		c.db.expireIfNeeded(c.args[i])
+		if c.db.lookupKey(c.args[i]) != nil {
+			count++
+		}
+	}
+	c.addReplyLongLong(count)
 }

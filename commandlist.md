@@ -73,6 +73,18 @@ OK
 (empty array)
 ~~~
 
+### exists
+
+**EXISTS key [key ...]**
+
+~~~bash
+127.0.0.1:6379> set kk v1
+OK
+127.0.0.1:6379> exists kk
+(integer) 1
+127.0.0.1:6379> exists kk kkk
+(integer) 1
+~~~
 ## AOF
 
 ### BGREWRITEAOF

@@ -112,6 +112,7 @@ const (
 	EXPIRE       = "expire"
 	OBJECT       = "object"
 	DEL          = "del"
+	EXISTS       = "exists"
 	KEYS         = "keys"
 	BGREWRITEAOF = "bgrewriteaof"
 	BGSAVE       = "bgsave"
