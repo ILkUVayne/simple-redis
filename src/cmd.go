@@ -78,9 +78,12 @@ func call(c *SRedisClient) {
 var commandTable = []SRedisCommand{
 	{EXPIRE, expireCommand, 3},
 	{OBJECT, objectCommand, 3},
+	{KEYS, keysCommand, 2},
+	{PERSIST, persistCommand, 2},
+	{TTL, ttlCommand, 2},
+	{PTTL, pTtlCommand, 2},
 	{DEL, delCommand, -2},
 	{EXISTS, existsCommand, -2},
-	{KEYS, keysCommand, 2},
 	// aof
 	{BGREWRITEAOF, bgRewriteAofCommand, 1},
 	// rdb
@@ -111,6 +114,26 @@ var commandTable = []SRedisCommand{
 //-----------------------------------------------------------------------------
 // db commands
 //-----------------------------------------------------------------------------
+
+func ttlGenericCommand(c *SRedisClient, outputMs bool) {
+	key := c.args[1]
+	c.db.expireIfNeeded(key)
+	if c.db.lookupKey(key) == nil {
+		c.addReplyLongLong(-2)
+		return
+	}
+	expireTime := c.db.expireTime(key)
+	if expireTime == -1 {
+		c.addReplyLongLong(-1)
+		return
+	}
+	ttl := expireTime - utils.GetMsTime()
+	if outputMs {
+		c.addReplyLongLong(int(ttl))
+		return
+	}
+	c.addReplyLongLong(int((ttl + 500) / 1000))
+}
 
 // expire key value
 func expireCommand(c *SRedisClient) {
@@ -202,4 +225,30 @@ func existsCommand(c *SRedisClient) {
 		}
 	}
 	c.addReplyLongLong(count)
+}
+
+// TTL key, return s
+func ttlCommand(c *SRedisClient) {
+	ttlGenericCommand(c, false)
+}
+
+// PTTL key, return ms
+func pTtlCommand(c *SRedisClient) {
+	ttlGenericCommand(c, true)
+}
+
+// PERSIST key
+func persistCommand(c *SRedisClient) {
+	key := c.args[1]
+	c.db.expireIfNeeded(key)
+	if c.db.expireGet(key) == nil {
+		c.addReply(shared.czero)
+		return
+	}
+	if c.db.expireDel(key) == REDIS_OK {
+		c.addReply(shared.cone)
+		server.incrDirtyCount(c, 1)
+		return
+	}
+	c.addReply(shared.czero)
 }

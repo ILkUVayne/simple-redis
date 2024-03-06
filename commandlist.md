@@ -4,9 +4,11 @@
 
 ## db
 
-### expire
+### EXPIRE
 
-**expire key value**
+**EXPIRE key seconds**
+
+The EXPIRE command is used to set the expiration time of a key in seconds. When the key expires, it cannot be used again.
 
 ~~~bash
 127.0.0.1:6379> expire name 5
@@ -24,9 +26,11 @@ OK
 "raw"
 ~~~
 
-### del
+### DEL
 
-**del key [key ...]**
+**DEL key [key ...]**
+
+The DEL command is used to delete one or more keys that already exist in the database. If they do not exist, they are automatically ignored.
 
 ~~~bash
 127.0.0.1:6379> set k1 aaa
@@ -45,9 +49,11 @@ OK
 (integer) 3
 ~~~
 
-### keys
+### KEYS
 
-**keys pattern**
+**KEYS pattern**
+
+The KEYS command is used to find all keys that match the specified pattern.
 
 ~~~bash
 127.0.0.1:6379> set name asdsa
@@ -73,9 +79,11 @@ OK
 (empty array)
 ~~~
 
-### exists
+### EXISTS
 
 **EXISTS key [key ...]**
+
+The EXISTS command is used to check whether a specified key or multiple keys exist.
 
 ~~~bash
 127.0.0.1:6379> set kk v1
@@ -85,6 +93,52 @@ OK
 127.0.0.1:6379> exists kk kkk
 (integer) 1
 ~~~
+
+### TTL
+
+**TTL key**
+
+The TTL command checks the remaining expiration time of the Key, in seconds
+
+~~~bash
+127.0.0.1:6379> expire url 50
+OK
+127.0.0.1:6379> TTL url
+(integer) 40
+~~~
+
+### PTTL
+
+**PTTL key**
+
+The PTTL command checks the remaining expiration time of a Key in milliseconds.
+
+~~~bash
+127.0.0.1:6379> pTTL url
+(integer) 36804
+127.0.0.1:6379> pTTL url1
+(integer) -2
+127.0.0.1:6379> pTTL s1
+(integer) -1
+~~~
+
+### PERSIST
+
+**PERSIST key**
+
+The PERSIST command is used to remove the expiration time of a specified key, so that the key will never expire
+
+~~~bash
+127.0.0.1:6379> expire url 50
+OK
+127.0.0.1:6379> ttl url
+(integer) 44
+127.0.0.1:6379> persist url
+(integer) 1
+127.0.0.1:6379> ttl url
+(integer) -1
+~~~
+
 ## AOF
 
 ### BGREWRITEAOF
