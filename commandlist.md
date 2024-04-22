@@ -139,6 +139,25 @@ OK
 (integer) -1
 ~~~
 
+### RANDOMKEY
+
+**RANDOMKEY**
+
+The Redis RANDOMKEY command is used to randomly return a key from the current database. When the database is not empty, return a key; Returns nil when the database is empty.
+
+~~~bash
+127.0.0.1:6379> keys *
+(empty array)
+127.0.0.1:6379> RANDOMKEY
+(nil)
+127.0.0.1:6379> set name hello
+OK
+127.0.0.1:6379> set key world
+OK
+127.0.0.1:6379> RANDOMKEY
+"key"
+~~~
+
 ## AOF
 
 ### BGREWRITEAOF

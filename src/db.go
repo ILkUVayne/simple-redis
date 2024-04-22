@@ -95,3 +95,17 @@ func (db *SRedisDB) lookupKeyReadOrReply(c *SRedisClient, key *SRobj, reply *SRo
 	}
 	return o
 }
+
+func (db *SRedisDB) dbRandomKey() *SRobj {
+	for {
+		de := db.data.dictGetRandomKey()
+		if de == nil {
+			return nil
+		}
+		keyObj := de.key
+		if db.expireIfNeeded(keyObj) {
+			continue
+		}
+		return keyObj
+	}
+}

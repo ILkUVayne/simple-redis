@@ -113,6 +113,7 @@ const (
 	OBJECT       = "object"
 	DEL          = "del"
 	EXISTS       = "exists"
+	RANDOMKEY    = "randomkey"
 	PERSIST      = "persist"
 	TTL          = "ttl"
 	PTTL         = "pttl"
