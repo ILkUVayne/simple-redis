@@ -413,6 +413,11 @@ func writeZSetObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 }
 
 func rdbSave(filename *string) int {
+	if server.db.dbDataSize() == 0 {
+		utils.Info("database is empty")
+		return REDIS_OK
+	}
+
 	tmpFile := persistenceFile(fmt.Sprintf("temp-%d.rdb", os.Getpid()))
 	f, err := os.Create(tmpFile)
 	if err != nil {
@@ -494,6 +499,7 @@ func backgroundSaveDoneHandler() {
 	server.lastBgSaveStatus = REDIS_OK
 	server.rdbChildPid = -1
 	server.changeLoadFactor(LOAD_FACTOR)
+	utils.Info("Background RDB finished successfully")
 }
 
 //-----------------------------------------------------------------------------

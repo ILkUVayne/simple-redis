@@ -95,3 +95,21 @@ func (db *SRedisDB) lookupKeyReadOrReply(c *SRedisClient, key *SRobj, reply *SRo
 	}
 	return o
 }
+
+func (db *SRedisDB) dbRandomKey() *SRobj {
+	for {
+		de := db.data.dictGetRandomKey()
+		if de == nil {
+			return nil
+		}
+		keyObj := de.getKey()
+		if db.expireIfNeeded(keyObj) {
+			continue
+		}
+		return keyObj
+	}
+}
+
+func (db *SRedisDB) dbDataSize() int64 {
+	return db.data.dictSize()
+}

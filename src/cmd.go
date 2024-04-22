@@ -84,6 +84,7 @@ var commandTable = []SRedisCommand{
 	{PTTL, pTtlCommand, 2},
 	{DEL, delCommand, -2},
 	{EXISTS, existsCommand, -2},
+	{RANDOMKEY, randomKeyCommand, 1},
 	// aof
 	{BGREWRITEAOF, bgRewriteAofCommand, 1},
 	// rdb
@@ -205,7 +206,6 @@ func keysCommand(c *SRedisClient) {
 		key := de.getKey()
 		if allKeys || utils.StringMatch(pattern, key.strVal(), false) {
 			if !c.db.expireIfNeeded(key) {
-
 				c.addReplyBulk(key)
 				numKeys++
 			}
@@ -251,4 +251,14 @@ func persistCommand(c *SRedisClient) {
 		return
 	}
 	c.addReply(shared.czero)
+}
+
+// RANDOMKEY
+func randomKeyCommand(c *SRedisClient) {
+	key := c.db.dbRandomKey()
+	if key == nil {
+		c.addReply(shared.nullBulk)
+		return
+	}
+	c.addReplyBulk(key)
 }
