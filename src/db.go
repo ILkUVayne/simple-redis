@@ -102,10 +102,14 @@ func (db *SRedisDB) dbRandomKey() *SRobj {
 		if de == nil {
 			return nil
 		}
-		keyObj := de.key
+		keyObj := de.getKey()
 		if db.expireIfNeeded(keyObj) {
 			continue
 		}
 		return keyObj
 	}
+}
+
+func (db *SRedisDB) dbDataSize() int64 {
+	return db.data.dictSize()
 }
