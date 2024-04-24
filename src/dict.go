@@ -66,8 +66,10 @@ func (de *dictEntry) getVal() *SRobj {
 }
 
 type dictType struct {
-	hashFunc   func(key *SRobj) int64
-	keyCompare func(key1, key2 *SRobj) bool
+	hashFunc      func(key *SRobj) int64
+	keyCompare    func(key1, key2 *SRobj) bool
+	keyDestructor func(key *SRobj)
+	valDestructor func(val *SRobj)
 }
 
 type dictht struct {
@@ -85,7 +87,7 @@ type dict struct {
 	iterators int64
 }
 
-// ----------------------------- hash func -------------------------
+// ----------------------------- dict type func -------------------------
 
 func SRStrHash(key *SRobj) int64 {
 	if key.Typ != SR_STR {
@@ -106,7 +108,30 @@ func SRStrCompare(key1, key2 *SRobj) bool {
 	return key1.strVal() == key2.strVal()
 }
 
+func SRStrDestructor(key *SRobj) {
+	key.decrRefCount()
+}
+
+func ObjectDestructor(val *SRobj) {
+	if val == nil {
+		return
+	}
+	val.decrRefCount()
+}
+
 // -------------------------------- api ----------------------------
+
+func (d *dict) dictFreeKey(de *dictEntry) {
+	if d.dType.keyDestructor != nil {
+		d.dType.keyDestructor(de.getKey())
+	}
+}
+
+func (d *dict) dictFreeVal(de *dictEntry) {
+	if d.dType.valDestructor != nil {
+		d.dType.valDestructor(de.getVal())
+	}
+}
 
 // return dict current size
 func (d *dict) dictSlots() int64 {
@@ -137,10 +162,7 @@ func (d *dict) dictGetIterator() *dictIterator {
 	return di
 }
 
-// return new dict
-func dictCreate(dType *dictType) *dict {
-	d := new(dict)
-	d.dType = dType
+func (d *dict) initHt() {
 	ht := new(dictht)
 	ht.mask = DICT_HT_INITIAL_SIZE - 1
 	ht.size = DICT_HT_INITIAL_SIZE
@@ -149,6 +171,13 @@ func dictCreate(dType *dictType) *dict {
 	d.ht[0] = ht
 	d.rehashIdx = -1
 	d.iterators = 0
+}
+
+// return new dict
+func dictCreate(dType *dictType) *dict {
+	d := new(dict)
+	d.dType = dType
+	d.initHt()
 	return d
 }
 
@@ -293,6 +322,10 @@ func (d *dict) dictAddRaw(key *SRobj) *dictEntry {
 	var idx int64
 	var entry dictEntry
 	var ht *dictht
+	// maybe after flushdb
+	if d.ht[0].size == 0 {
+		d.initHt()
+	}
 	if idx = d.dictKeyIndex(key); idx == -1 {
 		return nil
 	}
@@ -420,6 +453,44 @@ func (d *dict) dictGetRandomKey() *dictEntry {
 		he = he.next
 	}
 	return he
+}
+
+func (d *dict) _dictClear(ht *dictht) int {
+	var he *dictEntry
+
+	if ht == nil {
+		return DICK_OK
+	}
+	for i := int64(0); i < ht.size; i++ {
+		he = ht.table[i]
+		if he == nil {
+			continue
+		}
+		for he != nil {
+			nextHe := he.next
+			d.dictFreeKey(he)
+			d.dictFreeVal(he)
+			freeDictEntry(he)
+			ht.used--
+			he = nextHe
+		}
+	}
+	_dictReset(ht)
+	return DICK_OK
+}
+
+func _dictReset(ht *dictht) {
+	ht.table = nil
+	ht.size = 0
+	ht.used = 0
+	ht.mask = 0
+}
+
+func (d *dict) dictEmpty() {
+	d._dictClear(d.ht[0])
+	d._dictClear(d.ht[1])
+	d.rehashIdx = -1
+	d.iterators = 0
 }
 
 func assertDict(o *SRobj) *dict {

@@ -114,6 +114,7 @@ const (
 	DEL          = "del"
 	EXISTS       = "exists"
 	RANDOMKEY    = "randomkey"
+	FLUSHDB      = "flushdb"
 	PERSIST      = "persist"
 	TTL          = "ttl"
 	PTTL         = "pttl"

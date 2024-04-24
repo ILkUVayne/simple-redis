@@ -414,6 +414,8 @@ func writeZSetObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 
 func rdbSave(filename *string) int {
 	if server.db.dbDataSize() == 0 {
+		_ = os.Remove(*filename)
+		_, _ = os.Create(*filename)
 		utils.Info("database is empty")
 		return REDIS_OK
 	}
