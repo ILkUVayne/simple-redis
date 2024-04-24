@@ -16,8 +16,10 @@ type zRangeSpec struct {
 }
 
 var zSetDictType = dictType{
-	hashFunc:   SRStrHash,
-	keyCompare: SRStrCompare,
+	hashFunc:      SRStrHash,
+	keyCompare:    SRStrCompare,
+	keyDestructor: nil,
+	valDestructor: nil,
 }
 
 // return (min,minex) or (max,maxnx) and error

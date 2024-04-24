@@ -158,6 +158,23 @@ OK
 "key"
 ~~~
 
+### FLUSHDB
+
+**FLUSHDB**
+
+The Redis FLUSHDB command will clear all data in Redis
+
+~~~bash
+127.0.0.1:6379> keys *
+1) "k1"
+2) "k2"
+3) "k3"
+127.0.0.1:6379> FLUSHDB
+OK
+127.0.0.1:6379> keys *
+(empty array)
+~~~
+
 ## AOF
 
 ### BGREWRITEAOF

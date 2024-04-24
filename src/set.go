@@ -58,8 +58,10 @@ func setTypeInitIterator(subject *SRobj) *setTypeIterator {
 }
 
 var setDictType = dictType{
-	hashFunc:   SRStrHash,
-	keyCompare: SRStrCompare,
+	hashFunc:      SRStrHash,
+	keyCompare:    SRStrCompare,
+	keyDestructor: nil,
+	valDestructor: nil,
 }
 
 func setTypeCreate(value *SRobj) *SRobj {
