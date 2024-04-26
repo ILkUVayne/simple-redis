@@ -86,6 +86,7 @@ var commandTable = []SRedisCommand{
 	{EXISTS, existsCommand, -2},
 	{RANDOMKEY, randomKeyCommand, 1},
 	{FLUSHDB, flushDbCommand, 1},
+	{TYPE, typeCommand, 2},
 	// aof
 	{BGREWRITEAOF, bgRewriteAofCommand, 1},
 	// rdb

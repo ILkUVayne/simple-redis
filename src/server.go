@@ -7,7 +7,8 @@ import (
 )
 
 type sharedObjects struct {
-	crlf, ok, err, czero, cone, emptyMultiBulk, nullBulk, syntaxErr, typeErr, unknowErr, argsNumErr, wrongTypeErr *SRobj
+	crlf, ok, err, czero, cone, emptyMultiBulk, nullBulk, syntaxErr, typeErr, unknowErr, argsNumErr, wrongTypeErr,
+	none *SRobj
 }
 
 var shared sharedObjects
@@ -19,6 +20,7 @@ func createSharedObjects() {
 	shared.czero = createSRobj(SR_STR, ":0\r\n")
 	shared.cone = createSRobj(SR_STR, ":1\r\n")
 	shared.emptyMultiBulk = createSRobj(SR_STR, "*0\r\n")
+	shared.none = createSRobj(SR_STR, "+none\r\n")
 	shared.nullBulk = createSRobj(SR_STR, RESP_NIL_VAL)
 	shared.syntaxErr = createSRobj(SR_STR, fmt.Sprintf(RESP_ERR, "syntax error"))
 	shared.typeErr = createSRobj(SR_STR, fmt.Sprintf(RESP_ERR, "wrong type"))

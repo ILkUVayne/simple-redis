@@ -189,6 +189,20 @@ func objectCommand(c *SRedisClient) {
 	c.addReplyBulk(value.getEncoding())
 }
 
+// TYPE key
+func typeCommand(c *SRedisClient) {
+	val := c.args[1]
+	if val.Typ != SR_STR {
+		c.addReply(shared.typeErr)
+		return
+	}
+	value := c.db.lookupKeyReadOrReply(c, val, shared.none)
+	if value == nil {
+		return
+	}
+	c.addReplyStatus(value.strType())
+}
+
 // del key [key ...]
 func delCommand(c *SRedisClient) {
 	deleted := 0
@@ -271,6 +285,7 @@ func randomKeyCommand(c *SRedisClient) {
 	c.addReplyBulk(key)
 }
 
+// FLUSHDB
 func flushDbCommand(c *SRedisClient) {
 	server.incrDirtyCount(c, server.db.dbDataSize())
 	server.db.data.dictEmpty()
