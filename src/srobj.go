@@ -17,6 +17,14 @@ var encodingMaps = map[uint8]string{
 	REDIS_ENCODING_SKIPLIST:   "skiplist",
 }
 
+var TypeMaps = map[SRType]string{
+	SR_STR:  "string",
+	SR_LIST: "list",
+	SR_SET:  "set",
+	SR_ZSET: "zset",
+	SR_DICT: "hash",
+}
+
 type SRType uint8
 
 type SRVal any
@@ -89,8 +97,20 @@ func (s *SRobj) strEncoding() string {
 	return encoding
 }
 
+func (s *SRobj) strType() string {
+	typ, ok := TypeMaps[s.Typ]
+	if !ok {
+		return "unknown"
+	}
+	return typ
+}
+
 func (s *SRobj) getEncoding() *SRobj {
 	return createSRobj(SR_STR, s.strEncoding())
+}
+
+func (s *SRobj) getType() *SRobj {
+	return createSRobj(SR_STR, s.strType())
 }
 
 func (s *SRobj) checkType(c *SRedisClient, typ SRType) bool {

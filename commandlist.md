@@ -175,6 +175,37 @@ OK
 (empty array)
 ~~~
 
+### TYPE
+
+**TYPE key**
+
+The Redis FLUSHDB command Returns the data type of the key, such as string, list, set, hash, zset, etc. If it returns none, it indicates that the key does not exist.
+
+~~~bash
+127.0.0.1:6379> SET webname www.baidu.com
+OK
+127.0.0.1:6379> TYPE webname
+string
+127.0.0.1:6379> LPUSH weburl www.baidu.com
+(integer) 1
+127.0.0.1:6379> TYPE weburl
+list
+127.0.0.1:6379> Hset name url www.baidu.com
+(integer) 1
+127.0.0.1:6379> TYPE name
+hash
+127.0.0.1:6379> SADD web www.taobao.com www.jd.com www.baidu.com
+(integer) 3
+127.0.0.1:6379> TYPE web
+set
+127.0.0.1:6379> ZADD zs 100 math
+(integer) 1
+127.0.0.1:6379> TYPE zs
+zset
+127.0.0.1:6379> TYPE zs11
+none
+~~~
+
 ## AOF
 
 ### BGREWRITEAOF
