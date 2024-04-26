@@ -98,7 +98,7 @@ OK
 
 **TTL key**
 
-The TTL command checks the remaining expiration time of the Key, in seconds
+The TTL command checks the remaining expiration time of the Key, in seconds.If the key does not exist, return -2; If the key exists but the remaining survival time is not set, return -1.
 
 ~~~bash
 127.0.0.1:6379> expire url 50
@@ -111,7 +111,7 @@ OK
 
 **PTTL key**
 
-The PTTL command checks the remaining expiration time of a Key in milliseconds.
+The PTTL command checks the remaining expiration time of a Key in milliseconds.When the key does not exist, return -2. When the key exists but the remaining survival time is not set, return -1. Otherwise, return the remaining lifetime of the key.
 
 ~~~bash
 127.0.0.1:6379> pTTL url
