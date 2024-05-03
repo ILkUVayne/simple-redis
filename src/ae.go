@@ -46,7 +46,7 @@ type aeEventLoop struct {
 }
 
 // fileEvent to epoll
-var fe2ep = [3]uint32{0, unix.EPOLLIN, unix.EPOLLOUT}
+var fe2ep = [3]uint32{0x0, unix.EPOLLIN, unix.EPOLLOUT}
 
 // get fileEvent key
 func feKey(fd int, mask FeType) int {
@@ -80,11 +80,11 @@ func (el *aeEventLoop) addFileEvent(fd int, mask FeType, proc aeFileProc, client
 	// epoll_ctl
 	em := el.epollMask(fd)
 	// 该fd对应的mask事件已注册
-	if em&fe2ep[mask] != 0 {
+	if em&fe2ep[mask] != 0x0 {
 		return
 	}
 	op := unix.EPOLL_CTL_ADD
-	if em != 0 {
+	if em != 0x0 {
 		op = unix.EPOLL_CTL_MOD
 	}
 	em |= fe2ep[mask]
@@ -106,7 +106,7 @@ func (el *aeEventLoop) removeFileEvent(fd int, mask FeType) {
 	// epoll_ctl
 	em := el.epollMask(fd)
 	// 该fd对应的mask事件未注册，无需删除
-	if em&fe2ep[mask] == 0 {
+	if em&fe2ep[mask] == 0x0 {
 		return
 	}
 	op := unix.EPOLL_CTL_DEL

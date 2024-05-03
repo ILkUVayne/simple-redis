@@ -31,6 +31,6 @@ var CliArgs cliArgs
 
 func ParseCliArgs() {
 	flag.StringVar(&CliArgs.hostIp, "host", "127.0.0.1", "Server hostname")
-	flag.IntVar(&CliArgs.port, "p", 6379, "Server port")
+	flag.IntVar(&CliArgs.port, "p", DEFAULT_PORT, "Server port")
 	flag.Parse()
 }
