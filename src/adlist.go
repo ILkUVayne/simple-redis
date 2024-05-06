@@ -10,11 +10,12 @@ type Pusher interface {
 	lPush(data *SRobj)
 }
 
-type listType struct {
-	keyCompare func(key1, key2 *SRobj) bool
+var lType = dictType{
+	hashFunc:      nil,
+	keyCompare:    SRStrCompare,
+	keyDestructor: nil,
+	valDestructor: nil,
 }
-
-var lType = listType{keyCompare: SRStrCompare}
 
 // -----------------------------------------------------------------------------
 // list iterators
@@ -27,12 +28,13 @@ type listIter struct {
 
 func (li *listIter) listNext() *node {
 	curr := li.next
-	if curr != nil {
-		if li.direction == AL_START_HEAD {
-			li.next = curr.next
-		} else {
-			li.next = curr.prev
-		}
+	if curr == nil {
+		return curr
+	}
+	// default AL_START_TAIL
+	li.next = curr.prev
+	if li.direction == AL_START_HEAD {
+		li.next = curr.next
 	}
 	return curr
 }
@@ -64,7 +66,7 @@ func (n *node) nodePrev() *node {
 // -----------------------------------------------------------------------------
 
 type list struct {
-	lType  *listType
+	lType  *dictType
 	head   *node
 	tail   *node
 	length int
@@ -190,7 +192,7 @@ func (l *list) listRewindTail() *listIter {
 // list API
 // -----------------------------------------------------------------------------
 
-func listCreate(lType *listType) *list {
+func listCreate(lType *dictType) *list {
 	l := new(list)
 	l.lType = lType
 	return l

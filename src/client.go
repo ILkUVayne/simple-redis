@@ -72,7 +72,7 @@ func createSRClient(fd int) *SRedisClient {
 	c.fd = fd
 	c.db = server.db
 	c.cmdTyp = CMD_UNKNOWN
-	c.reply = listCreate(&listType{keyCompare: SRStrCompare})
+	c.reply = listCreate(&lType)
 	c.queryBuf = make([]byte, SREDIS_IO_BUF)
 	c.replyReady = true
 	return c

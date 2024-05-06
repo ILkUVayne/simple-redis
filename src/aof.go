@@ -52,7 +52,7 @@ func createFakeClient() *SRedisClient {
 	c.fd = -1
 	c.db = server.db
 	c.cmdTyp = CMD_UNKNOWN
-	c.reply = listCreate(&listType{keyCompare: SRStrCompare})
+	c.reply = listCreate(&lType)
 	c.queryBuf = make([]byte, SREDIS_IO_BUF)
 	c.replyReady = true
 	return c
@@ -296,23 +296,20 @@ func rewriteExpireObject(f *os.File, key, val *SRobj) {
 func rewriteListObject(f *os.File, key, val *SRobj) {
 	count, items := 0, listTypeLength(val)
 	// encoding is linked list
-	if val.encoding == REDIS_ENCODING_LINKEDLIST {
-		l := assertList(val)
-		li := l.listRewind()
-		for ln := li.listNext(); ln != nil; ln = li.listNext() {
-			eleObj := ln.nodeValue()
-			if count == 0 {
-				cmd := fmt.Sprintf(RESP_LIST_RPUSH, 2+getItems(items))
-				// add key
-				rewriteObject(f, &cmd, key)
-			}
-			// add val
-			rewriteObject(f, nil, eleObj)
-			checkItems(&count, &items)
+	checkListEncoding(val)
+	l := assertList(val)
+	li := l.listRewind()
+	for ln := li.listNext(); ln != nil; ln = li.listNext() {
+		eleObj := ln.nodeValue()
+		if count == 0 {
+			cmd := fmt.Sprintf(RESP_LIST_RPUSH, 2+getItems(items))
+			// add key
+			rewriteObject(f, &cmd, key)
 		}
-		return
+		// add val
+		rewriteObject(f, nil, eleObj)
+		checkItems(&count, &items)
 	}
-	panic("Unknown list encoding")
 }
 
 // rewrite set object to file
