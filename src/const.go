@@ -10,9 +10,6 @@ const (
 	REDIS_OK           = 0
 	REDIS_ERR          = 1
 
-	REDIS_HEAD = 0
-	REDIS_TAIL = 1
-
 	REDIS_AOF_OFF = 0 /* AOF is off */
 	REDIS_AOF_ON  = 1
 

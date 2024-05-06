@@ -27,11 +27,11 @@ func pushGenericCommand(c *SRedisClient, where int) {
 }
 
 func lPushCommand(c *SRedisClient) {
-	pushGenericCommand(c, REDIS_HEAD)
+	pushGenericCommand(c, AL_START_HEAD)
 }
 
 func rPushCommand(c *SRedisClient) {
-	pushGenericCommand(c, REDIS_TAIL)
+	pushGenericCommand(c, AL_START_TAIL)
 }
 
 func popGenericCommand(c *SRedisClient, where int) {
@@ -54,9 +54,9 @@ func popGenericCommand(c *SRedisClient, where int) {
 }
 
 func lPopCommand(c *SRedisClient) {
-	popGenericCommand(c, REDIS_HEAD)
+	popGenericCommand(c, AL_START_HEAD)
 }
 
 func rPopCommand(c *SRedisClient) {
-	popGenericCommand(c, REDIS_TAIL)
+	popGenericCommand(c, AL_START_TAIL)
 }

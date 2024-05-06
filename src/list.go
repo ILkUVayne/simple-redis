@@ -4,43 +4,40 @@ package src
 // List commands API
 //-----------------------------------------------------------------------------
 
+func checkListEncoding(subject *SRobj) {
+	if subject.encoding != REDIS_ENCODING_LINKEDLIST {
+		panic("Unknown list encoding")
+	}
+}
+
 func listTypePush(subject, value *SRobj, where int) {
-	if subject.encoding == REDIS_ENCODING_LINKEDLIST {
-		l := assertList(subject)
-		if where == REDIS_HEAD {
-			l.lPush(value)
-		} else {
-			l.rPush(value)
-		}
-		value.incrRefCount()
+	checkListEncoding(subject)
+	l := assertList(subject)
+	value.incrRefCount()
+	if where == AL_START_HEAD {
+		l.lPush(value)
 		return
 	}
-	panic("Unknown list encoding")
+	l.rPush(value)
 }
 
 func listTypePop(subject *SRobj, where int) *SRobj {
-	var value *SRobj
-	if subject.encoding == REDIS_ENCODING_LINKEDLIST {
-		l := assertList(subject)
-		var ln *node
-		if where == REDIS_HEAD {
-			ln = l.first()
-		} else {
-			ln = l.last()
-		}
-		if ln != nil {
-			value = ln.data
-			value.incrRefCount()
-			l.delNode(ln)
-		}
-		return value
+	checkListEncoding(subject)
+	l := assertList(subject)
+	ln := l.last()
+	if where == AL_START_HEAD {
+		ln = l.first()
 	}
-	panic("Unknown list encoding")
+	if ln == nil {
+		return nil
+	}
+	value := ln.data
+	value.incrRefCount()
+	l.delNode(ln)
+	return value
 }
 
 func listTypeLength(subject *SRobj) int {
-	if subject.encoding == REDIS_ENCODING_LINKEDLIST {
-		return assertList(subject).len()
-	}
-	panic("Unknown list encoding")
+	checkListEncoding(subject)
+	return assertList(subject).len()
 }

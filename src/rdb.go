@@ -125,7 +125,7 @@ func rdbLoadListObject(obj parser.RedisObject) {
 			lObj = createListObject()
 			server.db.dictSet(key, lObj)
 		}
-		listTypePush(lObj, createSRobj(SR_STR, string(v)), REDIS_TAIL)
+		listTypePush(lObj, createSRobj(SR_STR, string(v)), AL_START_TAIL)
 	}
 	// add expire
 	rdbLoadExpire(key, expire)
@@ -285,10 +285,7 @@ func writeListObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 	var err error
 	values := make([][]byte, 0)
 
-	if val.encoding != REDIS_ENCODING_LINKEDLIST {
-		panic("Unknown list encoding")
-	}
-
+	checkListEncoding(val)
 	if val.encoding == REDIS_ENCODING_LINKEDLIST {
 		l := assertList(val)
 		li := l.listRewind()
