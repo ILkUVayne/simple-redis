@@ -22,6 +22,14 @@ type SRedisClient struct {
 	bulkLen    int
 }
 
+// return true if is fake client
+func (c *SRedisClient) isFake() bool {
+	if c.fd == FAKE_CLIENT_FD {
+		return true
+	}
+	return false
+}
+
 // getQueryLine
 // e.g. "get name\r\n"
 // idx == 8
@@ -50,7 +58,7 @@ func (c *SRedisClient) getQueryNum(start, end int) (int, error) {
 //
 // typ: "r" == rPush "l" == lPush
 func (c *SRedisClient) pushReply(data *SRobj, typ string) {
-	if c.fd < 0 || data == nil {
+	if c.isFake() || data == nil {
 		return
 	}
 	switch typ {
@@ -98,7 +106,7 @@ func freeClient(c *SRedisClient) {
 	server.el.removeFileEvent(c.fd, AE_READABLE)
 	server.el.removeFileEvent(c.fd, AE_WRITEABLE)
 	freeReplyList(c)
-	if c.fd > 0 {
+	if !c.isFake() {
 		Close(c.fd)
 	}
 }

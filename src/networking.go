@@ -148,7 +148,7 @@ func (c *SRedisClient) doReply() {
 // 将查询结果添加到c.reply中,并创建SendReplyToClient事件
 func (c *SRedisClient) addReply(data *SRobj) {
 	c.pushReply(data, "r")
-	if c.replyReady && c.fd > 0 {
+	if c.replyReady && !c.isFake() {
 		server.el.addFileEvent(c.fd, AE_WRITEABLE, SendReplyToClient, c)
 	}
 }

@@ -75,7 +75,7 @@ type SRedisServer struct {
 }
 
 func (s *SRedisServer) incrDirtyCount(c *SRedisClient, num int64) {
-	if c.fd > 0 {
+	if !c.isFake() {
 		s.dirty += num
 	}
 }

@@ -48,7 +48,7 @@ func (s *SRedisServer) aofRewriteBufferReset() {
 
 // return a fake client,client.fd == -1
 func createFakeClient() *SRedisClient {
-	return createSRClient(-1)
+	return createSRClient(FAKE_CLIENT_FD)
 }
 
 // if expired,del key
