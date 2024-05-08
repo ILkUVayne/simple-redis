@@ -48,28 +48,16 @@ func (s *SRedisServer) aofRewriteBufferReset() {
 
 // return a fake client,client.fd == -1
 func createFakeClient() *SRedisClient {
-	c := new(SRedisClient)
-	c.fd = -1
-	c.db = server.db
-	c.cmdTyp = CMD_UNKNOWN
-	c.reply = listCreate(&lType)
-	c.queryBuf = make([]byte, SREDIS_IO_BUF)
-	c.replyReady = true
-	return c
+	return createSRClient(FAKE_CLIENT_FD)
 }
 
 // if expired,del key
-func aofCheckExpire(args []*SRobj) int {
+func aofCheckExpire(args []*SRobj) bool {
 	if args[0].strVal() != EXPIRE {
-		return REDIS_OK
+		return false
 	}
-	intVal, _ := args[2].intVal()
-	if intVal < utils.GetMsTime() {
-		server.db.data.dictDelete(args[1])
-		server.db.expire.dictDelete(args[1])
-		return REDIS_ERR
-	}
-	return REDIS_OK
+	when, _ := args[2].intVal()
+	return server.db.expireIfNeeded1(when, args[1])
 }
 
 // read aof file and load data
@@ -105,7 +93,7 @@ func loadAppendOnlyFile(name string) {
 		aLen--
 		// call command
 		if aLen == 0 {
-			if aofCheckExpire(args) == REDIS_ERR {
+			if aofCheckExpire(args) {
 				args = nil
 				continue
 			}
@@ -331,67 +319,56 @@ func rewriteSetObject(f *os.File, key, val *SRobj) {
 		return
 	}
 	// encoding is hash table
-	if val.encoding == REDIS_ENCODING_HT {
-		di := assertDict(val).dictGetIterator()
-		for de := di.dictNext(); de != nil; de = di.dictNext() {
-			eleObj := de.getKey()
-			if count == 0 {
-				cmd := fmt.Sprintf(RESP_SET, 2+getItems(items))
-				// add key
-				rewriteObject(f, &cmd, key)
-			}
-			// add val
-			rewriteObject(f, nil, eleObj)
-			checkItems(&count, &items)
+	di := assertDict(val).dictGetIterator()
+	for de := di.dictNext(); de != nil; de = di.dictNext() {
+		eleObj := de.getKey()
+		if count == 0 {
+			cmd := fmt.Sprintf(RESP_SET, 2+getItems(items))
+			// add key
+			rewriteObject(f, &cmd, key)
 		}
-		di.dictReleaseIterator()
-		return
+		// add val
+		rewriteObject(f, nil, eleObj)
+		checkItems(&count, &items)
 	}
-	panic("Unknown set encoding")
+	di.dictReleaseIterator()
 }
 
 // rewrite zSet object to file
 func rewriteZSetObject(f *os.File, key, val *SRobj) {
 	count, items := 0, int(zSetLength(val))
 	// encoding is skip list
-	if val.encoding == REDIS_ENCODING_SKIPLIST {
-		zs := assertZSet(val)
-		di := zs.d.dictGetIterator()
-		for de := di.dictNext(); de != nil; de = di.dictNext() {
-			eleObj := de.getKey()
-			score := de.getVal()
+	zs := assertZSet(val)
+	di := zs.d.dictGetIterator()
+	for de := di.dictNext(); de != nil; de = di.dictNext() {
+		eleObj := de.getKey()
+		score := de.getVal()
 
-			if count == 0 {
-				cmd := fmt.Sprintf(RESP_ZSET, 2+getItems(items)*2)
-				// add key
-				rewriteObject(f, &cmd, key)
-			}
-			sf, _ := score.floatVal()
-			str := strconv.FormatFloat(sf, 'f', 2, 64)
-			// add zSetScore and zSetVal
-			rewriteObject(f, nil, createSRobj(SR_STR, str), eleObj)
-			checkItems(&count, &items)
+		if count == 0 {
+			cmd := fmt.Sprintf(RESP_ZSET, 2+getItems(items)*2)
+			// add key
+			rewriteObject(f, &cmd, key)
 		}
-		di.dictReleaseIterator()
-		return
+		sf, _ := score.floatVal()
+		str := strconv.FormatFloat(sf, 'f', 2, 64)
+		// add zSetScore and zSetVal
+		rewriteObject(f, nil, createSRobj(SR_STR, str), eleObj)
+		checkItems(&count, &items)
 	}
-	panic("Unknown sorted zset encoding")
+	di.dictReleaseIterator()
 }
 
 // rewrite hash object to file
 func rewriteDictObject(f *os.File, key, val *SRobj) {
+	checkHashEncoding(val)
 	// encoding is hash table
-	if val.encoding == REDIS_ENCODING_HT {
-		di := assertDict(val).dictGetIterator()
-		for de := di.dictNext(); de != nil; de = di.dictNext() {
-			cmd := fmt.Sprintf(RESP_HASH_HSET, 4)
-			// add key hashKey hashVal
-			rewriteObject(f, &cmd, key, de.getKey(), de.getVal())
-		}
-		di.dictReleaseIterator()
-		return
+	di := assertDict(val).dictGetIterator()
+	for de := di.dictNext(); de != nil; de = di.dictNext() {
+		cmd := fmt.Sprintf(RESP_HASH_HSET, 4)
+		// add key hashKey hashVal
+		rewriteObject(f, &cmd, key, de.getKey(), de.getVal())
 	}
-	panic("Unknown hash encoding")
+	di.dictReleaseIterator()
 }
 
 // Iterator dict and append rewrite command to temp aof file
@@ -407,8 +384,7 @@ func rewriteAppendOnlyFile(filename string) int {
 
 	di := server.db.data.dictGetIterator()
 	for de := di.dictNext(); de != nil; de = di.dictNext() {
-		key := de.getKey()
-		val := de.getVal()
+		key, val := de.getKey(), de.getVal()
 		expireTime := server.db.expireTime(key)
 		// if expired, skip
 		if expireTime != -1 && expireTime < now {

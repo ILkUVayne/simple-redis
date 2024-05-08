@@ -286,14 +286,14 @@ func writeListObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 	values := make([][]byte, 0)
 
 	checkListEncoding(val)
-	if val.encoding == REDIS_ENCODING_LINKEDLIST {
-		l := assertList(val)
-		li := l.listRewind()
-		for ln := li.listNext(); ln != nil; ln = li.listNext() {
-			eleObj := ln.nodeValue()
-			values = append(values, []byte(eleObj.strVal()))
-		}
+	// encoding is linked list
+	l := assertList(val)
+	li := l.listRewind()
+	for ln := li.listNext(); ln != nil; ln = li.listNext() {
+		eleObj := ln.nodeValue()
+		values = append(values, []byte(eleObj.strVal()))
 	}
+
 	if expire != -1 {
 		err = enc.WriteListObject(key.strVal(), values, encoder.WithTTL(uint64(expire)))
 	} else {
@@ -312,9 +312,7 @@ func writeSetObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 	var err error
 	values := make([][]byte, 0)
 
-	if val.encoding != REDIS_ENCODING_INTSET && val.encoding != REDIS_ENCODING_HT {
-		panic("Unknown set encoding")
-	}
+	checkSetEncoding(val)
 
 	if val.encoding == REDIS_ENCODING_INTSET {
 		var intVal int64
@@ -347,17 +345,14 @@ func writeSetObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 
 func writeDictObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 	var err error
-	if val.encoding != REDIS_ENCODING_HT {
-		panic("Unknown hash encoding")
-	}
+	checkHashEncoding(val)
 	values := make(map[string][]byte)
-	if val.encoding == REDIS_ENCODING_HT {
-		di := assertDict(val).dictGetIterator()
-		for de := di.dictNext(); de != nil; de = di.dictNext() {
-			values[de.getKey().strVal()] = []byte(de.getVal().strVal())
-		}
-		di.dictReleaseIterator()
+	// encoding is hash table
+	di := assertDict(val).dictGetIterator()
+	for de := di.dictNext(); de != nil; de = di.dictNext() {
+		values[de.getKey().strVal()] = []byte(de.getVal().strVal())
 	}
+	di.dictReleaseIterator()
 
 	if expire != -1 {
 		err = enc.WriteHashMapObject(key.strVal(), values, encoder.WithTTL(uint64(expire)))
@@ -375,25 +370,23 @@ func writeDictObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 
 func writeZSetObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 	var err error
-	values := make([]*model.ZSetEntry, 0)
 
-	if val.encoding != REDIS_ENCODING_SKIPLIST {
-		panic("Unknown sorted zset encoding")
+	checkZSetEncoding(val)
+
+	values := make([]*model.ZSetEntry, 0)
+	// encoding is skip list
+	zs := assertZSet(val)
+	di := zs.d.dictGetIterator()
+	for de := di.dictNext(); de != nil; de = di.dictNext() {
+		eleObj := de.getKey()
+		score := de.getVal()
+		zn := new(model.ZSetEntry)
+		sf, _ := score.floatVal()
+		zn.Score = sf
+		zn.Member = eleObj.strVal()
+		values = append(values, zn)
 	}
-	if val.encoding == REDIS_ENCODING_SKIPLIST {
-		zs := assertZSet(val)
-		di := zs.d.dictGetIterator()
-		for de := di.dictNext(); de != nil; de = di.dictNext() {
-			eleObj := de.getKey()
-			score := de.getVal()
-			zn := new(model.ZSetEntry)
-			sf, _ := score.floatVal()
-			zn.Score = sf
-			zn.Member = eleObj.strVal()
-			values = append(values, zn)
-		}
-		di.dictReleaseIterator()
-	}
+	di.dictReleaseIterator()
 
 	if expire != -1 {
 		err = enc.WriteZSetObject(key.strVal(), values, encoder.WithTTL(uint64(expire)))

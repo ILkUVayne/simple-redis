@@ -32,6 +32,9 @@ func (db *SRedisDB) expireDel(key *SRobj) int {
 }
 
 func (db *SRedisDB) dbDel(key *SRobj) int {
+	// 重新创建一个新的key，如果直接用传入的key是expire库的key
+	// 删除expire后会被提前释放(s.refCount == 0),导致dictDel报错
+	key = createSRobj(SR_STR, key.strVal())
 	if db.expire.dictSize() > 0 {
 		db.expireDel(key)
 	}
@@ -66,12 +69,15 @@ func (db *SRedisDB) expireIfNeeded(key *SRobj) bool {
 		return false
 	}
 
-	intVal, _ := e.intVal()
-	if when := intVal; when > utils.GetMsTime() {
+	when, _ := e.intVal()
+	return db.expireIfNeeded1(when, key)
+}
+
+func (db *SRedisDB) expireIfNeeded1(when int64, key *SRobj) bool {
+	if when > utils.GetMsTime() {
 		return false
 	}
-	db.expireDel(key)
-	db.dictDel(key)
+	db.dbDel(key)
 	return true
 }
 
@@ -102,9 +108,17 @@ func (db *SRedisDB) lookupKeyReadOrReply(c *SRedisClient, key *SRobj, reply *SRo
 	return o
 }
 
+func (db *SRedisDB) dataRandomKey() *dictEntry {
+	return db.data.dictGetRandomKey()
+}
+
+func (db *SRedisDB) expireRandomKey() *dictEntry {
+	return db.expire.dictGetRandomKey()
+}
+
 func (db *SRedisDB) dbRandomKey() *SRobj {
 	for {
-		de := db.data.dictGetRandomKey()
+		de := db.dataRandomKey()
 		if de == nil {
 			return nil
 		}

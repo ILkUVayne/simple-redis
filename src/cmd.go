@@ -34,7 +34,7 @@ func lookupCommand(cmdStr string) *SRedisCommand {
 // 执行命令
 func processCommand(c *SRedisClient) {
 	cmdStr := c.args[0].strVal()
-	if c.fd > 0 {
+	if !c.isFake() {
 		utils.Info("process command: ", cmdStr)
 	}
 
