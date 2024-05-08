@@ -31,18 +31,20 @@ func hashTypeTryObjectEncoding(subject, o1, o2 *SRobj) {
 	}
 }
 
+func checkHashEncoding(subject *SRobj) {
+	if subject.encoding != REDIS_ENCODING_HT {
+		panic("Unknown hash encoding")
+	}
+}
+
 // hash obj set by encoding type
 func hashTypeSet(o, field, value *SRobj) int {
-	if o.encoding == REDIS_ENCODING_HT {
-		return assertDict(o).dictSet(field, value)
-	}
-	panic("Unknown hash encoding")
+	checkHashEncoding(o)
+	return assertDict(o).dictSet(field, value)
 }
 
 func hashTypeGetFromHashTable(o, field *SRobj, value **SRobj) bool {
-	if o.encoding != REDIS_ENCODING_HT {
-		panic("Unknown hash encoding")
-	}
+	checkHashEncoding(o)
 	v := assertDict(o).dictGet(field)
 	if v == nil {
 		return false
@@ -57,23 +59,18 @@ func addHashFieldToReply(c *SRedisClient, o, field *SRobj) {
 		return
 	}
 
-	if o.encoding == REDIS_ENCODING_HT {
-		var value *SRobj
-		if hashTypeGetFromHashTable(o, field, &value) {
-			c.addReplyBulk(value)
-			return
-		}
-		c.addReply(shared.nullBulk)
+	checkHashEncoding(o)
+	var value *SRobj
+	if hashTypeGetFromHashTable(o, field, &value) {
+		c.addReplyBulk(value)
 		return
 	}
-
-	panic("Unknown hash encoding")
+	c.addReply(shared.nullBulk)
+	return
 }
 
 // return hash ogj length by encoding
 func hashTypeLength(o *SRobj) int64 {
-	if o.encoding == REDIS_ENCODING_HT {
-		return assertDict(o).dictSize()
-	}
-	panic("Unknown hash encoding")
+	checkHashEncoding(o)
+	return assertDict(o).dictSize()
 }

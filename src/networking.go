@@ -79,15 +79,12 @@ func activeExpireCycle() {
 			break
 		}
 
-		entry := server.db.expire.dictGetRandomKey()
+		entry := server.db.expireRandomKey()
 		if entry == nil {
 			break
 		}
-		intVal, _ := entry.val.intVal()
-		if intVal < utils.GetMsTime() {
-			server.db.data.dictDelete(entry.key)
-			server.db.expire.dictDelete(entry.key)
-		}
+		when, _ := entry.val.intVal()
+		server.db.expireIfNeeded1(when, entry.getKey())
 	}
 }
 
