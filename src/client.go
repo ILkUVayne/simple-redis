@@ -56,18 +56,18 @@ func (c *SRedisClient) getQueryNum(start, end int) (int, error) {
 
 // append reply data to client.reply,when fake client while do nothing
 //
-// typ: "r" == rPush "l" == lPush
-func (c *SRedisClient) pushReply(data *SRobj, typ string) {
+// typ: AL_START_HEAD  AL_START_TAIL
+func (c *SRedisClient) pushReply(data *SRobj, where int) {
 	if c.isFake() || data == nil {
 		return
 	}
-	switch typ {
-	case "r":
+	switch where {
+	case AL_START_TAIL:
 		c.reply.rPush(data)
-	case "l":
+	case AL_START_HEAD:
 		c.reply.lPush(data)
 	default:
-		utils.Error("invalid push type: ", typ)
+		utils.Error("invalid push type: ", where)
 	}
 	data.incrRefCount()
 }
@@ -117,6 +117,32 @@ func resetClient(c *SRedisClient) {
 	c.cmdTyp = CMD_UNKNOWN
 	c.bulkLen = 0
 	c.bulkNum = 0
+}
+
+func checkCmdType(c *SRedisClient) {
+	if c.cmdTyp != CMD_UNKNOWN {
+		return
+	}
+	c.cmdTyp = CMD_INLINE
+	if c.queryBuf[0] == '*' {
+		c.cmdTyp = CMD_BULK
+	}
+}
+
+type cmdBufHandleFunc func(c *SRedisClient) (bool, error)
+
+var cmdBufHandleFuncMaps = map[CmdType]cmdBufHandleFunc{
+	CMD_INLINE: inlineBufHandle,
+	CMD_BULK:   bulkBufHandle,
+}
+
+func cmdBufHandle(c *SRedisClient) (bool, error) {
+	checkCmdType(c)
+	fn, ok := cmdBufHandleFuncMaps[c.cmdTyp]
+	if !ok {
+		return false, errors.New("unknow cmd type")
+	}
+	return fn(c)
 }
 
 // inline command handle
@@ -198,23 +224,7 @@ func bulkBufHandle(c *SRedisClient) (bool, error) {
 // query to args and processCommand
 func processQueryBuf(c *SRedisClient) error {
 	for c.queryLen > 0 {
-		// get cmd type
-		if c.cmdTyp == CMD_UNKNOWN {
-			c.cmdTyp = CMD_INLINE
-			if c.queryBuf[0] == '*' {
-				c.cmdTyp = CMD_BULK
-			}
-		}
-		var ok bool
-		var err error
-		switch c.cmdTyp {
-		case CMD_INLINE:
-			ok, err = inlineBufHandle(c)
-		case CMD_BULK:
-			ok, err = bulkBufHandle(c)
-		default:
-			return errors.New("unknow cmd type")
-		}
+		ok, err := cmdBufHandle(c)
 		if err != nil {
 			return err
 		}
