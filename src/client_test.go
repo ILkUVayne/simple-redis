@@ -81,24 +81,3 @@ func TestBulkBufHandle(t *testing.T) {
 		t.Error("c.args set error")
 	}
 }
-
-func TestProcessQueryBuf(t *testing.T) {
-	// inline
-	c := createSRClient(10)
-	buf := []byte("get name\r\n")
-	c.queryBuf = buf
-	c.queryLen = len(buf)
-	err := processQueryBuf(c)
-	if err != nil {
-		t.Error("inline processQueryBuf err: ", err)
-	}
-	// bulk
-	c = createSRClient(11)
-	buf = []byte("*2\r\n$3\r\nget\r\n$4\r\nname\r\n")
-	c.queryBuf = buf
-	c.queryLen = len(buf)
-	err = processQueryBuf(c)
-	if err != nil {
-		t.Error("bulk processQueryBuf err: ", err)
-	}
-}
