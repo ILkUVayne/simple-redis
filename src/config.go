@@ -18,6 +18,19 @@ type saveParam struct {
 	changes int
 }
 
+var complexConfFuncMaps = map[string]complexConfFunc{
+	"save": appendServerSaveParams,
+}
+
+// return true complexConf,or false simpleConf
+func complexConfHandle(key, val string) (ok bool) {
+	var fn complexConfFunc
+	if fn, ok = complexConfFuncMaps[strings.ToLower(key)]; ok {
+		fn(val)
+	}
+	return
+}
+
 // rdb append save conf
 func appendServerSaveParams(val string) {
 	firstIdx := strings.IndexAny(val, " ")
@@ -47,10 +60,6 @@ func appendServerSaveParams(val string) {
 		return
 	}
 	config.saveParams = append(config.saveParams, sp)
-}
-
-var complexConfFuncMaps = map[string]complexConfFunc{
-	"save": appendServerSaveParams,
 }
 
 type configVal struct {
@@ -83,17 +92,6 @@ func SetupConf(confName string) {
 	}(f)
 
 	parse(f)
-}
-
-// return true complexConf,or false simpleConf
-func complexConfHandle(key, val string) bool {
-	fn, ok := complexConfFuncMaps[strings.ToLower(key)]
-	// simpleConf return false
-	if !ok {
-		return false
-	}
-	fn(val)
-	return true
 }
 
 func parse(f *os.File) {

@@ -63,6 +63,10 @@ func (db *SRedisDB) dictSet(key *SRobj, val *SRobj) {
 	server.db.data.dictSet(key, val)
 }
 
+func (db *SRedisDB) expireSet(key *SRobj, val *SRobj) {
+	server.db.expire.dictSet(key, val)
+}
+
 func (db *SRedisDB) expireIfNeeded(key *SRobj) bool {
 	e := db.expireGet(key)
 	if e == nil {
@@ -130,8 +134,16 @@ func (db *SRedisDB) dbRandomKey() *SRobj {
 	}
 }
 
+func (db *SRedisDB) dbExpireSize() int64 {
+	return db.expire.dictSize()
+}
+
 func (db *SRedisDB) dbDataSize() int64 {
 	return db.data.dictSize()
+}
+
+func (db *SRedisDB) dbDataDi() *dictIterator {
+	return server.db.data.dictGetIterator()
 }
 
 //-----------------------------------------------------------------------------
@@ -183,7 +195,7 @@ func expireCommand(c *SRedisClient) {
 	}
 
 	expireObj := createFromInt(expire)
-	c.db.expire.dictSet(key, expireObj)
+	c.db.expireSet(key, expireObj)
 	expireObj.decrRefCount()
 	c.addReply(shared.ok)
 	server.incrDirtyCount(c, 1)

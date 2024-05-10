@@ -75,7 +75,7 @@ func SendReplyToClient(el *aeEventLoop, fd int, clientData any) {
 // check some random expire key
 func activeExpireCycle() {
 	for i := 0; i < EXPIRE_CHECK_COUNT; i++ {
-		if server.db.expire.dictSize() == 0 {
+		if server.db.dbExpireSize() == 0 {
 			break
 		}
 

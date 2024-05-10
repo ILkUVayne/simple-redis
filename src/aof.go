@@ -28,18 +28,16 @@ func aofRewriteBufferWrite(f *os.File) int {
 
 // reset aof buffer
 func (s *SRedisServer) aofBufReset() {
-	if len(s.aofBuf) == 0 {
-		return
+	if len(s.aofBuf) != 0 {
+		s.aofBuf = ""
 	}
-	s.aofBuf = ""
 }
 
 // reset aof rewrite buffer
 func (s *SRedisServer) aofRewriteBufferReset() {
-	if len(s.aofRewriteBufBlocks) == 0 {
-		return
+	if len(s.aofRewriteBufBlocks) != 0 {
+		s.aofRewriteBufBlocks = ""
 	}
-	s.aofRewriteBufBlocks = ""
 }
 
 // -----------------------------------------------------------------------------
@@ -217,8 +215,7 @@ func aofUpdateCurrentSize() {
 //
 // s is command string
 func rewrite(f *os.File, s *string) {
-	_, err := io.WriteString(f, *s)
-	if err != nil {
+	if _, err := io.WriteString(f, *s); err != nil {
 		utils.Error("rewriteStringObject err: ", err)
 	}
 }
@@ -382,7 +379,7 @@ func rewriteAppendOnlyFile(filename string) int {
 	}
 	defer func() { _ = f.Close() }()
 
-	di := server.db.data.dictGetIterator()
+	di := server.db.dbDataDi()
 	for de := di.dictNext(); de != nil; de = di.dictNext() {
 		key, val := de.getKey(), de.getVal()
 		expireTime := server.db.expireTime(key)
