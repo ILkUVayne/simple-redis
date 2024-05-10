@@ -12,7 +12,7 @@ type CommandProc func(c *SRedisClient)
 type SRedisCommand struct {
 	name  string
 	proc  CommandProc
-	arity int // command args,if < 0 like -3 means args >= 3
+	arity int // command args mums,if < 0 like -3 means args >= 3
 }
 
 func (cmd *SRedisCommand) propagate(args []*SRobj) {

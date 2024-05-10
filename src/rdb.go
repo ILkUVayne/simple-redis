@@ -36,7 +36,7 @@ func rdbBeforeWrite(enc *core.Encoder) int {
 		}
 	}
 	// set db index,keyCount,expireCount
-	err = enc.WriteDBHeader(0, uint64(server.db.data.dictSize()), uint64(server.db.expire.dictSize()))
+	err = enc.WriteDBHeader(0, uint64(server.db.dbDataSize()), uint64(server.db.dbExpireSize()))
 	if err != nil {
 		utils.ErrorP("rdbSave err: ", err)
 		return REDIS_ERR
@@ -85,7 +85,7 @@ func rdbLoadExpire(key *SRobj, expire int64) {
 		return
 	}
 	expireObj := createFromInt(expire)
-	server.db.expire.dictSet(key, expireObj)
+	server.db.expireSet(key, expireObj)
 	expireObj.decrRefCount()
 }
 
@@ -423,7 +423,7 @@ func rdbSave(filename *string) int {
 		return REDIS_ERR
 	}
 
-	di := server.db.data.dictGetIterator()
+	di := server.db.dbDataDi()
 	for de := di.dictNext(); de != nil; de = di.dictNext() {
 		key := de.getKey()
 		val := de.getVal()
