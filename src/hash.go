@@ -21,13 +21,12 @@ func hashTypeLookupWriteOrCreate(c *SRedisClient, key *SRobj) *SRobj {
 }
 
 func hashTypeTryObjectEncoding(subject, o1, o2 *SRobj) {
-	if subject.encoding == REDIS_ENCODING_HT {
-		if o1 != nil {
-			o1.tryObjectEncoding()
-		}
-		if o2 != nil {
-			o2.tryObjectEncoding()
-		}
+	checkHashEncoding(subject)
+	if o1 != nil {
+		o1.tryObjectEncoding()
+	}
+	if o2 != nil {
+		o2.tryObjectEncoding()
 	}
 }
 

@@ -13,17 +13,8 @@ type sRedisReply struct {
 	length int
 }
 
-func (r *sRedisReply) formatStr() {
-	switch r.typ {
-	case BULK_STR:
-		if r.str != NIL_STR {
-			r.fStr = fmt.Sprintf("\"%s\"", r.str)
-		}
-	case SIMPLE_ERROR:
-		r.fStr = fmt.Sprintf("(error) %s", r.str)
-	case INTEGERS:
-		r.fStr = fmt.Sprintf("(integer) %s", r.str)
-	}
+func (r *sRedisReply) strFormat() {
+	r.fStr = strFormatHandle(r)
 }
 
 type sRedisContext struct {
@@ -70,14 +61,14 @@ func getReply(c *sRedisContext, reply *sRedisReply) int {
 		reply.typ = typ
 	}
 	//
-	str, err := respParseFuncs[reply.typ](reply.buf, reply.length)
+	str, err := respParseHandle(reply)
 	if err != nil {
 		c.err = err
 		return CLI_ERR
 	}
 	if str != "" {
 		reply.str = str
-		reply.formatStr()
+		reply.strFormat()
 	}
 	return CLI_OK
 }
