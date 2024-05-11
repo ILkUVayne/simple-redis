@@ -2,6 +2,7 @@ package src
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -25,12 +26,19 @@ var respType = map[byte]int{
 	'>': PUSHES,
 }
 
-var respParseFuncs = map[int]respParseFunc{
+var respParseFuncMaps = map[int]respParseFunc{
 	SIMPLE_STR:   respParseSimpleStr,
 	SIMPLE_ERROR: respParseSimpleStr,
 	BULK_STR:     respParseBulk,
 	INTEGERS:     respParseIntegers,
 	ARRAYS:       respParseArrays,
+}
+
+func respParseHandle(reply *sRedisReply) (string, error) {
+	if fn, ok := respParseFuncMaps[reply.typ]; ok {
+		return fn(reply.buf, reply.length)
+	}
+	return "", errors.New(fmt.Sprintf("type %d respParseFunc not found", reply.typ))
 }
 
 // return -1 if invalid type
@@ -138,4 +146,34 @@ func respParseArrays(buf []byte, length int) (string, error) {
 		buf = buf[idx+2:]
 	}
 	return str[:len(str)-2], nil
+}
+
+type strFormatFunc func(s string) string
+
+var strFormatFuncMaps = map[int]strFormatFunc{
+	BULK_STR:     bulkStrFormat,
+	SIMPLE_ERROR: simpleErrStrFormat,
+	INTEGERS:     intStrFormat,
+}
+
+func strFormatHandle(reply *sRedisReply) string {
+	if fn, ok := strFormatFuncMaps[reply.typ]; ok {
+		return fn(reply.str)
+	}
+	return ""
+}
+
+func bulkStrFormat(s string) string {
+	if s != NIL_STR {
+		return fmt.Sprintf("\"%s\"", s)
+	}
+	return ""
+}
+
+func simpleErrStrFormat(s string) string {
+	return fmt.Sprintf("(error) %s", s)
+}
+
+func intStrFormat(s string) string {
+	return fmt.Sprintf("(integer) %s", s)
 }
