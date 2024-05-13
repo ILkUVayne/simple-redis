@@ -78,11 +78,11 @@ func TestZslDelete(t *testing.T) {
 }
 
 func TestZslParseRange(t *testing.T) {
-	min := createSRobj(SR_STR, "(15")
-	min.tryObjectEncoding()
-	max := createSRobj(SR_STR, "20")
-	max.tryObjectEncoding()
-	rg, err := zslParseRange(min, max)
+	Min := createSRobj(SR_STR, "(15.0")
+	Min.tryObjectEncoding()
+	Max := createSRobj(SR_STR, "20.0")
+	Max.tryObjectEncoding()
+	rg, err := zslParseRange(Min, Max)
 	if err != nil {
 		t.Error("zslParseRange err: ", err)
 	}
