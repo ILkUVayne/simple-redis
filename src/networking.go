@@ -8,7 +8,7 @@ import (
 )
 
 // accept client connect
-func acceptTcpHandler(el *aeEventLoop, fd int, clientData any) {
+func acceptTcpHandler(el *aeEventLoop, fd int, _ any) {
 	cfd := Accept(fd)
 	if cfd == AE_ERR {
 		utils.Error("simple-redis server: Accepting client err: cfd == ", cfd)
@@ -20,7 +20,7 @@ func acceptTcpHandler(el *aeEventLoop, fd int, clientData any) {
 }
 
 // read client query and process
-func readQueryFromClient(el *aeEventLoop, fd int, clientData any) {
+func readQueryFromClient(_ *aeEventLoop, fd int, clientData any) {
 	c := assertClient(clientData)
 	if (len(c.queryBuf) - c.queryLen) < SREDIS_MAX_BULK {
 		c.queryBuf = append(c.queryBuf, make([]byte, SREDIS_MAX_BULK)...)
@@ -41,7 +41,7 @@ func readQueryFromClient(el *aeEventLoop, fd int, clientData any) {
 }
 
 // SendReplyToClient send query result to client
-func SendReplyToClient(el *aeEventLoop, fd int, clientData any) {
+func SendReplyToClient(el *aeEventLoop, _ int, clientData any) {
 	c := assertClient(clientData)
 	for c.reply.len() > 0 {
 		resp := c.reply.first()
@@ -88,13 +88,8 @@ func activeExpireCycle() {
 	}
 }
 
-// run cronjob, default 100ms
-func serverCron(el *aeEventLoop, id int, clientData any) {
-	// check expire key
-	activeExpireCycle()
-	// flush aof_buf on disk
-	flushAppendOnlyFile()
-	// Check if a background saving or AOF rewrite in progress terminated.
+// check background persistence terminated
+func checkPersistence() {
 	if server.aofChildPid != -1 || server.rdbChildPid != -1 {
 		pid, _ := wait4(-1, unix.WNOHANG)
 		if pid != 0 && pid != -1 {
@@ -105,37 +100,47 @@ func serverCron(el *aeEventLoop, id int, clientData any) {
 				backgroundSaveDoneHandler()
 			}
 		}
-	} else {
-		// If there is not a background saving/rewrite in progress check if
-		// we have to save/rewrite now
-		for _, v := range server.saveParams {
-			now := utils.GetMsTime()
-			if server.dirty > int64(v.changes) &&
-				now-server.lastSave > int64(v.seconds) &&
-				(now-server.lastBgSaveTry > REDIS_BGSAVE_RETRY_DELAY ||
-					server.lastBgSaveStatus == REDIS_OK) {
-				utils.InfoF("%d changes in %d seconds. Saving...", v.changes, v.seconds)
-				rdbSaveBackground()
-				break
-			}
-		}
+		return
+	}
 
-		// If there is not a background saving/rewrite in progress check if
-		// we have to save/rewrite now
-		if server.aofChildPid == -1 &&
-			server.aofRewritePerc > 0 &&
-			server.aofCurrentSize > server.aofRewriteMinSize {
-			base := int64(1)
-			if server.aofRewriteBaseSize > 0 {
-				base = server.aofRewriteBaseSize
-			}
-			growth := (server.aofCurrentSize*100)/base - 100
-			if growth > int64(server.aofRewritePerc) {
-				utils.InfoF("Starting automatic rewriting of AOF on %d% growth", growth)
-				rewriteAppendOnlyFileBackground()
-			}
+	// If there is not a background saving/rewrite in progress check if
+	// we have to save/rewrite now
+	for _, v := range server.saveParams {
+		now := utils.GetMsTime()
+		if server.dirty > int64(v.changes) &&
+			now-server.lastSave > int64(v.seconds) &&
+			(now-server.lastBgSaveTry > REDIS_BGSAVE_RETRY_DELAY ||
+				server.lastBgSaveStatus == REDIS_OK) {
+			utils.InfoF("%d changes in %d seconds. Saving...", v.changes, v.seconds)
+			rdbSaveBackground()
+			break
 		}
 	}
+
+	// Trigger an AOF rewrite if needed
+	if server.aofChildPid == -1 &&
+		server.aofRewritePerc > 0 &&
+		server.aofCurrentSize > server.aofRewriteMinSize {
+		base := int64(1)
+		if server.aofRewriteBaseSize > 0 {
+			base = server.aofRewriteBaseSize
+		}
+		growth := (server.aofCurrentSize*100)/base - 100
+		if growth > int64(server.aofRewritePerc) {
+			utils.InfoF("Starting automatic rewriting of AOF on %d% growth", growth)
+			rewriteAppendOnlyFileBackground()
+		}
+	}
+}
+
+// run cronjob, default 100ms
+func serverCron(*aeEventLoop, int, any) {
+	// check expire key
+	activeExpireCycle()
+	// flush aof_buf on disk
+	flushAppendOnlyFile()
+	// Check if a background saving or AOF rewrite in progress terminated.
+	checkPersistence()
 }
 
 // ================================ addReply =================================

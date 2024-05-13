@@ -7,15 +7,15 @@ import (
 	"time"
 )
 
-func testFeProc(loop *aeEventLoop, fd int, clientData any) {
+func testFeProc(*aeEventLoop, int, any) {
 	fmt.Println("run testFeProc")
 }
 
-func testTeProc(loop *aeEventLoop, fd int, clientData any) {
+func testTeProc(*aeEventLoop, int, any) {
 	fmt.Println("run testTeProc")
 }
 
-func testOnceTeProc(loop *aeEventLoop, fd int, clientData any) {
+func testOnceTeProc(*aeEventLoop, int, any) {
 	fmt.Println("run once testTeProc")
 }
 
