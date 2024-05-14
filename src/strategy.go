@@ -11,6 +11,28 @@ import (
 	"strings"
 )
 
+//-----------------------------------------------------------------------------
+// client
+//-----------------------------------------------------------------------------
+
+// ================================ cmd buff handle =================================
+
+type cmdBufHandleFunc func(c *SRedisClient) (bool, error)
+
+var cmdBufHandleFuncMaps = map[CmdType]cmdBufHandleFunc{
+	CMD_INLINE: inlineBufHandle,
+	CMD_BULK:   bulkBufHandle,
+}
+
+func cmdBufHandle(c *SRedisClient) (bool, error) {
+	checkCmdType(c)
+	fn, ok := cmdBufHandleFuncMaps[c.cmdTyp]
+	if !ok {
+		return false, errors.New("unknow cmd type")
+	}
+	return fn(c)
+}
+
 // -----------------------------------------------------------------------------
 // aof
 // -----------------------------------------------------------------------------
@@ -180,4 +202,28 @@ func strFormatHandle(reply *sRedisReply) string {
 		return fn(reply.str)
 	}
 	return ""
+}
+
+//-----------------------------------------------------------------------------
+// Sorted set
+//-----------------------------------------------------------------------------
+
+// ================================ Parse Range =================================
+
+type parseRangeFunc func(s *string) (float64, int, error)
+
+var parseRangeFuncMaps = map[uint8]parseRangeFunc{
+	'(': parseParentheses,
+}
+
+// return (min,minex) or (max,maxnx) and error
+func _parseRange(obj *SRobj) (float64, int, error) {
+	str := obj.strVal()
+	fn, ok := parseRangeFuncMaps[str[0]]
+	if !ok {
+		val, _ := obj.floatVal()
+		return val, 0, nil
+	}
+	str = str[1:]
+	return fn(&str)
 }

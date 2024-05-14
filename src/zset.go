@@ -15,10 +15,14 @@ type zRangeSpec struct {
 	minex, maxex int
 }
 
-type parseRangeFunc func(s *string) (float64, int, error)
+// ================================ Parse Range =================================
 
-var parseRangeFuncMaps = map[uint8]parseRangeFunc{
-	'(': parseParentheses,
+func parseParentheses(s *string) (float64, int, error) {
+	var i float64
+	if utils.String2Float64(s, &i) == REDIS_ERR {
+		return 0, 0, errors.New("zset range invalid")
+	}
+	return i, 1, nil
 }
 
 func zslParseRange(min *SRobj, max *SRobj) (*zRangeSpec, error) {
@@ -30,26 +34,6 @@ func zslParseRange(min *SRobj, max *SRobj) (*zRangeSpec, error) {
 	}
 	spec.max, spec.maxex, err = _parseRange(max)
 	return spec, err
-}
-
-// return (min,minex) or (max,maxnx) and error
-func _parseRange(obj *SRobj) (float64, int, error) {
-	str := obj.strVal()
-	fn, ok := parseRangeFuncMaps[str[0]]
-	if !ok {
-		val, _ := obj.floatVal()
-		return val, 0, nil
-	}
-	str = str[1:]
-	return fn(&str)
-}
-
-func parseParentheses(s *string) (float64, int, error) {
-	var i float64
-	if utils.String2Float64(s, &i) == REDIS_ERR {
-		return 0, 0, errors.New("zset range invalid")
-	}
-	return i, 1, nil
 }
 
 var zSetDictType = dictType{
