@@ -129,22 +129,6 @@ func checkCmdType(c *SRedisClient) {
 	}
 }
 
-type cmdBufHandleFunc func(c *SRedisClient) (bool, error)
-
-var cmdBufHandleFuncMaps = map[CmdType]cmdBufHandleFunc{
-	CMD_INLINE: inlineBufHandle,
-	CMD_BULK:   bulkBufHandle,
-}
-
-func cmdBufHandle(c *SRedisClient) (bool, error) {
-	checkCmdType(c)
-	fn, ok := cmdBufHandleFuncMaps[c.cmdTyp]
-	if !ok {
-		return false, errors.New("unknow cmd type")
-	}
-	return fn(c)
-}
-
 // inline command handle
 // e.g. "get name\r\n"
 func inlineBufHandle(c *SRedisClient) (bool, error) {
