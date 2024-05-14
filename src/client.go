@@ -239,11 +239,3 @@ func processQueryBuf(c *SRedisClient) error {
 	}
 	return nil
 }
-
-func assertClient(o any) *SRedisClient {
-	c, ok := o.(*SRedisClient)
-	if !ok {
-		utils.Error("assertClient err")
-	}
-	return c
-}

@@ -2,7 +2,6 @@ package src
 
 import (
 	"math/rand"
-	"simple-redis/utils"
 )
 
 type intSet struct {
@@ -123,13 +122,5 @@ func (is *intSet) intSetLen() uint32 {
 func intSetNew() *intSet {
 	is := new(intSet)
 	is.contents = make([]int64, DEFAULT_INTSET_BUF, DEFAULT_INTSET_BUF)
-	return is
-}
-
-func assertIntSet(o *SRobj) *intSet {
-	is, ok := o.Val.(*intSet)
-	if !ok {
-		utils.Error("assertIntSet err: ", o.Typ)
-	}
 	return is
 }

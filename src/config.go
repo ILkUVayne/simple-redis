@@ -9,26 +9,10 @@ import (
 	"strings"
 )
 
-// complex config parse function
-type complexConfFunc func(val string)
-
 // rdb save param
 type saveParam struct {
 	seconds int
 	changes int
-}
-
-var complexConfFuncMaps = map[string]complexConfFunc{
-	"save": appendServerSaveParams,
-}
-
-// return true complexConf,or false simpleConf
-func complexConfHandle(key, val string) (ok bool) {
-	var fn complexConfFunc
-	if fn, ok = complexConfFuncMaps[strings.ToLower(key)]; ok {
-		fn(val)
-	}
-	return
 }
 
 // rdb append save conf

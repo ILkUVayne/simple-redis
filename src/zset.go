@@ -264,11 +264,3 @@ func zSetLength(o *SRobj) uint {
 	checkZSetEncoding(o)
 	return assertZSet(o).zSetLength()
 }
-
-func assertZSet(o *SRobj) *zSet {
-	zs, ok := o.Val.(*zSet)
-	if !ok {
-		utils.Error("assertZSet err: ", o.Typ)
-	}
-	return zs
-}
