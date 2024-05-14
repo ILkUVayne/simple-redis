@@ -250,11 +250,11 @@ func _writeDictObject(enc *core.Encoder, key string, value any, options ...any) 
 	return enc.WriteHashMapObject(key, value.(map[string][]byte), options)
 }
 
+// ================================ build rdb save data =================================
+
 func writeStringObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 	return _writeObjectHandle(val.Typ, enc, key.strVal(), []byte(val.strVal()), expire)
 }
-
-// ================================ build rdb save data =================================
 
 func writeListObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 	values := make([][]byte, 0)
