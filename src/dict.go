@@ -492,11 +492,3 @@ func (d *dict) dictEmpty() {
 	d.rehashIdx = -1
 	d.iterators = 0
 }
-
-func assertDict(o *SRobj) *dict {
-	d, ok := o.Val.(*dict)
-	if !ok {
-		utils.Error("assertDict err: ", o.Typ)
-	}
-	return d
-}

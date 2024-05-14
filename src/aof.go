@@ -178,30 +178,6 @@ func (cmd *SRedisCommand) feedAppendOnlyFile(args []*SRobj, argc int) {
 // AOF rewrite
 // ----------------------------------------------------------------------------
 
-// aof rewriteObjectFunc type
-type aofRWObjectFunc func(f *os.File, key, val *SRobj)
-
-// aof rewriteObjectFunc maps
-var aofRWObjectMaps = map[SRType]aofRWObjectFunc{
-	SR_STR:  rewriteStringObject,
-	SR_LIST: rewriteListObject,
-	SR_SET:  rewriteSetObject,
-	SR_ZSET: rewriteZSetObject,
-	SR_DICT: rewriteDictObject,
-}
-
-// // aof rewriteObjectFunc factory
-func aofRWObject(f *os.File, key, val *SRobj) int {
-	fn, ok := aofRWObjectMaps[val.Typ]
-	if !ok {
-		utils.ErrorP("Unknown object type: ", val.Typ)
-		return REDIS_ERR
-	}
-	// call
-	fn(f, key, val)
-	return REDIS_OK
-}
-
 // update current aof file size (server.aofCurrentSize)
 func aofUpdateCurrentSize() {
 	fInfo, err := server.aofFd.Stat()

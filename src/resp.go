@@ -7,8 +7,6 @@ import (
 	"strings"
 )
 
-type respParseFunc func([]byte, int) (string, error)
-
 var respType = map[byte]int{
 	'+': SIMPLE_STR,
 	'-': SIMPLE_ERROR,
@@ -24,21 +22,6 @@ var respType = map[byte]int{
 	'%': MAPS,
 	'~': SETS,
 	'>': PUSHES,
-}
-
-var respParseFuncMaps = map[int]respParseFunc{
-	SIMPLE_STR:   respParseSimpleStr,
-	SIMPLE_ERROR: respParseSimpleStr,
-	BULK_STR:     respParseBulk,
-	INTEGERS:     respParseIntegers,
-	ARRAYS:       respParseArrays,
-}
-
-func respParseHandle(reply *sRedisReply) (string, error) {
-	if fn, ok := respParseFuncMaps[reply.typ]; ok {
-		return fn(reply.buf, reply.length)
-	}
-	return "", errors.New(fmt.Sprintf("type %d respParseFunc not found", reply.typ))
 }
 
 // return -1 if invalid type
@@ -57,6 +40,8 @@ func getQueryLine(buf []byte, queryLen int) (int, error) {
 	}
 	return idx, nil
 }
+
+// ================================ Parse resp data =================================
 
 func respParseSimpleStr(buf []byte, length int) (string, error) {
 	idx, err := getQueryLine(buf, length)
@@ -148,20 +133,7 @@ func respParseArrays(buf []byte, length int) (string, error) {
 	return str[:len(str)-2], nil
 }
 
-type strFormatFunc func(s string) string
-
-var strFormatFuncMaps = map[int]strFormatFunc{
-	BULK_STR:     bulkStrFormat,
-	SIMPLE_ERROR: simpleErrStrFormat,
-	INTEGERS:     intStrFormat,
-}
-
-func strFormatHandle(reply *sRedisReply) string {
-	if fn, ok := strFormatFuncMaps[reply.typ]; ok {
-		return fn(reply.str)
-	}
-	return ""
-}
+// ================================ format response string =================================
 
 func bulkStrFormat(s string) string {
 	if s != NIL_STR {

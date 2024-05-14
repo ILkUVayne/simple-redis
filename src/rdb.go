@@ -48,24 +48,6 @@ func rdbBeforeWrite(enc *core.Encoder) int {
 // rdb loading
 //-----------------------------------------------------------------------------
 
-type rdbLoadObjectFunc func(obj parser.RedisObject)
-
-var rdbLoadObjectMaps = map[string]rdbLoadObjectFunc{
-	parser.StringType: rdbLoadStringObject,
-	parser.ListType:   rdbLoadListObject,
-	parser.HashType:   rdbLoadHashObject,
-	parser.ZSetType:   rdbLoadZSetObject,
-	parser.SetType:    rdbLoadSetObject,
-}
-
-func rdbLoadObject(obj parser.RedisObject) {
-	fn, ok := rdbLoadObjectMaps[obj.GetType()]
-	if !ok {
-		utils.Error("Unknown object type: ", obj.GetType())
-	}
-	fn(obj)
-}
-
 // return Ms time,return -1 when Expired, return 0 when persistent object
 func rdbCheckExpire(obj parser.RedisObject) int64 {
 	expire := obj.GetExpiration()
@@ -246,43 +228,35 @@ func rdbLoad(filename *string) {
 // rdb file implementation
 // -----------------------------------------------------------------------------
 
-type rdbSaveObjectFunc func(enc *core.Encoder, key, val *SRobj, expire int64) int
+// ================================ write rdb data to disk =================================
 
-var rdbSaveMaps = map[SRType]rdbSaveObjectFunc{
-	SR_STR:  writeStringObject,
-	SR_LIST: writeListObject,
-	SR_SET:  writeSetObject,
-	SR_ZSET: writeZSetObject,
-	SR_DICT: writeDictObject,
+func _writeStringObject(enc *core.Encoder, key string, value any, options ...any) error {
+	return enc.WriteStringObject(key, value.([]byte), options)
 }
 
-func rdbWriteObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
-	fn, ok := rdbSaveMaps[val.Typ]
-	if !ok {
-		utils.ErrorP("Unknown object type: ", val.Typ)
-		return REDIS_ERR
-	}
-	return fn(enc, key, val, expire)
+func _writeListObject(enc *core.Encoder, key string, value any, options ...any) error {
+	return enc.WriteListObject(key, value.([][]byte), options)
+}
+
+func _writeSetObject(enc *core.Encoder, key string, value any, options ...any) error {
+	return enc.WriteSetObject(key, value.([][]byte), options)
+}
+
+func _writeZSetObject(enc *core.Encoder, key string, value any, options ...any) error {
+	return enc.WriteZSetObject(key, value.([]*model.ZSetEntry), options)
+}
+
+func _writeDictObject(enc *core.Encoder, key string, value any, options ...any) error {
+	return enc.WriteHashMapObject(key, value.(map[string][]byte), options)
 }
 
 func writeStringObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
-	var err error
-	strKey, valStr := key.strVal(), val.strVal()
-	if expire != -1 {
-		err = enc.WriteStringObject(strKey, []byte(valStr), encoder.WithTTL(uint64(expire)))
-	} else {
-		err = enc.WriteStringObject(strKey, []byte(valStr))
-	}
-
-	if err != nil {
-		utils.ErrorP("rdbSave writeStringObject: ", err)
-		return REDIS_ERR
-	}
-	return REDIS_OK
+	return _writeObjectHandle(val.Typ, enc, key.strVal(), []byte(val.strVal()), expire)
 }
 
+// ================================ build rdb save data =================================
+
 func writeListObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
-	var err error
 	values := make([][]byte, 0)
 
 	checkListEncoding(val)
@@ -293,23 +267,10 @@ func writeListObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 		eleObj := ln.nodeValue()
 		values = append(values, []byte(eleObj.strVal()))
 	}
-
-	if expire != -1 {
-		err = enc.WriteListObject(key.strVal(), values, encoder.WithTTL(uint64(expire)))
-	} else {
-		err = enc.WriteListObject(key.strVal(), values)
-	}
-	// gc
-	values = nil
-	if err != nil {
-		utils.ErrorP("rdbSave writeListObject: ", err)
-		return REDIS_ERR
-	}
-	return REDIS_OK
+	return _writeObjectHandle(val.Typ, enc, key.strVal(), values, expire)
 }
 
 func writeSetObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
-	var err error
 	values := make([][]byte, 0)
 
 	checkSetEncoding(val)
@@ -328,23 +289,10 @@ func writeSetObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 		}
 		di.dictReleaseIterator()
 	}
-
-	if expire != -1 {
-		err = enc.WriteSetObject(key.strVal(), values, encoder.WithTTL(uint64(expire)))
-	} else {
-		err = enc.WriteSetObject(key.strVal(), values)
-	}
-	// gc
-	values = nil
-	if err != nil {
-		utils.ErrorP("rdbSave writeSetObject: ", err)
-		return REDIS_ERR
-	}
-	return REDIS_OK
+	return _writeObjectHandle(val.Typ, enc, key.strVal(), values, expire)
 }
 
 func writeDictObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
-	var err error
 	checkHashEncoding(val)
 	values := make(map[string][]byte)
 	// encoding is hash table
@@ -353,24 +301,10 @@ func writeDictObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 		values[de.getKey().strVal()] = []byte(de.getVal().strVal())
 	}
 	di.dictReleaseIterator()
-
-	if expire != -1 {
-		err = enc.WriteHashMapObject(key.strVal(), values, encoder.WithTTL(uint64(expire)))
-	} else {
-		err = enc.WriteHashMapObject(key.strVal(), values)
-	}
-	// gc
-	values = nil
-	if err != nil {
-		utils.ErrorP("rdbSave writeDictObject: ", err)
-		return REDIS_ERR
-	}
-	return REDIS_OK
+	return _writeObjectHandle(val.Typ, enc, key.strVal(), values, expire)
 }
 
 func writeZSetObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
-	var err error
-
 	checkZSetEncoding(val)
 
 	values := make([]*model.ZSetEntry, 0)
@@ -387,19 +321,7 @@ func writeZSetObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 		values = append(values, zn)
 	}
 	di.dictReleaseIterator()
-
-	if expire != -1 {
-		err = enc.WriteZSetObject(key.strVal(), values, encoder.WithTTL(uint64(expire)))
-	} else {
-		err = enc.WriteZSetObject(key.strVal(), values)
-	}
-	// gc
-	values = nil
-	if err != nil {
-		utils.ErrorP("rdbSave writeZSetObject: ", err)
-		return REDIS_ERR
-	}
-	return REDIS_OK
+	return _writeObjectHandle(val.Typ, enc, key.strVal(), values, expire)
 }
 
 func rdbSave(filename *string) int {

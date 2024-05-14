@@ -3,8 +3,6 @@
 // lib list provides methods for creating linked lists and adding/deleting queries
 package src
 
-import "simple-redis/utils"
-
 type Pusher interface {
 	rPush(data *SRobj)
 	lPush(data *SRobj)
@@ -195,13 +193,5 @@ func (l *list) listRewindTail() *listIter {
 func listCreate(lType *dictType) *list {
 	l := new(list)
 	l.lType = lType
-	return l
-}
-
-func assertList(o *SRobj) *list {
-	l, ok := o.Val.(*list)
-	if !ok {
-		utils.Error("assertList err: ", o.Typ)
-	}
 	return l
 }
