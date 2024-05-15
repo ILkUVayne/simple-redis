@@ -60,18 +60,6 @@ func printPrompt() {
 	fmt.Println(reader.str)
 }
 
-func getHome() string {
-	str, err := utils.Home()
-	if err != nil {
-		utils.Error(err)
-	}
-	return str
-}
-
-func historyFile(file string) string {
-	return getHome() + "/" + file
-}
-
 /*------------------------------------------------------------------------------
  * User interface
  *--------------------------------------------------------------------------- */
@@ -86,7 +74,7 @@ func repl() {
 
 	if utils.Isatty() {
 		history = true
-		historyfile = historyFile(REDIS_CLI_HISTFILE_DEFAULT)
+		historyfile = utils.HistoryFile(REDIS_CLI_HISTFILE_DEFAULT)
 		_ = linenoise.LoadHistory(historyfile)
 	}
 

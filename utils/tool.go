@@ -78,6 +78,22 @@ func homeWindows() (string, error) {
 	return home, nil
 }
 
+func absolutePath(file string) string {
+	str, err := Home()
+	if err != nil {
+		Error(err)
+	}
+	return str + "/" + file
+}
+
+func HistoryFile(file string) string {
+	return absolutePath(file)
+}
+
+func PersistenceFile(file string) string {
+	return absolutePath(file)
+}
+
 func Isatty() bool {
 	if isatty.IsTerminal(os.Stdin.Fd()) {
 		return true

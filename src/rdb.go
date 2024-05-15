@@ -82,7 +82,10 @@ func rdbLoadStringObject(obj parser.RedisObject) {
 	}
 	// add key value
 	key := createSRobj(SR_STR, o.Key)
-	server.db.dictSet(key, createSRobj(SR_STR, string(o.Value)))
+	val := createSRobj(SR_STR, string(o.Value))
+	// maybe int, try encoding
+	val.tryObjectEncoding()
+	server.db.dictSet(key, val)
 	// add expire
 	rdbLoadExpire(key, expire)
 }
@@ -332,7 +335,7 @@ func rdbSave(filename *string) int {
 		return REDIS_OK
 	}
 
-	tmpFile := persistenceFile(fmt.Sprintf("temp-%d.rdb", os.Getpid()))
+	tmpFile := utils.PersistenceFile(fmt.Sprintf("temp-%d.rdb", os.Getpid()))
 	f, err := os.Create(tmpFile)
 	if err != nil {
 		utils.ErrorP("Failed opening .rdb for saving: ", err)
