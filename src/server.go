@@ -13,7 +13,7 @@ type sharedObjects struct {
 
 var shared sharedObjects
 
-func createSharedObjects() {
+func initSharedObjects() {
 	shared.crlf = createSRobj(SR_STR, "\r\n")
 	shared.ok = createSRobj(SR_STR, RESP_OK)
 	shared.err = createSRobj(SR_STR, RESP_ERR)
@@ -27,21 +27,6 @@ func createSharedObjects() {
 	shared.unknowErr = createSRobj(SR_STR, fmt.Sprintf(RESP_ERR, "unknow command"))
 	shared.argsNumErr = createSRobj(SR_STR, fmt.Sprintf(RESP_ERR, "wrong number of args"))
 	shared.wrongTypeErr = createSRobj(SR_STR, fmt.Sprintf(RESP_ERR, "Operation against a key holding the wrong kind of value"))
-}
-
-func persistenceFile(file string) string {
-	return getHome() + "/" + file
-}
-
-func loadDataFromDisk() {
-	start := utils.GetMsTime()
-	if server.aofState == REDIS_AOF_ON {
-		loadAppendOnlyFile(server.aofFilename)
-		utils.InfoF("DB loaded from append only file: %.3f seconds", float64(utils.GetMsTime()-start)/1000)
-	} else {
-		rdbLoad(&server.rdbFilename)
-		utils.InfoF("DB loaded from disk: %.3f seconds", float64(utils.GetMsTime()-start)/1000)
-	}
 }
 
 type SRedisServer struct {
@@ -98,8 +83,6 @@ func (s *SRedisServer) changeLoadFactor(lf int) {
 	}
 }
 
-var server SRedisServer
-
 func initServerConfig() {
 	server.port = DEFAULT_PORT
 	if config.Port > 0 {
@@ -121,16 +104,14 @@ func initServerConfig() {
 	}
 }
 
+var server SRedisServer
+
 func initServer() {
-	server.db = &SRedisDB{
-		data:   dictCreate(&dbDictType),
-		expire: dictCreate(&keyPtrDictType),
-	}
+	server.db = createSRDB()
 	server.clients = make(map[int]*SRedisClient)
 	server.fd = TcpServer(server.port)
 	server.el = aeCreateEventLoop()
 	server.loadFactor = LOAD_FACTOR
-	createSharedObjects()
 	// add fileEvent
 	server.el.addFileEvent(server.fd, AE_READABLE, acceptTcpHandler, nil)
 	// add timeEvent
@@ -138,7 +119,7 @@ func initServer() {
 	// AOF fd
 	server.aofChildPid = -1
 	if server.aofState == REDIS_AOF_ON {
-		server.aofFilename = persistenceFile(REDIS_AOF_DEFAULT)
+		server.aofFilename = utils.PersistenceFile(REDIS_AOF_DEFAULT)
 		fd, err := os.OpenFile(server.aofFilename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 		if err != nil {
 			utils.Error("Can't open the append-only file: ", err)
@@ -149,7 +130,18 @@ func initServer() {
 	}
 	// rdb
 	server.rdbChildPid = -1
-	server.rdbFilename = persistenceFile("dump.rdb")
+	server.rdbFilename = utils.PersistenceFile("dump.rdb")
+}
+
+func loadDataFromDisk() {
+	start := utils.GetMsTime()
+	if server.aofState == REDIS_AOF_ON {
+		loadAppendOnlyFile(server.aofFilename)
+		utils.InfoF("DB loaded from append only file: %.3f seconds", float64(utils.GetMsTime()-start)/1000)
+		return
+	}
+	rdbLoad(&server.rdbFilename)
+	utils.InfoF("DB loaded from disk: %.3f seconds", float64(utils.GetMsTime()-start)/1000)
 }
 
 func ServerStart() {
@@ -157,6 +149,8 @@ func ServerStart() {
 	SetupConf(ServerArgs.confPath)
 	// init config
 	initServerConfig()
+	// init Shared Objects
+	initSharedObjects()
 	// init server
 	initServer()
 	utils.Info("* Server initialized")

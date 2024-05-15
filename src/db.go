@@ -146,6 +146,13 @@ func (db *SRedisDB) dbDataDi() *dictIterator {
 	return server.db.data.dictGetIterator()
 }
 
+func createSRDB() *SRedisDB {
+	return &SRedisDB{
+		data:   dictCreate(&dbDictType),
+		expire: dictCreate(&keyPtrDictType),
+	}
+}
+
 //-----------------------------------------------------------------------------
 // db commands
 //-----------------------------------------------------------------------------
