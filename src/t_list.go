@@ -36,7 +36,7 @@ func rPushCommand(c *SRedisClient) {
 
 func popGenericCommand(c *SRedisClient, where int) {
 	lObj := c.db.lookupKeyReadOrReply(c, c.args[1], shared.nullBulk)
-	if lObj == nil || lObj.checkType(c, SR_LIST) == false {
+	if lObj == nil || !lObj.checkType(c, SR_LIST) {
 		return
 	}
 

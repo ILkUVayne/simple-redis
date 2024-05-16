@@ -22,7 +22,7 @@ func hSetCommand(c *SRedisClient) {
 func hGetCommand(c *SRedisClient) {
 	var o *SRobj
 	o = c.db.lookupKeyReadOrReply(c, c.args[1], shared.nullBulk)
-	if o == nil || o.checkType(c, SR_DICT) == false {
+	if o == nil || !o.checkType(c, SR_DICT) {
 		return
 	}
 	addHashFieldToReply(c, o, c.args[2])

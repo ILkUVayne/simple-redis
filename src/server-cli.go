@@ -48,6 +48,22 @@ func cliRefreshPrompt() {
 	CliArgs.prompt = fmt.Sprintf("%s:%d> ", CliArgs.hostIp, CliArgs.port)
 }
 
+func cliDisplayPrompt() string {
+	if context == nil {
+		return "not connected> "
+	}
+	return CliArgs.prompt
+}
+
+func cliInputLine() string {
+	str, err := linenoise.Line(cliDisplayPrompt())
+	if err != nil {
+		// KillSignalError
+		utils.Exit(0)
+	}
+	return str
+}
+
 func printPrompt() {
 	if context.err != nil {
 		fmt.Printf("(error) ERR: " + context.err.Error())
@@ -69,35 +85,21 @@ func parseOptions() {
 }
 
 func repl() {
-	history := false
-	historyfile := ""
-
+	history, hf := false, ""
 	if utils.Isatty() {
-		history = true
-		historyfile = utils.HistoryFile(REDIS_CLI_HISTFILE_DEFAULT)
-		_ = linenoise.LoadHistory(historyfile)
+		history, hf = true, utils.HistoryFile(REDIS_CLI_HISTFILE_DEFAULT)
+		_ = linenoise.LoadHistory(hf)
 	}
 
 	cliRefreshPrompt()
 	for {
-		var str string
-		var err error
-		if context == nil {
-			str, err = linenoise.Line("not connected> ")
-		} else {
-			str, err = linenoise.Line(CliArgs.prompt)
-		}
-		if err != nil {
-			break
-		}
-
-		if history {
-			_ = linenoise.AddHistory(str)
-			_ = linenoise.SaveHistory(historyfile)
-		}
+		str := cliInputLine()
 		if len(str) == 0 {
 			fmt.Println("Invalid argument(s)")
 			continue
+		}
+		if history {
+			_, _ = linenoise.AddHistory(str), linenoise.SaveHistory(hf)
 		}
 		fields := strings.Fields(str)
 		if fields[0] == "quit" || fields[0] == "exit" {
@@ -111,7 +113,6 @@ func repl() {
 			}
 		}
 	}
-	utils.Exit(0)
 }
 
 func noninteractive(args []string) {
