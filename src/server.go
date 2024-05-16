@@ -156,7 +156,7 @@ func ServerStart() {
 	utils.Info("* Server initialized")
 	// load data
 	loadDataFromDisk()
-
+	// set signal handle
 	SetupSignalHandler(serverShutdown)
 	// aeMain
 	utils.InfoF("* server started, The server is now ready to accept connections on port %d", server.port)

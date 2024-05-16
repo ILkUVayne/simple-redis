@@ -96,7 +96,7 @@ func zRangeGenericCommand(c *SRedisClient, reverse bool) {
 	}
 
 	zobj = c.db.lookupKeyReadOrReply(c, key, shared.emptyMultiBulk)
-	if zobj == nil || zobj.checkType(c, SR_ZSET) == false {
+	if zobj == nil || !zobj.checkType(c, SR_ZSET) {
 		return
 	}
 
