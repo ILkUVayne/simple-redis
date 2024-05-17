@@ -122,13 +122,7 @@ func (s *SRobj) checkType(c *SRedisClient, typ SRType) bool {
 }
 
 func (s *SRobj) tryObjectEncoding() {
-	if s.encoding != REDIS_ENCODING_RAW {
-		return
-	}
-	if s.refCount > 1 {
-		return
-	}
-	if s.Typ != SR_STR {
+	if s.encoding != REDIS_ENCODING_RAW || s.refCount > 1 || s.Typ != SR_STR {
 		return
 	}
 	// Check if we can represent this string as a long integer
