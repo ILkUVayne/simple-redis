@@ -353,6 +353,7 @@ func (d *dict) dictAdd(key, val *SRobj) bool {
 	return true
 }
 
+// return DICT_SET if new key, else DICT_REP if replacer
 func (d *dict) dictSet(key, val *SRobj) int {
 	if d.dictAdd(key, val) {
 		return DICT_SET

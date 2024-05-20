@@ -27,16 +27,8 @@ func sAddCommand(c *SRedisClient) {
 	server.incrDirtyCount(c, int64(added))
 }
 
-func sinterGenericCommand(c *SRedisClient, setKeys []*SRobj, setNum int64, dstKey *SRobj) {
-	var dstSet *SRobj
-	var eleObj *SRobj
-	var encoding int
-	var intObj int64
-	var j int64
-	var replyLen *node
-	var cardinality int
-	set := make([]*SRobj, setNum)
-
+func getSets(c *SRedisClient, setKeys []*SRobj, setNum int64, dstKey *SRobj) []*SRobj {
+	sets := make([]*SRobj, setNum)
 	for i := int64(0); i < setNum; i++ {
 		var setObj *SRobj
 		if dstKey != nil {
@@ -45,45 +37,67 @@ func sinterGenericCommand(c *SRedisClient, setKeys []*SRobj, setNum int64, dstKe
 			setObj = c.db.lookupKeyRead(setKeys[i])
 		}
 		if setObj == nil {
-			set = nil
+			sets = nil
 			if dstKey != nil {
 				if c.db.dbDel(dstKey) == REDIS_OK {
 					server.incrDirtyCount(c, 1)
 				}
 				c.addReply(shared.czero)
-				return
+				return nil
 			}
 			c.addReply(shared.emptyMultiBulk)
-			return
+			return nil
 		}
 		if !setObj.checkType(c, SR_SET) {
-			set = nil
-			return
+			sets = nil
+			return nil
 		}
-		set[i] = setObj
+		sets[i] = setObj
 	}
+	return sets
+}
 
-	sortSet(set)
+func sinterGenericCommand(c *SRedisClient, setKeys []*SRobj, setNum int64, dstKey *SRobj) {
+	var dstSet *SRobj
+	var eleObj *SRobj
+	var encoding int
+	var intObj int64
+	var replyLen *node
+	var cardinality int
+	// 通过key查找对应的无序集合，并放入sets切片
+	sets := getSets(c, setKeys, setNum, dstKey)
+	if sets == nil {
+		return
+	}
+	// 根据sets中的每个集合的size大小，从小到大排序，方便后续取交集
+	sortSet(sets)
 
 	if dstKey == nil {
 		replyLen = c.addDeferredMultiBulkLength()
 	} else {
 		dstSet = createIntSetObject()
 	}
-
-	si := setTypeInitIterator(set[0])
+	// 获取交集
+	// 迭代最小的集合sets[0]，然后遍历剩余的集合，若都存在则表示交集
+	// 例如：sets[0] = {1,2} sets[1] = {1,3,4} sets[2] = {1,4,5}
+	// 第一次迭代：intObj（eleObj是当set encoding是hash table的时候的值）= 1，依次遍历sets[1] sets[2]，均存在1，是交集
+	// 第二次迭代：intObj = 2，依次遍历sets[1] sets[2]，只要有一个集合不存2，则不是交集
+	// 最终得出交集为 1
+	si := setTypeInitIterator(sets[0])
+	var j int64
 	for encoding = si.setTypeNext(&eleObj, &intObj); encoding != -1; encoding = si.setTypeNext(&eleObj, &intObj) {
+		// 遍历剩余集合，查询当前迭代值是否存在该集合中，若不存在直接break，表示当前值不是交集，迭代sets[0]中的下一个
 		for j = 1; j < setNum; j++ {
-			if set[j] == set[0] {
+			if sets[j] == sets[0] {
 				continue
 			}
 			if uint8(encoding) == REDIS_ENCODING_INTSET {
-				if set[j].encoding == REDIS_ENCODING_INTSET && !assertIntSet(set[j]).intSetFind(intObj) {
+				if sets[j].encoding == REDIS_ENCODING_INTSET && !assertIntSet(sets[j]).intSetFind(intObj) {
 					break
 				}
-				if set[j].encoding == REDIS_ENCODING_HT {
+				if sets[j].encoding == REDIS_ENCODING_HT {
 					eleObj = createFromInt(intObj)
-					if !setTypeIsMember(set[j], eleObj) {
+					if !setTypeIsMember(sets[j], eleObj) {
 						eleObj.decrRefCount()
 						break
 					}
@@ -91,52 +105,55 @@ func sinterGenericCommand(c *SRedisClient, setKeys []*SRobj, setNum int64, dstKe
 				}
 			}
 			if uint8(encoding) == REDIS_ENCODING_HT {
-				if eleObj.encoding == REDIS_ENCODING_INT && set[j].encoding == REDIS_ENCODING_INTSET {
+				if eleObj.encoding == REDIS_ENCODING_INT && sets[j].encoding == REDIS_ENCODING_INTSET {
 					iVal, _ := eleObj.intVal()
-					if !assertIntSet(set[j]).intSetFind(iVal) {
+					if !assertIntSet(sets[j]).intSetFind(iVal) {
 						break
 					}
 				}
-				if !setTypeIsMember(set[j], eleObj) {
+				if !setTypeIsMember(sets[j], eleObj) {
 					break
 				}
 			}
 		}
-
-		if j == setNum {
-			if dstKey == nil {
-				if uint8(encoding) == REDIS_ENCODING_HT {
-					c.addReplyBulk(eleObj)
-				} else {
-					c.addReplyBulkInt(intObj)
-				}
-				cardinality++
-			} else {
-				if uint8(encoding) == REDIS_ENCODING_INTSET {
-					eleObj = createFromInt(intObj)
-					setTypeAdd(dstSet, eleObj)
-					eleObj.decrRefCount()
-				} else {
-					setTypeAdd(dstSet, eleObj)
-				}
-			}
+		// j != setNum 表示当前值不是交集
+		if j != setNum {
+			continue
 		}
+		// 当前值是交集
+		if dstKey == nil {
+			cardinality++
+			if uint8(encoding) == REDIS_ENCODING_HT {
+				c.addReplyBulk(eleObj)
+				continue
+			}
+			c.addReplyBulkInt(intObj)
+			continue
+		}
+		if uint8(encoding) == REDIS_ENCODING_INTSET {
+			eleObj = createFromInt(intObj)
+			setTypeAdd(dstSet, eleObj)
+			eleObj.decrRefCount()
+			continue
+		}
+		setTypeAdd(dstSet, eleObj)
 	}
+	// 返回响应
 	si.setTypeReleaseIterator()
-	set = nil
+	sets = nil
 	if dstKey == nil {
 		c.setDeferredMultiBulkLength(replyLen, cardinality)
 		return
 	}
 	c.db.dbDel(dstKey)
+	server.incrDirtyCount(c, 1)
 	if setTypeSize(dstSet) > 0 {
 		c.db.dictSet(dstKey, dstSet)
 		c.addReplyLongLong(int(setTypeSize(dstSet)))
-	} else {
-		dstSet.decrRefCount()
-		c.addReply(shared.czero)
+		return
 	}
-	server.incrDirtyCount(c, 1)
+	dstSet.decrRefCount()
+	c.addReply(shared.czero)
 }
 
 func sinterCommand(c *SRedisClient) {
