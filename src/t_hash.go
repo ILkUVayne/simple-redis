@@ -11,12 +11,12 @@ func hSetCommand(c *SRedisClient) {
 	}
 	hashTypeTryObjectEncoding(o, c.args[2], c.args[3])
 	update := hashTypeSet(o, c.args[2], c.args[3])
+	server.incrDirtyCount(c, 1)
 	if update == DICT_SET {
 		c.addReply(shared.cone)
-	} else {
-		c.addReply(shared.czero)
+		return
 	}
-	server.incrDirtyCount(c, 1)
+	c.addReply(shared.czero)
 }
 
 func hGetCommand(c *SRedisClient) {

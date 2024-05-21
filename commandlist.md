@@ -19,6 +19,8 @@ OK
 
 **object encoding key**
 
+Returns the internal encoding for the Redis object stored at <key>
+
 ~~~bash
 127.0.0.1:6379> set k1 asdas
 OK
@@ -210,6 +212,8 @@ none
 
 ### BGREWRITEAOF
 
+Instruct Redis to start an Append Only File rewrite process.
+
 ~~~bash
 127.0.0.2:6379> BGREWRITEAOF
 Background append only file rewriting started
@@ -219,12 +223,16 @@ Background append only file rewriting started
 
 ### BGSAVE
 
+Save the DB in background.
+
 ~~~bash
 127.0.0.1:6379> bgsave
 Background saving started
 ~~~
 
 ### SAVE
+
+Save the DB.
 
 ~~~bash
 127.0.0.1:6379> save
@@ -237,6 +245,8 @@ OK
 
 **set key value**
 
+Set the value stored in the key. When the key has already stored other values, the SET command will overwrite the original value and reset the new value.
+
 ~~~bash
 127.0.0.1:6379> set k1 hello
 OK
@@ -245,6 +255,8 @@ OK
 ### get 
 
 **get key**
+
+Returns the string value stored by the key. If the key does not exist, it returns null. If the key stores a value that is not a string type, it returns an error because the GET command can only handle strings.
 
 ~~~bash
 127.0.0.1:6379> get k1
@@ -256,6 +268,10 @@ OK
 ### lpush
 
 **lpush key value [value ...]**
+
+Insert one or more values into the header of the list (starting from the left), and if there are multiple value values, insert them in order from left to right.
+
+If the key does not exist, an empty list will be automatically created and LPUSH operations will be executed; When the key exists but is not a list type, an error is returned.
 
 ~~~bash
 127.0.0.1:6379> lpush l1 baidu.com google.com 4399.com 7k7k.com
@@ -278,6 +294,8 @@ OK
 ### lpop
 
 **lpop key**
+
+Remove and return the header element of the list key.
 
 ~~~bash
 127.0.0.1:6379> lpop l1
@@ -303,6 +321,8 @@ OK
 
 **hset key field value**
 
+Set the value of the field in the hash table key to value. If the key does not exist, a new hash table will be automatically created and HSET operations will be performed. If the field has already been saved, the old value will be overwritten.
+
 ~~~bash
 127.0.0.1:6379> hset h1 k1 baidu.com
 (integer) 1
@@ -316,6 +336,8 @@ OK
 
 **hget key field**
 
+Returns the field value of the given field in the hash table key.
+
 ~~~bash
 127.0.0.1:6379> hget h1 k1
 "baidu.com"
@@ -328,6 +350,8 @@ OK
 ### sadd
 
 **add key member [member ...]**
+
+Adding one or more member elements to the set key will ignore member elements that already exist in the set. If the key does not exist, automatically create a collection containing member elements. When the key is not a collection type, an error is returned.
 
 ~~~bash
 127.0.0.1:6379> sadd s1 12
@@ -350,6 +374,8 @@ OK
 
 **smembers key**
 
+Returns all members in the set key.
+
 ~~~bash
 127.0.0.1:6379> smembers s10
 1) "12"
@@ -367,6 +393,8 @@ OK
 
 **sinter key [key ...]**
 
+Returns all members of a set, which is the intersection of all given sets. For non-existent keys, they are considered as empty sets. If there is an empty set in a given set, the result is also an empty set.
+
 ~~~bash
 127.0.0.1:6379> sinter s1 s2
 1) "12"
@@ -377,6 +405,10 @@ OK
 ### sinterstore
 
 **sinterstore key [key ...]**
+
+Save the results to the destination set instead of simply returning the result set. If the destination set already exists, overwrite it.
+
+The destination can be the key itself.
 
 ~~~bash
 127.0.0.1:6379> sinterstore s6 s3 s4
@@ -392,6 +424,8 @@ OK
 
 **zadd key score member [score member ...]**
 
+Add one or more member elements and their score values to the ordered set key.
+
 ~~~bash
 127.0.0.1:6379> zadd zs 50 z1 40 z2 60 z3 45.5 z4
 (integer) 4
@@ -400,6 +434,10 @@ OK
 ### zrange
 
 **zrange key min max [withscores]**
+
+Returns the members within a specified interval in an ordered set key, with their positions sorted in ascending order of score (from smallest to largest).
+
+By using the withscores option, return the member and its score value together.
 
 ~~~bash
 127.0.0.1:6379> zrange z1 0 5 withscores
