@@ -1,14 +1,17 @@
 # simple-redis
 
-Mainly for learning, for reference only
+Simple Redis written in Go, mainly for learning, for reference only.
 
 ![](https://github.com/ILkUVayne/simple-redis/blob/dev/demonstrate.gif)
+
+## Requirements
+
+- Linux
+- Go 1.21 or above
 
 ## Building
 
 - build
-
-This command will build an executable file **sredis**
 
 ~~~bash
 # server
@@ -20,12 +23,11 @@ go build ./sredis-cli.go
 
 - run
 
-This command will directly start the server
-
 ~~~bash
 # server
-go run ./sredis.go -c ./sredis.conf
+go run ./sredis.go
 # server with config
+go run ./sredis.go -c ./sredis.conf
 
 # cli
 go run ./sredis-cli.go
