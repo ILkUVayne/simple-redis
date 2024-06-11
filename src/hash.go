@@ -73,3 +73,14 @@ func hashTypeLength(o *SRobj) int64 {
 	checkHashEncoding(o)
 	return assertDict(o).dictSize()
 }
+
+func hashTypeDel(o, field *SRobj) bool {
+	checkHashEncoding(o)
+	deleted := false
+	if assertDict(o).dictDelete(field) == REDIS_OK {
+		deleted = true
+	}
+	// todo check if the dictionary needs a resize after a delete
+
+	return deleted
+}

@@ -20,10 +20,29 @@ func hSetCommand(c *SRedisClient) {
 }
 
 func hGetCommand(c *SRedisClient) {
-	var o *SRobj
-	o = c.db.lookupKeyReadOrReply(c, c.args[1], shared.nullBulk)
+	o := c.db.lookupKeyReadOrReply(c, c.args[1], shared.nullBulk)
 	if o == nil || !o.checkType(c, SR_DICT) {
 		return
 	}
 	addHashFieldToReply(c, o, c.args[2])
+}
+
+// HDEL key field [field ...]
+func hDelCommand(c *SRedisClient) {
+	deleted := 0
+	o := c.db.lookupKeyReadOrReply(c, c.args[1], shared.nullBulk)
+	if o == nil || !o.checkType(c, SR_DICT) {
+		return
+	}
+	for i := 2; i < len(c.args); i++ {
+		if !hashTypeDel(o, c.args[i]) {
+			continue
+		}
+		deleted++
+		if hashTypeLength(o) == 0 {
+			c.db.dbDel(c.args[1])
+			break
+		}
+	}
+	c.addReplyLongLong(deleted)
 }
