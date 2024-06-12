@@ -20,6 +20,7 @@ func fork() int {
 // options
 // unix.WNOHANG 如果没有任何已经结束了的子进程，则马上返回，不等待
 // unix.WUNTRACED 如果子进程进入暂停执行的情况，则马上返回，但结束状态不予理会
+// options 设为0，则会一直等待，直到有进程退出
 //
 // return 0 如果设置了 WNOHANG，而调用 wait4() 时，没有发现已退出的子进程可收集，则返回0.
 // return > 0 正常返回时，wait4() 返回收集到的子进程的PID.

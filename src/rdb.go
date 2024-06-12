@@ -405,6 +405,7 @@ func rdbSaveBackground() int {
 		utils.Info("Background saving started by pid %d", childPid)
 		server.rdbChildPid = childPid
 		server.changeLoadFactor(BG_PERSISTENCE_LOAD_FACTOR)
+		updateDictResizePolicy()
 		return REDIS_OK
 	}
 	return REDIS_OK

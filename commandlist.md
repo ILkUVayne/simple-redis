@@ -94,6 +94,8 @@ OK
 (integer) 1
 127.0.0.1:6379> exists kk kkk
 (integer) 1
+127.0.0.1:6379> exists names
+(integer) 0
 ~~~
 
 ### TTL

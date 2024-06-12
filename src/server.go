@@ -83,6 +83,15 @@ func (s *SRedisServer) changeLoadFactor(lf int) {
 	}
 }
 
+// 更新调整dict容量权限
+func updateDictResizePolicy() {
+	if server.rdbChildPid == -1 && server.aofChildPid == -1 {
+		dictEnableResize()
+		return
+	}
+	dictDisableResize()
+}
+
 func initServerConfig() {
 	server.port = DEFAULT_PORT
 	if config.Port > 0 {
