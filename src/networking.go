@@ -100,6 +100,7 @@ func checkPersistence() {
 				backgroundSaveDoneHandler()
 			}
 		}
+		updateDictResizePolicy()
 		return
 	}
 
@@ -133,10 +134,21 @@ func checkPersistence() {
 	}
 }
 
-// run cronjob, default 100ms
-func serverCron(*aeEventLoop, int, any) {
+func databaseCorn() {
 	// check expire key
 	activeExpireCycle()
+	if server.aofChildPid != -1 && server.rdbChildPid != -1 {
+		// Resize
+		tryResizeHashTables()
+		// Rehash
+		tryRehash()
+	}
+}
+
+// run cronjob, default 100ms
+func serverCron(*aeEventLoop, int, any) {
+	// database corn
+	databaseCorn()
 	// flush aof_buf on disk
 	flushAppendOnlyFile()
 	// Check if a background saving or AOF rewrite in progress terminated.

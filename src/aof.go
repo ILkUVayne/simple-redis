@@ -405,6 +405,7 @@ func rewriteAppendOnlyFileBackground() int {
 		utils.Info("Background append only file rewriting started by pid %d", childPid)
 		server.aofChildPid = childPid
 		server.changeLoadFactor(BG_PERSISTENCE_LOAD_FACTOR)
+		updateDictResizePolicy()
 		return REDIS_OK
 	}
 	return REDIS_OK

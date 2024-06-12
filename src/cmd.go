@@ -111,5 +111,6 @@ var commandTable = []SRedisCommand{
 	// hash
 	{H_SET, hSetCommand, 4},
 	{H_GET, hGetCommand, 3},
+	{H_DEL, hDelCommand, -3},
 	// more
 }

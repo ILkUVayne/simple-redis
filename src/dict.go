@@ -7,6 +7,8 @@ import (
 	"simple-redis/utils"
 )
 
+var dictCanResize = true
+
 type dictIterator struct {
 	d                *dict
 	table, index     int
@@ -252,12 +254,32 @@ func (d *dict) dictNextPower(size int64) int64 {
 	}
 }
 
+// 判断是否需要调整dict容量
+//
+// used使用量占比小于10%时，需要调整dict容量
+func (d *dict) htNeedResize() bool {
+	size, used := d.dictSlots(), d.dictSize()
+	return size > DICT_HT_INITIAL_SIZE && (used*100/size < HT_MIN_FILL)
+}
+
+// 调整dict容量
+func (d *dict) dictResize() int {
+	if !dictCanResize || d.isRehash() {
+		return DICT_ERR
+	}
+	minimal := d.dictSize()
+	if minimal < DICT_HT_INITIAL_SIZE {
+		minimal = DICT_HT_INITIAL_SIZE
+	}
+	return d.dictExpand(minimal)
+}
+
 // 扩容
 func (d *dict) dictExpand(size int64) int {
 	realSize := d.dictNextPower(size)
 
 	if d.isRehash() || d.ht[0].used > size {
-		return DICK_ERR
+		return DICT_ERR
 	}
 
 	ht := new(dictht)
@@ -268,23 +290,23 @@ func (d *dict) dictExpand(size int64) int {
 
 	d.ht[1] = ht
 	d.rehashIdx = 0
-	return DICK_OK
+	return DICT_OK
 }
 
 // 检查是否需要扩容
 func (d *dict) dictExpandIfNeeded() int {
 	if d.isRehash() {
-		return DICK_OK
+		return DICT_OK
 	}
-	if d.ht[0].used > d.ht[0].size && (float64(d.ht[0].used)/float64(d.ht[0].size) > float64(server.loadFactor)) {
+	if d.ht[0].used > d.ht[0].size && (dictCanResize || float64(d.ht[0].used)/float64(d.ht[0].size) > float64(server.loadFactor)) {
 		return d.dictExpand(d.ht[0].size * EXPEND_RATIO)
 	}
-	return DICK_OK
+	return DICT_OK
 }
 
 // return -1 if err or exist
 func (d *dict) dictKeyIndex(key *SRobj) int64 {
-	if err := d.dictExpandIfNeeded(); err != DICK_OK {
+	if err := d.dictExpandIfNeeded(); err != DICT_OK {
 		return -1
 	}
 	idx, _ := d.dictFind(key)
@@ -379,7 +401,7 @@ func (d *dict) dictGet(key *SRobj) *SRobj {
 
 func (d *dict) dictDelete(key *SRobj) int {
 	if d.ht[0].size == 0 {
-		return DICK_ERR
+		return DICT_ERR
 	}
 
 	if d.isRehash() {
@@ -401,7 +423,7 @@ func (d *dict) dictDelete(key *SRobj) int {
 				}
 				freeDictEntry(he)
 				d.ht[table].used--
-				return DICK_OK
+				return DICT_OK
 			}
 			preHe = he
 			he = he.next
@@ -410,7 +432,7 @@ func (d *dict) dictDelete(key *SRobj) int {
 			break
 		}
 	}
-	return DICK_ERR
+	return DICT_ERR
 }
 
 // get a random key
@@ -460,7 +482,7 @@ func (d *dict) _dictClear(ht *dictht) int {
 	var he *dictEntry
 
 	if ht == nil {
-		return DICK_OK
+		return DICT_OK
 	}
 	for i := int64(0); i < ht.size; i++ {
 		he = ht.table[i]
@@ -477,7 +499,7 @@ func (d *dict) _dictClear(ht *dictht) int {
 		}
 	}
 	_dictReset(ht)
-	return DICK_OK
+	return DICT_OK
 }
 
 func _dictReset(ht *dictht) {
@@ -492,4 +514,12 @@ func (d *dict) dictEmpty() {
 	d._dictClear(d.ht[1])
 	d.rehashIdx = -1
 	d.iterators = 0
+}
+
+func dictEnableResize() {
+	dictCanResize = true
+}
+
+func dictDisableResize() {
+	dictCanResize = false
 }

@@ -153,6 +153,19 @@ func createSRDB() *SRedisDB {
 	}
 }
 
+func tryRehash() {
+	server.db.data.dictRehashStep()
+}
+
+func tryResizeHashTables() {
+	if server.db.data.htNeedResize() {
+		server.db.data.dictResize()
+	}
+	if server.db.expire.htNeedResize() {
+		server.db.expire.dictResize()
+	}
+}
+
 //-----------------------------------------------------------------------------
 // db commands
 //-----------------------------------------------------------------------------

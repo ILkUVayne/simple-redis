@@ -95,10 +95,29 @@ func TestDictNextPower(t *testing.T) {
 	}
 }
 
+func TestDictResize(t *testing.T) {
+	d := dictCreate(&dbDictType)
+	d.dictSet(createSRobj(SR_STR, "name"), createSRobj(SR_STR, "ly"))
+	d.dictSet(createSRobj(SR_STR, "name1"), createSRobj(SR_STR, "ly"))
+	d.dictExpand(5)
+	d.dictGet(createSRobj(SR_STR, "name"))
+	d.dictGet(createSRobj(SR_STR, "name"))
+	if d.dictResize() != DICT_ERR {
+		t.Error("dictResize err: isRehash now")
+	}
+	d.dictGet(createSRobj(SR_STR, "name"))
+	if d.dictResize() == DICT_ERR {
+		t.Error("dictResize err: result is false")
+	}
+	if d.ht[1].size != 4 {
+		t.Error("dictExpand err: size == ", d.ht[1].size)
+	}
+}
+
 func TestDictExpand(t *testing.T) {
 	server.rehashNullStep = 10
 	server.loadFactor = LOAD_FACTOR
-	d := dictCreate(&dictType{hashFunc: SRStrHash, keyCompare: SRStrCompare})
+	d := dictCreate(&dbDictType)
 	d.dictSet(createSRobj(SR_STR, "name"), createSRobj(SR_STR, "ly"))
 	d.dictSet(createSRobj(SR_STR, "name1"), createSRobj(SR_STR, "ly"))
 	d.dictSet(createSRobj(SR_STR, "name2"), createSRobj(SR_STR, "ly"))

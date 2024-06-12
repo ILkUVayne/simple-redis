@@ -94,6 +94,8 @@ OK
 (integer) 1
 127.0.0.1:6379> exists kk kkk
 (integer) 1
+127.0.0.1:6379> exists names
+(integer) 0
 ~~~
 
 ### TTL
@@ -343,6 +345,29 @@ Returns the field value of the given field in the hash table key.
 "baidu.com"
 127.0.0.1:6379> hget h1 k2
 "100"
+~~~
+
+### hdel
+
+**hget key field [field ...]**
+
+Delete one or more specified fields in the hash table key, and non-existent fields will be ignored.
+
+~~~bash
+127.0.0.1:6379> hset h1 k1 aaa
+(integer) 1
+127.0.0.1:6379> hset h1 k2 bbb
+(integer) 1
+127.0.0.1:6379> hset h1 k3 ccc
+(integer) 1
+127.0.0.1:6379> hdel h1 k1
+(integer) 1
+127.0.0.1:6379> hget h1 k1
+(nil)
+127.0.0.1:6379> hdel h1 k1 k2 k3
+(integer) 2
+127.0.0.1:6379> hdel s4 k1
+(error) ERR: Operation against a key holding the wrong kind of value
 ~~~
 
 ## set
