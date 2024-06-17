@@ -69,7 +69,7 @@ func zAddGenericCommand(c *SRedisClient, incr bool) {
 		c.addReplyDouble(score)
 		return
 	}
-	c.addReplyLongLong(added)
+	c.addReplyLongLong(int64(added))
 }
 
 func zAddCommand(c *SRedisClient) {

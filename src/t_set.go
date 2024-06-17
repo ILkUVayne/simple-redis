@@ -23,7 +23,7 @@ func sAddCommand(c *SRedisClient) {
 			added++
 		}
 	}
-	c.addReplyLongLong(added)
+	c.addReplyLongLong(int64(added))
 	server.incrDirtyCount(c, int64(added))
 }
 
@@ -149,7 +149,7 @@ func sinterGenericCommand(c *SRedisClient, setKeys []*SRobj, setNum int64, dstKe
 	server.incrDirtyCount(c, 1)
 	if setTypeSize(dstSet) > 0 {
 		c.db.dictSet(dstKey, dstSet)
-		c.addReplyLongLong(int(setTypeSize(dstSet)))
+		c.addReplyLongLong(setTypeSize(dstSet))
 		return
 	}
 	dstSet.decrRefCount()

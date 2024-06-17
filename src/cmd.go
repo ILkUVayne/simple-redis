@@ -95,6 +95,8 @@ var commandTable = []SRedisCommand{
 	// string
 	{GET, getCommand, 2},
 	{SET, setCommand, 3},
+	{INCR, incrCommand, 2},
+	{DECR, decrCommand, 2},
 	// zset
 	{Z_ADD, zAddCommand, -4},
 	{Z_RANGE, zRangeCommand, -4},

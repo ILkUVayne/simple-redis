@@ -22,7 +22,7 @@ func pushGenericCommand(c *SRedisClient, where int) {
 		listTypePush(lObj, c.args[i], where)
 		pushed++
 	}
-	c.addReplyLongLong(assertList(lObj).len())
+	c.addReplyLongLong(int64(assertList(lObj).len()))
 	server.incrDirtyCount(c, pushed)
 }
 

@@ -27,7 +27,7 @@ func TestSRStrCompare(t *testing.T) {
 }
 
 func TestDictCreate(t *testing.T) {
-	d := dictCreate(&dictType{hashFunc: SRStrHash, keyCompare: SRStrCompare})
+	d := dictCreate(&dbDictType)
 	if d.rehashIdx != -1 {
 		t.Error("dict init rehashidx err: rehashidx == ", d.rehashIdx)
 	}
@@ -54,7 +54,7 @@ func TestFreeDictEntry(t *testing.T) {
 }
 
 func TestIsRehash(t *testing.T) {
-	d := dictCreate(&dictType{hashFunc: SRStrHash, keyCompare: SRStrCompare})
+	d := dictCreate(&dbDictType)
 	if d.isRehash() {
 		t.Error("isRehash err: d.isRehash == ", d.isRehash())
 	}
@@ -67,7 +67,7 @@ func TestIsRehash(t *testing.T) {
 func TestDictRehash(t *testing.T) {
 	server.rehashNullStep = 10
 	server.loadFactor = LOAD_FACTOR
-	d := dictCreate(&dictType{hashFunc: SRStrHash, keyCompare: SRStrCompare})
+	d := dictCreate(&dbDictType)
 	d.dictSet(createSRobj(SR_STR, "name"), createSRobj(SR_STR, "ly"))
 	d.dictSet(createSRobj(SR_STR, "name1"), createSRobj(SR_STR, "ly"))
 	d.dictSet(createSRobj(SR_STR, "name2"), createSRobj(SR_STR, "ly"))
@@ -88,7 +88,7 @@ func TestDictRehash(t *testing.T) {
 }
 
 func TestDictNextPower(t *testing.T) {
-	d := dictCreate(&dictType{hashFunc: SRStrHash, keyCompare: SRStrCompare})
+	d := dictCreate(&dbDictType)
 	s1 := d.dictNextPower(5)
 	if s1 != 8 {
 		t.Error("dictNextPower err: size == ", s1)
@@ -130,7 +130,7 @@ func TestDictExpand(t *testing.T) {
 }
 
 func TestDictKeyIndex(t *testing.T) {
-	d := dictCreate(&dictType{hashFunc: SRStrHash, keyCompare: SRStrCompare})
+	d := dictCreate(&dbDictType)
 	key := createSRobj(SR_STR, "name")
 	val := createSRobj(SR_STR, "ly")
 	d.dictSet(key, val)
@@ -145,7 +145,7 @@ func TestDictKeyIndex(t *testing.T) {
 }
 
 func TestDictFind(t *testing.T) {
-	d := dictCreate(&dictType{hashFunc: SRStrHash, keyCompare: SRStrCompare})
+	d := dictCreate(&dbDictType)
 	key := createSRobj(SR_STR, "name")
 	val := createSRobj(SR_STR, "ly")
 	d.dictSet(key, val)
@@ -161,7 +161,7 @@ func TestDictFind(t *testing.T) {
 func TestDictSet(t *testing.T) {
 	server.rehashNullStep = 10
 	server.loadFactor = LOAD_FACTOR
-	d := dictCreate(&dictType{hashFunc: SRStrHash, keyCompare: SRStrCompare})
+	d := dictCreate(&dbDictType)
 	d.dictSet(createSRobj(SR_STR, "name"), createSRobj(SR_STR, "ly"))
 	d.dictSet(createSRobj(SR_STR, "name1"), createSRobj(SR_STR, "ly"))
 	d.dictSet(createSRobj(SR_STR, "name2"), createSRobj(SR_STR, "ly"))
@@ -181,7 +181,7 @@ func TestDictSet(t *testing.T) {
 }
 
 func TestDictGet(t *testing.T) {
-	d := dictCreate(&dictType{hashFunc: SRStrHash, keyCompare: SRStrCompare})
+	d := dictCreate(&dbDictType)
 	key := createSRobj(SR_STR, "name")
 	val := createSRobj(SR_STR, "ly")
 	d.dictSet(key, val)
@@ -196,7 +196,7 @@ func TestDictGet(t *testing.T) {
 }
 
 func TestDictDelete(t *testing.T) {
-	d := dictCreate(&dictType{hashFunc: SRStrHash, keyCompare: SRStrCompare})
+	d := dictCreate(&dbDictType)
 	key := createSRobj(SR_STR, "name")
 	val := createSRobj(SR_STR, "ly")
 	d.dictSet(key, val)
@@ -216,7 +216,7 @@ func TestDictDelete(t *testing.T) {
 }
 
 func TestDictGetRandomKey(t *testing.T) {
-	d := dictCreate(&dictType{hashFunc: SRStrHash, keyCompare: SRStrCompare})
+	d := dictCreate(&dbDictType)
 	d.dictSet(createSRobj(SR_STR, "name1"), createSRobj(SR_STR, "ly1"))
 	d.dictSet(createSRobj(SR_STR, "name2"), createSRobj(SR_STR, "ly2"))
 	d.dictSet(createSRobj(SR_STR, "name3"), createSRobj(SR_STR, "ly3"))

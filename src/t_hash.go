@@ -44,5 +44,5 @@ func hDelCommand(c *SRedisClient) {
 			break
 		}
 	}
-	c.addReplyLongLong(deleted)
+	c.addReplyLongLong(int64(deleted))
 }
