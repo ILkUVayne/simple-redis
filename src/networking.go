@@ -189,7 +189,7 @@ func (c *SRedisClient) addReplyDouble(f float64) {
 	c.addReplyStr(fmt.Sprintf("$%d\r\n%s\r\n", len(str), str))
 }
 
-func (c *SRedisClient) addReplyLongLong(ll int) {
+func (c *SRedisClient) addReplyLongLong(ll int64) {
 	if ll == 0 {
 		c.addReply(shared.czero)
 		return

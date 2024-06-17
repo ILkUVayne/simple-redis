@@ -184,10 +184,10 @@ func ttlGenericCommand(c *SRedisClient, outputMs bool) {
 	}
 	ttl := expireTime - utils.GetMsTime()
 	if outputMs {
-		c.addReplyLongLong(int(ttl))
+		c.addReplyLongLong(ttl)
 		return
 	}
-	c.addReplyLongLong(int((ttl + 500) / 1000))
+	c.addReplyLongLong((ttl + 500) / 1000)
 }
 
 // expire key value
@@ -257,7 +257,7 @@ func delCommand(c *SRedisClient) {
 			deleted++
 		}
 	}
-	c.addReplyLongLong(deleted)
+	c.addReplyLongLong(int64(deleted))
 }
 
 // keys pattern
@@ -292,7 +292,7 @@ func existsCommand(c *SRedisClient) {
 			count++
 		}
 	}
-	c.addReplyLongLong(count)
+	c.addReplyLongLong(int64(count))
 }
 
 // TTL key, return s

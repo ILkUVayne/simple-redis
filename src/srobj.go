@@ -152,6 +152,10 @@ func (s *SRobj) getDecodedObject() *SRobj {
 }
 
 func (s *SRobj) getLongLongFromObject(target *int64) int {
+	if s == nil {
+		*target = 0
+		return REDIS_OK
+	}
 	if s.Typ != SR_STR {
 		return REDIS_ERR
 	}
@@ -227,8 +231,9 @@ func compareStringObjects(obj1, obj2 *SRobj) int {
 func createFromInt(val int64) *SRobj {
 	return &SRobj{
 		Typ:      SR_STR,
-		Val:      strconv.FormatInt(val, 10),
+		Val:      val,
 		refCount: 1,
+		encoding: REDIS_ENCODING_INT,
 	}
 }
 

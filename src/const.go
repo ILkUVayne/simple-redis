@@ -129,6 +129,8 @@ const (
 	SAVE         = "save"
 	GET          = "get"
 	SET          = "set"
+	INCR         = "incr"
+	DECR         = "decr"
 	Z_ADD        = "zadd"
 	Z_RANGE      = "zrange"
 	S_ADD        = "sadd"

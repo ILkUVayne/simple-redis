@@ -105,6 +105,8 @@ OK
 The TTL command checks the remaining expiration time of the Key, in seconds.If the key does not exist, return -2; If the key exists but the remaining survival time is not set, return -1.
 
 ~~~bash
+127.0.0.1:6379> set url www
+OK
 127.0.0.1:6379> expire url 50
 OK
 127.0.0.1:6379> TTL url
@@ -118,6 +120,10 @@ OK
 The PTTL command checks the remaining expiration time of a Key in milliseconds.When the key does not exist, return -2. When the key exists but the remaining survival time is not set, return -1. Otherwise, return the remaining lifetime of the key.
 
 ~~~bash
+127.0.0.1:6379> set url www
+OK
+127.0.0.1:6379> expire url 50
+OK
 127.0.0.1:6379> pTTL url
 (integer) 36804
 127.0.0.1:6379> pTTL url1
@@ -263,6 +269,56 @@ Returns the string value stored by the key. If the key does not exist, it return
 ~~~bash
 127.0.0.1:6379> get k1
 "hello"
+~~~
+
+### incr
+
+**incr key**
+
+Add 1 to the value stored in the key.
+
+If the key does not exist, the value of the key will be initialized to 0 before executing the INCR operation. If the value contains an incorrect type, or if a value of string type cannot be represented as a number, then an error is returned.
+
+~~~bash
+127.0.0.1:6379> set n1 20
+OK
+127.0.0.1:6379> incr n1
+(integer) 21
+127.0.0.1:6379> get n1
+"21"
+127.0.0.1:6379> incr n2
+(integer) 1
+127.0.0.1:6379> get n2
+"1"
+127.0.0.1:6379> sadd n3 sds fs
+(integer) 2
+127.0.0.1:6379> incr n3
+(error) ERR: Operation against a key holding the wrong kind of value
+~~~
+
+### decr
+
+**incr key**
+
+Subtract the value stored in the key by 1.
+
+If the key does not exist, the value of the key will be initialized to 0 before executing the DECR operation. If the value contains an incorrect type, or if a value of string type cannot be represented as a number, then an error is returned.
+
+~~~bash
+127.0.0.1:6379> set n1 30
+OK
+127.0.0.1:6379> decr n1
+(integer) 29
+127.0.0.1:6379> get n1
+"29"
+127.0.0.1:6379> decr n2
+(integer) -1
+127.0.0.1:6379> get n2
+"-1"
+127.0.0.1:6379> sadd n3 baidu google
+(integer) 2
+127.0.0.1:6379> decr n3
+(error) ERR: Operation against a key holding the wrong kind of value
 ~~~
 
 ## list
