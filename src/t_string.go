@@ -49,9 +49,8 @@ func incrDecrCommand(c *SRedisClient, incr int64) {
 		return
 	}
 	value += incr
-	newValue := createFromInt(value)
 	if o == nil {
-		c.db.dictSet(c.args[1], newValue)
+		c.db.dictSet(c.args[1], createFromInt(value))
 	} else {
 		o.Val = value
 	}
