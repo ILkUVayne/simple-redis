@@ -24,14 +24,13 @@ func zAddGenericCommand(c *SRedisClient, incr bool) {
 		}
 	}
 
-	zobj := server.db.lookupKeyWrite(key)
-	if zobj != nil && zobj.Typ != SR_ZSET {
-		c.addReply(shared.wrongTypeErr)
+	zobj := c.db.lookupKeyWrite(key)
+	if zobj != nil && !zobj.checkType(c, SR_ZSET) {
 		return
 	}
 	if zobj == nil {
 		zobj = createZsetSRobj()
-		server.db.dictSet(key, zobj)
+		c.db.dictSet(key, zobj)
 	}
 
 	for i := 0; i < elements; i++ {
