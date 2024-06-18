@@ -194,8 +194,7 @@ func ttlGenericCommand(c *SRedisClient, outputMs bool) {
 func expireCommand(c *SRedisClient) {
 	key := c.args[1]
 	val := c.args[2]
-	if val.Typ != SR_STR {
-		c.addReply(shared.typeErr)
+	if !val.checkType(c, SR_STR) {
 		return
 	}
 
@@ -224,8 +223,7 @@ func expireCommand(c *SRedisClient) {
 // object encoding key
 func objectCommand(c *SRedisClient) {
 	val := c.args[2]
-	if val.Typ != SR_STR {
-		c.addReply(shared.typeErr)
+	if !val.checkType(c, SR_STR) {
 		return
 	}
 	value := c.db.lookupKeyReadOrReply(c, val, nil)
@@ -238,8 +236,7 @@ func objectCommand(c *SRedisClient) {
 // TYPE key
 func typeCommand(c *SRedisClient) {
 	val := c.args[1]
-	if val.Typ != SR_STR {
-		c.addReply(shared.typeErr)
+	if !val.checkType(c, SR_STR) {
 		return
 	}
 	value := c.db.lookupKeyReadOrReply(c, val, shared.none)

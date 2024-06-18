@@ -6,14 +6,13 @@ package src
 
 func sAddCommand(c *SRedisClient) {
 	key := c.args[1]
-	set := server.db.lookupKeyWrite(key)
-	if set != nil && set.Typ != SR_SET {
-		c.addReply(shared.wrongTypeErr)
+	set := c.db.lookupKeyWrite(key)
+	if set != nil && !set.checkType(c, SR_SET) {
 		return
 	}
 	if set == nil {
 		set = setTypeCreate(c.args[2])
-		server.db.dictSet(key, set)
+		c.db.dictSet(key, set)
 	}
 	// add...
 	added := 0

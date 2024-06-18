@@ -5,8 +5,8 @@ package src
 //-----------------------------------------------------------------------------
 
 func hSetCommand(c *SRedisClient) {
-	var o *SRobj
-	if o = hashTypeLookupWriteOrCreate(c, c.args[1]); o == nil {
+	o := hashTypeLookupWriteOrCreate(c, c.args[1])
+	if o == nil {
 		return
 	}
 	hashTypeTryObjectEncoding(o, c.args[2], c.args[3])

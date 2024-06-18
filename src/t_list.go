@@ -8,8 +8,7 @@ func pushGenericCommand(c *SRedisClient, where int) {
 	var pushed int64
 	lObj := c.db.lookupKeyWrite(c.args[1])
 
-	if lObj != nil && lObj.Typ != SR_LIST {
-		c.addReply(shared.wrongTypeErr)
+	if lObj != nil && !lObj.checkType(c, SR_LIST) {
 		return
 	}
 

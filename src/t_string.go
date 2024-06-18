@@ -20,10 +20,8 @@ func getCommand(c *SRedisClient) {
 }
 
 func setCommand(c *SRedisClient) {
-	key := c.args[1]
-	val := c.args[2]
-	if val.Typ != SR_STR {
-		c.addReply(shared.typeErr)
+	key, val := c.args[1], c.args[2]
+	if !val.checkType(c, SR_STR) {
 		return
 	}
 	val.tryObjectEncoding()
