@@ -20,8 +20,7 @@ func getCommand(c *SRedisClient) {
 }
 
 func setCommand(c *SRedisClient) {
-	key := c.args[1]
-	val := c.args[2]
+	key, val := c.args[1], c.args[2]
 	if !val.checkType(c, SR_STR) {
 		return
 	}
