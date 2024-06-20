@@ -81,8 +81,7 @@ func rdbLoadStringObject(obj parser.RedisObject) {
 		utils.Error("rdbLoadStringObject err: invalid obj type")
 	}
 	// add key value
-	key := createSRobj(SR_STR, o.Key)
-	val := createSRobj(SR_STR, string(o.Value))
+	key, val := createSRobj(SR_STR, o.Key), createSRobj(SR_STR, string(o.Value))
 	// maybe int, try encoding
 	val.tryObjectEncoding()
 	server.db.dictSet(key, val)
@@ -315,8 +314,7 @@ func writeZSetObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 	zs := assertZSet(val)
 	di := zs.d.dictGetIterator()
 	for de := di.dictNext(); de != nil; de = di.dictNext() {
-		eleObj := de.getKey()
-		score := de.getVal()
+		eleObj, score := de.getKey(), de.getVal()
 		zn := new(model.ZSetEntry)
 		sf, _ := score.floatVal()
 		zn.Score = sf
@@ -350,8 +348,7 @@ func rdbSave(filename *string) int {
 
 	di := server.db.dbDataDi()
 	for de := di.dictNext(); de != nil; de = di.dictNext() {
-		key := de.getKey()
-		val := de.getVal()
+		key, val := de.getKey(), de.getVal()
 		expireTime := server.db.expireTime(key)
 		if rdbWriteObject(enc, key, val, expireTime) == REDIS_ERR {
 			goto werr
