@@ -86,3 +86,12 @@ func hashTypeDel(o, field *SRobj) bool {
 	}
 	return deleted
 }
+
+func hashTypeExists(o, field *SRobj) bool {
+	checkHashEncoding(o)
+	var value *SRobj
+	if hashTypeGetFromHashTable(o, field, &value) {
+		return true
+	}
+	return false
+}

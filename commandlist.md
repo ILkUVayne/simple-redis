@@ -426,6 +426,27 @@ Delete one or more specified fields in the hash table key, and non-existent fiel
 (error) ERR: Operation against a key holding the wrong kind of value
 ~~~
 
+### hexists
+
+**hexists key field**
+
+Check if the given field exists in the hash table key.
+
+~~~bash
+127.0.0.1:6379> hset h2 k1 baidu
+(integer) 1
+127.0.0.1:6379> hexists h2 k1
+(integer) 1
+127.0.0.1:6379> hexists h2 k2
+(integer) 0
+127.0.0.1:6379> hexists h3 k2
+(integer) 0
+127.0.0.1:6379> type s1
+set
+127.0.0.1:6379> hexists s1 k2
+(error) ERR: Operation against a key holding the wrong kind of value
+~~~
+
 ## set
 
 ### sadd

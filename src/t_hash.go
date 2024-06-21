@@ -4,6 +4,7 @@ package src
 // Hash type commands
 //-----------------------------------------------------------------------------
 
+// hset key field value
 func hSetCommand(c *SRedisClient) {
 	o := hashTypeLookupWriteOrCreate(c, c.args[1])
 	if o == nil {
@@ -19,6 +20,7 @@ func hSetCommand(c *SRedisClient) {
 	c.addReply(shared.czero)
 }
 
+// hget key field
 func hGetCommand(c *SRedisClient) {
 	o := c.db.lookupKeyReadOrReply(c, c.args[1], shared.nullBulk)
 	if o == nil || !o.checkType(c, SR_DICT) {
@@ -45,4 +47,17 @@ func hDelCommand(c *SRedisClient) {
 		}
 	}
 	c.addReplyLongLong(int64(deleted))
+}
+
+// hexists key field
+func hExistsCommand(c *SRedisClient) {
+	o := c.db.lookupKeyReadOrReply(c, c.args[1], shared.czero)
+	if o == nil || !o.checkType(c, SR_DICT) {
+		return
+	}
+	if hashTypeExists(o, c.args[2]) {
+		c.addReply(shared.cone)
+		return
+	}
+	c.addReply(shared.czero)
 }
