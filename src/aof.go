@@ -314,8 +314,7 @@ func rewriteZSetObject(f *os.File, key, val *SRobj) {
 	zs := assertZSet(val)
 	di := zs.d.dictGetIterator()
 	for de := di.dictNext(); de != nil; de = di.dictNext() {
-		eleObj := de.getKey()
-		score := de.getVal()
+		eleObj, score := de.getKey(), de.getVal()
 
 		if count == 0 {
 			cmd := fmt.Sprintf(RESP_ZSET, 2+getItems(items)*2)

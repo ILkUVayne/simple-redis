@@ -114,5 +114,6 @@ var commandTable = []SRedisCommand{
 	{H_SET, hSetCommand, 4},
 	{H_GET, hGetCommand, 3},
 	{H_DEL, hDelCommand, -3},
+	{H_EXISTS, hExistsCommand, 3},
 	// more
 }
