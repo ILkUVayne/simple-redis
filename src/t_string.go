@@ -6,6 +6,7 @@ import "math"
 // String commands
 //-----------------------------------------------------------------------------
 
+// get key
 func getCommand(c *SRedisClient) {
 	key := c.args[1]
 	val := c.db.lookupKeyRead(key)
@@ -19,6 +20,7 @@ func getCommand(c *SRedisClient) {
 	c.addReplyBulk(val)
 }
 
+// set key value
 func setCommand(c *SRedisClient) {
 	key, val := c.args[1], c.args[2]
 	if !val.checkType(c, SR_STR) {
@@ -56,10 +58,12 @@ func incrDecrCommand(c *SRedisClient, incr int64) {
 	c.addReplyLongLong(value)
 }
 
+// incr key
 func incrCommand(c *SRedisClient) {
 	incrDecrCommand(c, 1)
 }
 
+// decr key
 func decrCommand(c *SRedisClient) {
 	incrDecrCommand(c, -1)
 }

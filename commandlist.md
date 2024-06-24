@@ -298,7 +298,7 @@ OK
 
 ### decr
 
-**incr key**
+**decr key**
 
 Subtract the value stored in the key by 1.
 
@@ -451,7 +451,7 @@ set
 
 ### sadd
 
-**add key member [member ...]**
+**sadd key member [member ...]**
 
 Adding one or more member elements to the set key will ignore member elements that already exist in the set. If the key does not exist, automatically create a collection containing member elements. When the key is not a collection type, an error is returned.
 

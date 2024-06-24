@@ -25,10 +25,12 @@ func pushGenericCommand(c *SRedisClient, where int) {
 	server.incrDirtyCount(c, pushed)
 }
 
+// lpush key value [value ...]
 func lPushCommand(c *SRedisClient) {
 	pushGenericCommand(c, AL_START_HEAD)
 }
 
+// rpush key value [value ...]
 func rPushCommand(c *SRedisClient) {
 	pushGenericCommand(c, AL_START_TAIL)
 }
@@ -52,10 +54,12 @@ func popGenericCommand(c *SRedisClient, where int) {
 	server.incrDirtyCount(c, 1)
 }
 
+// lpop key
 func lPopCommand(c *SRedisClient) {
 	popGenericCommand(c, AL_START_HEAD)
 }
 
+// rpop key
 func rPopCommand(c *SRedisClient) {
 	popGenericCommand(c, AL_START_TAIL)
 }
