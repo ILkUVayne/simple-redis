@@ -71,6 +71,7 @@ func zAddGenericCommand(c *SRedisClient, incr bool) {
 	c.addReplyLongLong(int64(added))
 }
 
+// zadd key score member [score member ...]
 func zAddCommand(c *SRedisClient) {
 	zAddGenericCommand(c, false)
 }
@@ -154,6 +155,7 @@ func zRangeGenericCommand(c *SRedisClient, reverse bool) {
 	c.doReply()
 }
 
+// zrange key min max [withscores]
 func zRangeCommand(c *SRedisClient) {
 	zRangeGenericCommand(c, false)
 }

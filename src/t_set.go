@@ -4,6 +4,7 @@ package src
 // Set commands
 //-----------------------------------------------------------------------------
 
+// sadd key member [member ...]
 func sAddCommand(c *SRedisClient) {
 	key := c.args[1]
 	set := c.db.lookupKeyWrite(key)
@@ -155,10 +156,14 @@ func sinterGenericCommand(c *SRedisClient, setKeys []*SRobj, setNum int64, dstKe
 	c.addReply(shared.czero)
 }
 
+// smembers key
+//
+// sinter key [key ...]
 func sinterCommand(c *SRedisClient) {
 	sinterGenericCommand(c, c.args[1:], int64(len(c.args[1:])), nil)
 }
 
+// sinterstore key [key ...]
 func sinterStoreCommand(c *SRedisClient) {
 	sinterGenericCommand(c, c.args[2:], int64(len(c.args[2:])), c.args[1])
 }
