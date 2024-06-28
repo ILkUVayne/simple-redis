@@ -6,13 +6,16 @@ import (
 	"simple-redis/utils"
 )
 
+// 全局共享SRobj对象结构体，用以复用常用的命令返回对象
 type sharedObjects struct {
 	crlf, ok, err, czero, cone, emptyMultiBulk, nullBulk, syntaxErr, typeErr, unknowErr, argsNumErr, wrongTypeErr,
 	none *SRobj
 }
 
+// 全局共享SRobj对象
 var shared sharedObjects
 
+// 初始化全局共享SRobj对象
 func initSharedObjects() {
 	shared.crlf = createSRobj(SR_STR, "\r\n")
 	shared.ok = createSRobj(SR_STR, RESP_OK)
@@ -29,16 +32,21 @@ func initSharedObjects() {
 	shared.wrongTypeErr = createSRobj(SR_STR, fmt.Sprintf(RESP_ERR, "Operation against a key holding the wrong kind of value"))
 }
 
+// SRedisServer server 结构体
+//
+// 定义server所需的所有基本信息
 type SRedisServer struct {
 	port           int
-	fd             int
+	fd             int // server 监听的fd
 	db             *SRedisDB
 	clients        map[int]*SRedisClient
 	el             *aeEventLoop
-	loadFactor     int64
-	rehashNullStep int64
+	loadFactor     int64 // 负载因子
+	rehashNullStep int64 // 每次rehash最多遍历rehashNullStep步为nil的数据
+
 	// AOF persistence
-	aofFd               *os.File
+
+	aofFd               *os.File // aof文件fd
 	aofChildPid         int
 	aofFilename         string
 	aofBuf              string // AOF buffer
@@ -48,7 +56,9 @@ type SRedisServer struct {
 	aofRewriteBufBlocks string // AOF rewrite buffer
 	aofRewritePerc      int
 	aofRewriteMinSize   int64
+
 	// RDB persistence
+
 	dirty             int64
 	dirtyBeforeBgSave int64
 	lastBgSaveTry     int64
@@ -65,6 +75,9 @@ func (s *SRedisServer) incrDirtyCount(c *SRedisClient, num int64) {
 	}
 }
 
+// 更新负载因子，负载因子越小，越容易发生rehash
+//
+// 正常情况下为1，当进行BGREWRITEAOF或者BGSAVE时为了尽量避免rehash,会更新为5
 func (s *SRedisServer) changeLoadFactor(lf int) {
 	if s.loadFactor == int64(lf) {
 		return
@@ -139,7 +152,7 @@ func initServer() {
 	}
 	// rdb
 	server.rdbChildPid = -1
-	server.rdbFilename = utils.PersistenceFile("dump.rdb")
+	server.rdbFilename = utils.PersistenceFile(REDIS_RDB_DEFAULT)
 }
 
 func loadDataFromDisk() {
@@ -163,7 +176,7 @@ func ServerStart() {
 	// init server
 	initServer()
 	utils.Info("* Server initialized")
-	// load data
+	// load data from rdb or aof
 	loadDataFromDisk()
 	// set signal handle
 	SetupSignalHandler(serverShutdown)
