@@ -7,6 +7,9 @@ import (
 	"simple-redis/utils"
 )
 
+// dict是否能执行缩容
+//
+// 默认true，当在进行BGREWRITEAOF或者BGSAVE时会被禁用
 var dictCanResize = true
 
 type dictIterator struct {

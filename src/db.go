@@ -2,6 +2,7 @@ package src
 
 import "simple-redis/utils"
 
+// SRedisDB 数据库结构
 type SRedisDB struct {
 	data   *dict // data dict
 	expire *dict // expire dict
@@ -49,7 +50,7 @@ func (db *SRedisDB) expireGet(key *SRobj) *SRobj {
 	return db.expire.dictGet(key)
 }
 
-// Return the expire time of the specified key, or -1 if no expire is associated with this key
+// Return the expireTime of the specified key, or -1 if no expire is associated with this key
 func (db *SRedisDB) expireTime(key *SRobj) int64 {
 	expire := db.expireGet(key)
 	if expire == nil {
@@ -67,6 +68,7 @@ func (db *SRedisDB) expireSet(key *SRobj, val *SRobj) {
 	server.db.expire.dictSet(key, val)
 }
 
+// 检查是否过期，如果过期了，就删除
 func (db *SRedisDB) expireIfNeeded(key *SRobj) bool {
 	e := db.expireGet(key)
 	if e == nil {
@@ -112,10 +114,12 @@ func (db *SRedisDB) lookupKeyReadOrReply(c *SRedisClient, key *SRobj, reply *SRo
 	return o
 }
 
+// 获取一个随机数据
 func (db *SRedisDB) dataRandomKey() *dictEntry {
 	return db.data.dictGetRandomKey()
 }
 
+// 获取一个有过期时间的随机数据
 func (db *SRedisDB) expireRandomKey() *dictEntry {
 	return db.expire.dictGetRandomKey()
 }
@@ -142,6 +146,7 @@ func (db *SRedisDB) dbDataSize() int64 {
 	return db.data.dictSize()
 }
 
+// 获取一个数据库迭代器（dictIterator）
 func (db *SRedisDB) dbDataDi() *dictIterator {
 	return server.db.data.dictGetIterator()
 }
@@ -153,10 +158,12 @@ func createSRDB() *SRedisDB {
 	}
 }
 
+// 尝试执行一步rehash（如果当前数据库正在rehash）
 func tryRehash() {
 	server.db.data.dictRehashStep()
 }
 
+// 尝试缩容，如果需要的话
 func tryResizeHashTables() {
 	if server.db.data.htNeedResize() {
 		server.db.data.dictResize()

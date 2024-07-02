@@ -8,6 +8,7 @@ type Pusher interface {
 	lPush(data *SRobj)
 }
 
+// list dictType
 var lType = dictType{
 	hashFunc:      nil,
 	keyCompare:    SRStrCompare,
@@ -24,6 +25,7 @@ type listIter struct {
 	direction int
 }
 
+// return next node
 func (li *listIter) listNext() *node {
 	curr := li.next
 	if curr == nil {
@@ -190,6 +192,7 @@ func (l *list) listRewindTail() *listIter {
 // list API
 // -----------------------------------------------------------------------------
 
+// create new list
 func listCreate(lType *dictType) *list {
 	l := new(list)
 	l.lType = lType

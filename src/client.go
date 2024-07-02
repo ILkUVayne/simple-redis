@@ -7,17 +7,18 @@ import (
 	"strings"
 )
 
+// SRedisClient 客户端结构
 type SRedisClient struct {
-	fd         int
-	db         *SRedisDB
-	args       []*SRobj // command args
-	reply      *list    // reply data
-	replyReady bool
+	fd         int       // 客户端fd, 当fd等于 FAKE_CLIENT_FD 是fakeClient
+	db         *SRedisDB // 数据库指针
+	args       []*SRobj  // command args
+	reply      *list     // reply data
+	replyReady bool      // 响应数据是否准备完毕
 	queryBuf   []byte
 	queryLen   int
 	sentLen    int
-	cmd        *SRedisCommand
-	cmdTyp     CmdType // unknown inline bulk
+	cmd        *SRedisCommand // 客户端需要执行的命令
+	cmdTyp     CmdType        // unknown inline bulk
 	bulkNum    int
 	bulkLen    int
 }
@@ -119,6 +120,7 @@ func resetClient(c *SRedisClient) {
 	c.bulkNum = 0
 }
 
+// 检查并设置cmdTyp
 func checkCmdType(c *SRedisClient) {
 	if c.cmdTyp != CMD_UNKNOWN {
 		return

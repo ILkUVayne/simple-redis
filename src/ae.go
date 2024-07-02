@@ -20,18 +20,20 @@ type aeFileProc func(el *aeEventLoop, fd int, clientData any)
 // time event func
 type aeTimeProc func(el *aeEventLoop, id int, clientData any)
 
+// ae 文件事件
 type aeFileEvent struct {
-	mask       FeType // ae file event type, AE_READABLE and AE_WRITEABLE
-	proc       aeFileProc
+	mask       FeType     // ae file event type, AE_READABLE and AE_WRITEABLE
+	proc       aeFileProc // 文件事件处理函数
 	fd         int
 	clientData any
 }
 
+// ae 时间事件
 type aeTimeEvent struct {
 	id         int
-	when       int64 //ms
-	interval   int64 //ms
-	proc       aeTimeProc
+	when       int64      //ms
+	interval   int64      //ms
+	proc       aeTimeProc // 时间事件处理函数
 	clientData any
 	next       *aeTimeEvent
 	mask       TeType // ae time event type, AE_NORMAL and AE_ONCE
