@@ -2,7 +2,6 @@ package src
 
 import (
 	"bufio"
-	"log"
 	"os"
 	"reflect"
 	"simple-redis/utils"
@@ -15,7 +14,7 @@ type saveParam struct {
 	changes int
 }
 
-// rdb append save conf
+// rdb append saveParams conf
 func appendServerSaveParams(val string) {
 	firstIdx := strings.IndexAny(val, " ")
 	if val == "\"\"" {
@@ -46,40 +45,41 @@ func appendServerSaveParams(val string) {
 	config.saveParams = append(config.saveParams, sp)
 }
 
+// 配置信息映射结构
 type configVal struct {
 	Bind           string `cfg:"bind"`
 	Port           int    `cfg:"port"`
 	AppendOnly     bool   `cfg:"appendOnly"`
 	RehashNullStep int64  `cfg:"rehashNullStep"`
+
 	// complex conf
 
 	saveParams []*saveParam // rdb save params
 }
 
+// 配置信息
 var config *configVal
 
-func newConfig() {
-	config = new(configVal)
-}
-
+// SetupConf 加载配置信息
 func SetupConf(confName string) {
 	f, err := os.Open(confName)
 	if err != nil {
-		log.Fatal(err)
+		utils.Error(err)
 	}
 
 	defer func(f *os.File) {
 		err := f.Close()
 		if err != nil {
-			log.Fatal(err)
+			utils.Error(err)
 		}
 	}(f)
 
 	parse(f)
 }
 
+// 解析每行配置，并更新到config中
 func parse(f *os.File) {
-	newConfig()
+	config = new(configVal)
 	scanner := bufio.NewScanner(f)
 	rawMap := make(map[string]string)
 

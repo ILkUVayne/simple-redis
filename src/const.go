@@ -14,6 +14,7 @@ const (
 	REDIS_AOF_ON  = 1
 
 	REDIS_AOF_DEFAULT = "appendonly.aof"
+	REDIS_RDB_DEFAULT = "dump.rdb"
 
 	SREDIS_MAX_BULK   = 1024 * 4
 	SREDIS_MAX_INLINE = 1024 * 4

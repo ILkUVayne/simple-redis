@@ -449,6 +449,10 @@ cleanup:
 	server.changeLoadFactor(LOAD_FACTOR)
 }
 
+//-----------------------------------------------------------------------------
+// aof commands
+//-----------------------------------------------------------------------------
+
 // aof rewrite command
 func bgRewriteAofCommand(c *SRedisClient) {
 	if server.aofChildPid != -1 {
