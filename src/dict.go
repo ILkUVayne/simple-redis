@@ -344,22 +344,19 @@ func (d *dict) dictFind(key *SRobj) (int64, *dictEntry) {
 
 // add key to dict,return dictEntry
 func (d *dict) dictAddRaw(key *SRobj) *dictEntry {
-	var idx int64
-	var entry dictEntry
-	var ht *dictht
 	// maybe after flushdb
 	if d.ht[0].size == 0 {
 		d.initHt()
 	}
-	if idx = d.dictKeyIndex(key); idx == -1 {
+	idx := d.dictKeyIndex(key)
+	if idx == -1 {
 		return nil
 	}
-	ht = d.ht[0]
+	ht := d.ht[0]
 	if d.isRehash() {
 		ht = d.ht[1]
 	}
-	entry.key = key
-	entry.next = ht.table[idx]
+	entry := dictEntry{key: key, next: ht.table[idx]}
 	key.incrRefCount()
 	ht.table[idx] = &entry
 	ht.used++
@@ -438,6 +435,28 @@ func (d *dict) dictDelete(key *SRobj) int {
 	return DICT_ERR
 }
 
+// get a non-empty bucket
+func (d *dict) dictGetRandomKey1() *dictEntry {
+	var he *dictEntry
+	var slotIdx int64
+	if d.isRehash() {
+		for he == nil {
+			slotIdx = rand.Int63n(d.dictSlots())
+			if slotIdx >= d.ht[0].size {
+				he = d.ht[1].table[slotIdx-d.ht[0].size]
+				continue
+			}
+			he = d.ht[0].table[slotIdx]
+		}
+		return he
+	}
+	for he == nil {
+		slotIdx = rand.Int63n(d.ht[0].mask)
+		he = d.ht[0].table[slotIdx]
+	}
+	return he
+}
+
 // get a random key
 func (d *dict) dictGetRandomKey() *dictEntry {
 	if d.dictSize() == 0 {
@@ -447,35 +466,16 @@ func (d *dict) dictGetRandomKey() *dictEntry {
 		d.dictRehashStep()
 	}
 	// find a non-empty bucket
-	var he *dictEntry
-	var slotIdx int64
-	if d.isRehash() {
-		for he == nil {
-			slotIdx = rand.Int63n(d.dictSlots())
-			if slotIdx >= d.ht[0].size {
-				he = d.ht[1].table[slotIdx-d.ht[0].size]
-			} else {
-				he = d.ht[0].table[slotIdx]
-			}
-		}
-	} else {
-		for he == nil {
-			slotIdx = rand.Int63n(d.ht[0].mask)
-			he = d.ht[0].table[slotIdx]
-		}
-	}
-	var listLen int64
-	var listele int64
-	var orighe *dictEntry
-	listLen = 0
-	orighe = he
+	he := d.dictGetRandomKey1()
+	// get a random key from bucket
+	listLen, origHe := int64(0), he
 	for he != nil {
 		he = he.next
 		listLen++
 	}
-	listele = rand.Int63n(listLen)
-	he = orighe
-	for ; listele < 0; listele-- {
+	listEle := rand.Int63n(listLen)
+	he = origHe
+	for ; listEle < 0; listEle-- {
 		he = he.next
 	}
 	return he
@@ -505,18 +505,18 @@ func (d *dict) _dictClear(ht *dictht) int {
 	return DICT_OK
 }
 
-func _dictReset(ht *dictht) {
-	ht.table = nil
-	ht.size = 0
-	ht.used = 0
-	ht.mask = 0
-}
-
 func (d *dict) dictEmpty() {
 	d._dictClear(d.ht[0])
 	d._dictClear(d.ht[1])
 	d.rehashIdx = -1
 	d.iterators = 0
+}
+
+func _dictReset(ht *dictht) {
+	ht.table = nil
+	ht.size = 0
+	ht.used = 0
+	ht.mask = 0
 }
 
 func dictEnableResize() {
