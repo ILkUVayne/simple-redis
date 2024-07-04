@@ -177,6 +177,7 @@ func (c *SRedisClient) addReplyStr(s string) {
 	data.decrRefCount()
 }
 
+// 添加字符串错误返回
 func (c *SRedisClient) addReplyError(err string) {
 	if err == "" {
 		return
@@ -184,11 +185,13 @@ func (c *SRedisClient) addReplyError(err string) {
 	c.addReplyStr(fmt.Sprintf(RESP_ERR, err))
 }
 
+// 添加浮点数返回
 func (c *SRedisClient) addReplyDouble(f float64) {
 	str := strconv.FormatFloat(f, 'f', 2, 64)
 	c.addReplyStr(fmt.Sprintf("$%d\r\n%s\r\n", len(str), str))
 }
 
+// 添加整数返回
 func (c *SRedisClient) addReplyLongLong(ll int64) {
 	if ll == 0 {
 		c.addReply(shared.czero)

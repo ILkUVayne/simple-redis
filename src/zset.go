@@ -95,11 +95,9 @@ func (z *zSkipList) free() {
 func (z *zSkipList) _getUpdateAndRank(score float64, obj *SRobj) (*[32]*zSkipListNode, *[32]uint, *zSkipListNode) {
 	var update [ZSKIPLIST_MAXLEVEL]*zSkipListNode
 	var rank [ZSKIPLIST_MAXLEVEL]uint
-	var x *zSkipListNode
-	var i int
 
-	x = z.header
-	for i = z.level - 1; i >= 0; i-- {
+	x := z.header
+	for i := z.level - 1; i >= 0; i-- {
 		rank[i] = 0
 		if i != (z.level - 1) {
 			rank[i] = rank[i+1]
