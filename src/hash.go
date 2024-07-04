@@ -42,6 +42,7 @@ func hashTypeSet(o, field, value *SRobj) int {
 	return assertDict(o).dictSet(field, value)
 }
 
+// get value form hashTable encoding
 func hashTypeGetFromHashTable(o, field *SRobj, value **SRobj) bool {
 	checkHashEncoding(o)
 	v := assertDict(o).dictGet(field)

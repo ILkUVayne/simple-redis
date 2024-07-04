@@ -18,10 +18,7 @@ func Connect(host [4]byte, port int) int {
 	if err != nil {
 		utils.Error("simple-redis server: init socket err: ", err)
 	}
-	var addr unix.SockaddrInet4
-	addr.Addr = host
-	addr.Port = port
-	err = unix.Connect(sfd, &addr)
+	err = unix.Connect(sfd, &unix.SockaddrInet4{Addr: host, Port: port})
 	if err != nil {
 		utils.Error("simple-redis server: connect err: ", err)
 	}
@@ -52,8 +49,7 @@ func TcpServer(port int) int {
 	if err != nil {
 		utils.Error("simple-redis server: set SO_REUSEPORT err: ", err)
 	}
-	var addr unix.SockaddrInet4
-	addr.Port = port
+	addr := unix.SockaddrInet4{Port: port}
 	err = unix.Bind(sfd, &addr)
 	if err != nil {
 		utils.ErrorF("simple-redis server: %s:%d bind err: %s", string(addr.Addr[:]), addr.Port, err)

@@ -453,7 +453,7 @@ cleanup:
 // aof commands
 //-----------------------------------------------------------------------------
 
-// aof rewrite command
+// BGREWRITEAOF
 func bgRewriteAofCommand(c *SRedisClient) {
 	if server.aofChildPid != -1 {
 		c.addReplyError("Background append only file rewriting already in progress")

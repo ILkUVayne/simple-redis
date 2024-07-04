@@ -200,6 +200,7 @@ func rdbLoadSetObject(obj parser.RedisObject) {
 	rdbLoadExpire(key, expire)
 }
 
+// 加载rdb数据到内存中
 func rdbLoad(filename *string) {
 	fd, err := os.OpenFile(*filename, os.O_RDONLY|os.O_CREATE, 0666)
 	if err != nil {
@@ -325,6 +326,7 @@ func writeZSetObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 	return _writeObjectHandle(val.Typ, enc, key.strVal(), values, expire)
 }
 
+// 保存当前内存中的数据到rdb
 func rdbSave(filename *string) int {
 	if server.db.dbDataSize() == 0 {
 		_ = os.Remove(*filename)
@@ -380,6 +382,7 @@ werr:
 	return REDIS_ERR
 }
 
+// 后台rdbSave
 func rdbSaveBackground() int {
 	var childPid int
 
@@ -408,6 +411,7 @@ func rdbSaveBackground() int {
 	return REDIS_OK
 }
 
+// rdb完成后的收尾工作
 func backgroundSaveDoneHandler() {
 	server.dirty = server.dirty - server.dirtyBeforeBgSave
 	server.lastSave = utils.GetMsTime()
@@ -421,6 +425,7 @@ func backgroundSaveDoneHandler() {
 // rdb commands
 //-----------------------------------------------------------------------------
 
+// SAVE
 func saveCommand(c *SRedisClient) {
 	if server.rdbChildPid != -1 {
 		c.addReplyError("Background save already in progress")
@@ -433,6 +438,7 @@ func saveCommand(c *SRedisClient) {
 	c.addReply(shared.err)
 }
 
+// BGSAVE
 func bgSaveCommand(c *SRedisClient) {
 	if server.rdbChildPid != -1 {
 		c.addReplyError("Background save already in progress")

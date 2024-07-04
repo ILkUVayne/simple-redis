@@ -41,8 +41,7 @@ func sRedisAppendCommandArg(c *sRedisContext, args []string) {
 
 // Format args,Compliant with resp specifications
 func sRedisFormatCommandArg(target *string, args []string) {
-	var cmd string
-	cmd = fmt.Sprintf("*%d\r\n", len(args))
+	cmd := fmt.Sprintf("*%d\r\n", len(args))
 	for _, v := range args {
 		cmd += fmt.Sprintf("$%d\r\n", len(v))
 		cmd += fmt.Sprintf("%s\r\n", v)
@@ -60,7 +59,7 @@ func getReply(c *sRedisContext, reply *sRedisReply) int {
 		}
 		reply.typ = typ
 	}
-	//
+
 	str, err := respParseHandle(reply)
 	if err != nil {
 		c.err = err
