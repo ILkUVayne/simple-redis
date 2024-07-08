@@ -5,11 +5,10 @@ package src
 //-----------------------------------------------------------------------------
 
 func zAddGenericCommand(c *SRedisClient, incr bool) {
-	//nanErr := errors.New("resulting score is not a number (NaN)")
 	var score float64
 	var added int
-	key := c.args[1]
 
+	key := c.args[1]
 	elements := len(c.args[2:]) / 2
 
 	if len(c.args)%2 == 1 {
@@ -47,20 +46,21 @@ func zAddGenericCommand(c *SRedisClient, incr bool) {
 			}
 			if score != curscore {
 				zs.zsl.delete(curscore, curobj)
-				zNode := zs.zsl.insert(curscore, curobj)
+				zNode := zs.zsl.insert(score, curobj)
 				curobj.incrRefCount()
 				zs.d.dictSet(curobj, createFloatSRobj(SR_STR, zNode.score))
 				server.incrDirtyCount(c, 1)
 			}
-		} else {
-			zNode := zs.zsl.insert(score, ele)
-			ele.incrRefCount()
-			zs.d.dictSet(ele, createFloatSRobj(SR_STR, zNode.score))
-			ele.incrRefCount()
-			server.incrDirtyCount(c, 1)
-			if !incr {
-				added++
-			}
+			continue
+		}
+		// de == nil
+		zNode := zs.zsl.insert(score, ele)
+		ele.incrRefCount()
+		zs.d.dictSet(ele, createFloatSRobj(SR_STR, zNode.score))
+		ele.incrRefCount()
+		server.incrDirtyCount(c, 1)
+		if !incr {
+			added++
 		}
 	}
 
@@ -79,7 +79,7 @@ func zAddCommand(c *SRedisClient) {
 func zRangeGenericCommand(c *SRedisClient, reverse bool) {
 	var start int64
 	var end int64
-	var zobj *SRobj
+
 	key := c.args[1]
 	withscores := false
 
@@ -95,7 +95,7 @@ func zRangeGenericCommand(c *SRedisClient, reverse bool) {
 		withscores = true
 	}
 
-	zobj = c.db.lookupKeyReadOrReply(c, key, shared.emptyMultiBulk)
+	zobj := c.db.lookupKeyReadOrReply(c, key, shared.emptyMultiBulk)
 	if zobj == nil || !zobj.checkType(c, SR_ZSET) {
 		return
 	}
