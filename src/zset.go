@@ -44,15 +44,15 @@ var zSetDictType = dictType{
 }
 
 type zSkipListNodeLevel struct {
-	forward *zSkipListNode
-	span    uint
+	forward *zSkipListNode // 前进指针
+	span    uint           // 跨度
 }
 
 type zSkipListNode struct {
-	obj      *SRobj
-	score    float64
-	backward *zSkipListNode
-	level    []*zSkipListNodeLevel
+	obj      *SRobj                // 成员对象
+	score    float64               // 分数
+	backward *zSkipListNode        // 后退指针
+	level    []*zSkipListNodeLevel // 层
 }
 
 func (zn *zSkipListNode) freeNode() {
@@ -74,9 +74,9 @@ func zslCreateNode(level int, score float64, obj *SRobj) *zSkipListNode {
 }
 
 type zSkipList struct {
-	header, tail *zSkipListNode
-	length       uint
-	level        int
+	header, tail *zSkipListNode // 表头、表尾节点指针
+	length       uint           // 节点数量
+	level        int            // 表中节点最高的层数
 }
 
 func (z *zSkipList) free() {
