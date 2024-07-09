@@ -4,55 +4,27 @@ package src
 // Set commands
 //-----------------------------------------------------------------------------
 
-// sadd key member [member ...]
-func sAddCommand(c *SRedisClient) {
-	key := c.args[1]
-	set := c.db.lookupKeyWrite(key)
-	if set != nil && !set.checkType(c, SR_SET) {
-		return
-	}
-	if set == nil {
-		set = setTypeCreate(c.args[2])
-		c.db.dictSet(key, set)
-	}
-	// add...
-	added := 0
-	for j := 2; j < len(c.args); j++ {
-		c.args[j].tryObjectEncoding()
-		if setTypeAdd(set, c.args[j]) {
-			added++
-		}
-	}
-	c.addReplyLongLong(int64(added))
-	server.incrDirtyCount(c, int64(added))
-}
-
 func getSets(c *SRedisClient, setKeys []*SRobj, setNum int64, dstKey *SRobj) []*SRobj {
 	sets := make([]*SRobj, setNum)
 	for i := int64(0); i < setNum; i++ {
-		var setObj *SRobj
-		if dstKey != nil {
-			setObj = c.db.lookupKeyWrite(setKeys[i])
-		} else {
-			setObj = c.db.lookupKeyRead(setKeys[i])
-		}
-		if setObj == nil {
-			sets = nil
-			if dstKey != nil {
-				if c.db.dbDel(dstKey) == REDIS_OK {
-					server.incrDirtyCount(c, 1)
-				}
-				c.addReply(shared.czero)
+		setObj := c.db.lookupKeyRead(setKeys[i])
+		if setObj != nil {
+			if !setObj.checkType(c, SR_SET) {
 				return nil
 			}
+			sets[i] = setObj
+			continue
+		}
+		// setObj == nil
+		if dstKey == nil {
 			c.addReply(shared.emptyMultiBulk)
 			return nil
 		}
-		if !setObj.checkType(c, SR_SET) {
-			sets = nil
-			return nil
+		if c.db.dbDel(dstKey) == REDIS_OK {
+			server.incrDirtyCount(c, 1)
 		}
-		sets[i] = setObj
+		c.addReply(shared.czero)
+		return nil
 	}
 	return sets
 }
@@ -120,7 +92,7 @@ func sinterGenericCommand(c *SRedisClient, setKeys []*SRobj, setNum int64, dstKe
 		if j != setNum {
 			continue
 		}
-		// 当前值是交集
+		// j == setNum 当前值是交集
 		if dstKey == nil {
 			cardinality++
 			if uint8(encoding) == REDIS_ENCODING_HT {
@@ -154,6 +126,29 @@ func sinterGenericCommand(c *SRedisClient, setKeys []*SRobj, setNum int64, dstKe
 	}
 	dstSet.decrRefCount()
 	c.addReply(shared.czero)
+}
+
+// sadd key member [member ...]
+func sAddCommand(c *SRedisClient) {
+	key := c.args[1]
+	set := c.db.lookupKeyWrite(key)
+	if set != nil && !set.checkType(c, SR_SET) {
+		return
+	}
+	if set == nil {
+		set = setTypeCreate(c.args[2])
+		c.db.dictSet(key, set)
+	}
+	// add...
+	added := 0
+	for j := 2; j < len(c.args); j++ {
+		c.args[j].tryObjectEncoding()
+		if setTypeAdd(set, c.args[j]) {
+			added++
+		}
+	}
+	c.addReplyLongLong(int64(added))
+	server.incrDirtyCount(c, int64(added))
 }
 
 // smembers key
