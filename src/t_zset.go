@@ -23,45 +23,47 @@ func zAddGenericCommand(c *SRedisClient, incr bool) {
 		}
 	}
 
-	zobj := c.db.lookupKeyWrite(key)
-	if zobj != nil && !zobj.checkType(c, SR_ZSET) {
+	zObj := c.db.lookupKeyWrite(key)
+	if zObj != nil && !zObj.checkType(c, SR_ZSET) {
 		return
 	}
-	if zobj == nil {
-		zobj = createZsetSRobj()
-		c.db.dictSet(key, zobj)
+	if zObj == nil {
+		zObj = createZsetSRobj()
+		c.db.dictSet(key, zObj)
 	}
 
 	for i := 0; i < elements; i++ {
 		score = scores[i]
 		ele := c.args[3+i*2]
 		ele.tryObjectEncoding()
-		zs := assertZSet(zobj)
+		zs := assertZSet(zObj)
 		_, de := zs.d.dictFind(ele)
-		if de != nil {
-			curobj := de.key
-			curscore, _ := de.val.floatVal()
-			if incr {
-				score += curscore
-			}
-			if score != curscore {
-				zs.zsl.delete(curscore, curobj)
-				zNode := zs.zsl.insert(score, curobj)
-				curobj.incrRefCount()
-				zs.d.dictSet(curobj, createFloatSRobj(SR_STR, zNode.score))
-				server.incrDirtyCount(c, 1)
+		if de == nil {
+			zNode := zs.zsl.insert(score, ele)
+			ele.incrRefCount()
+			zs.d.dictSet(ele, createFloatSRobj(SR_STR, zNode.score))
+			ele.incrRefCount()
+			server.incrDirtyCount(c, 1)
+			if !incr {
+				added++
 			}
 			continue
 		}
-		// de == nil
-		zNode := zs.zsl.insert(score, ele)
-		ele.incrRefCount()
-		zs.d.dictSet(ele, createFloatSRobj(SR_STR, zNode.score))
-		ele.incrRefCount()
-		server.incrDirtyCount(c, 1)
-		if !incr {
-			added++
+		// de != nil
+		curObj := de.key
+		curScore, _ := de.val.floatVal()
+		if incr {
+			score += curScore
 		}
+		// unchanged
+		if score == curScore {
+			continue
+		}
+		zs.zsl.delete(curScore, curObj)
+		zNode := zs.zsl.insert(score, curObj)
+		curObj.incrRefCount()
+		zs.d.dictSet(curObj, createFloatSRobj(SR_STR, zNode.score))
+		server.incrDirtyCount(c, 1)
 	}
 
 	if incr {

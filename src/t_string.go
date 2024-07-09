@@ -8,16 +8,10 @@ import "math"
 
 // get key
 func getCommand(c *SRedisClient) {
-	key := c.args[1]
-	val := c.db.lookupKeyRead(key)
-	if val == nil {
-		c.addReply(shared.nullBulk)
-		return
+	val := c.db.lookupKeyReadOrReply(c, c.args[1], nil)
+	if val != nil && val.checkType(c, SR_STR) {
+		c.addReplyBulk(val)
 	}
-	if !val.checkType(c, SR_STR) {
-		return
-	}
-	c.addReplyBulk(val)
 }
 
 // set key value
