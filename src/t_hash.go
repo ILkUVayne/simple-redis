@@ -22,7 +22,7 @@ func hSetCommand(c *SRedisClient) {
 
 // hget key field
 func hGetCommand(c *SRedisClient) {
-	o := c.db.lookupKeyReadOrReply(c, c.args[1], shared.nullBulk)
+	o := c.db.lookupKeyReadOrReply(c, c.args[1], nil)
 	if o == nil || !o.checkType(c, SR_DICT) {
 		return
 	}
@@ -32,7 +32,7 @@ func hGetCommand(c *SRedisClient) {
 // HDEL key field [field ...]
 func hDelCommand(c *SRedisClient) {
 	deleted := 0
-	o := c.db.lookupKeyReadOrReply(c, c.args[1], shared.nullBulk)
+	o := c.db.lookupKeyReadOrReply(c, c.args[1], nil)
 	if o == nil || !o.checkType(c, SR_DICT) {
 		return
 	}
