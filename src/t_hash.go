@@ -23,10 +23,9 @@ func hSetCommand(c *SRedisClient) {
 // hget key field
 func hGetCommand(c *SRedisClient) {
 	o := c.db.lookupKeyReadOrReply(c, c.args[1], nil)
-	if o == nil || !o.checkType(c, SR_DICT) {
-		return
+	if o != nil && o.checkType(c, SR_DICT) {
+		addHashFieldToReply(c, o, c.args[2])
 	}
-	addHashFieldToReply(c, o, c.args[2])
 }
 
 // HDEL key field [field ...]
