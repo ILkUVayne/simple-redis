@@ -51,7 +51,7 @@ var aofRWObjectMaps = map[SRType]aofRWObjectFunc{
 	SR_DICT: rewriteDictObject,
 }
 
-// // aof rewriteObjectFunc factory
+// aof rewriteObjectFunc factory
 func aofRWObject(f *os.File, key, val *SRobj) int {
 	fn, ok := aofRWObjectMaps[val.Typ]
 	if !ok {
@@ -114,8 +114,7 @@ func _writeObjectHandle(typ SRType, enc *core.Encoder, key string, values any, e
 	} else {
 		err = fn(enc, key, values)
 	}
-	// gc
-	values = nil
+
 	if err != nil {
 		utils.ErrorP("rdbSave writeObject err: ", err)
 		return REDIS_ERR

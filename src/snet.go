@@ -44,6 +44,7 @@ func TcpServer(port int) int {
 	if err != nil {
 		utils.Error("simple-redis server: init socket err: ", err)
 	}
+	// SO_REUSEPORT可以让你将多个socket绑定在同一个监听端口，然后让内核给你自动做负载均衡，将请求平均地让多个线程进行处理。
 	//err = unix.SetsockoptInt(sfd, unix.SOL_SOCKET, unix.SO_REUSEPORT, port)
 	err = unix.SetsockoptInt(sfd, unix.SOL_SOCKET, unix.SO_REUSEADDR, port)
 	if err != nil {

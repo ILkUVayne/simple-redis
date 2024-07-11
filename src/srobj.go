@@ -90,19 +90,17 @@ func (s *SRobj) floatVal() (float64, int) {
 }
 
 func (s *SRobj) strEncoding() string {
-	encoding, ok := encodingMaps[s.encoding]
-	if !ok {
-		return "unknown"
+	if encoding, ok := encodingMaps[s.encoding]; ok {
+		return encoding
 	}
-	return encoding
+	return UNKNOWN
 }
 
 func (s *SRobj) strType() string {
-	typ, ok := TypeMaps[s.Typ]
-	if !ok {
-		return "unknown"
+	if typ, ok := TypeMaps[s.Typ]; ok {
+		return typ
 	}
-	return typ
+	return UNKNOWN
 }
 
 func (s *SRobj) getEncoding() *SRobj {
