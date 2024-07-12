@@ -25,10 +25,7 @@ type SRedisClient struct {
 
 // return true if is fake client
 func (c *SRedisClient) isFake() bool {
-	if c.fd == FAKE_CLIENT_FD {
-		return true
-	}
-	return false
+	return c.fd == FAKE_CLIENT_FD
 }
 
 // getQueryLine

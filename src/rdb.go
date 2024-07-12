@@ -207,6 +207,7 @@ func rdbLoad(filename *string) {
 		utils.Error("Can't open the rdb file: ", err)
 	}
 	defer func() { _ = fd.Close() }()
+
 	fInfo, err := fd.Stat()
 	if err != nil {
 		utils.Error("Unable to obtain the AOF file length. stat: ", err)

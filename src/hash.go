@@ -11,12 +11,10 @@ func hashTypeLookupWriteOrCreate(c *SRedisClient, key *SRobj) *SRobj {
 		o = createHashObject()
 		c.db.dictSet(key, o)
 	}
-
 	if o != nil && o.Typ != SR_DICT {
 		c.addReply(shared.wrongTypeErr)
 		return nil
 	}
-
 	return o
 }
 
@@ -66,7 +64,6 @@ func addHashFieldToReply(c *SRedisClient, o, field *SRobj) {
 		return
 	}
 	c.addReply(shared.nullBulk)
-	return
 }
 
 // return hash ogj length by encoding
@@ -91,8 +88,5 @@ func hashTypeDel(o, field *SRobj) bool {
 func hashTypeExists(o, field *SRobj) bool {
 	checkHashEncoding(o)
 	var value *SRobj
-	if hashTypeGetFromHashTable(o, field, &value) {
-		return true
-	}
-	return false
+	return hashTypeGetFromHashTable(o, field, &value)
 }

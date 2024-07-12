@@ -118,10 +118,9 @@ func SRStrDestructor(key *SRobj) {
 }
 
 func ObjectDestructor(val *SRobj) {
-	if val == nil {
-		return
+	if val != nil {
+		val.decrRefCount()
 	}
-	val.decrRefCount()
 }
 
 // -------------------------------- api ----------------------------
