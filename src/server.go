@@ -82,17 +82,13 @@ func (s *SRedisServer) changeLoadFactor(lf int) {
 	if s.loadFactor == int64(lf) {
 		return
 	}
-	if lf == LOAD_FACTOR {
-		if s.aofChildPid == -1 {
-			s.loadFactor = int64(lf)
-			return
-		}
+	if lf == LOAD_FACTOR && s.aofChildPid == -1 && s.rdbChildPid == -1 {
+		s.loadFactor = int64(lf)
+		return
 	}
-	if lf == BG_PERSISTENCE_LOAD_FACTOR {
-		if s.aofChildPid != -1 {
-			s.loadFactor = int64(lf)
-			return
-		}
+	if lf == BG_PERSISTENCE_LOAD_FACTOR && (s.aofChildPid != -1 || s.rdbChildPid != -1) {
+		s.loadFactor = int64(lf)
+		return
 	}
 }
 
@@ -180,7 +176,7 @@ func ServerStart() {
 	loadDataFromDisk()
 	// set signal handle
 	SetupSignalHandler(serverShutdown)
-	// aeMain
+	// aeMain loop
 	utils.InfoF("* server started, The server is now ready to accept connections on port %d", server.port)
 	aeMain(server.el)
 }
