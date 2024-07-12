@@ -137,7 +137,7 @@ func checkPersistence() {
 func databaseCorn() {
 	// check expire key
 	activeExpireCycle()
-	if server.aofChildPid != -1 && server.rdbChildPid != -1 {
+	if server.aofChildPid == -1 && server.rdbChildPid == -1 {
 		// Resize
 		tryResizeHashTables()
 		// Rehash
