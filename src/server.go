@@ -125,7 +125,10 @@ func initServerConfig() {
 var server SRedisServer
 
 func initServer() {
-	server.db = createSRDB()
+	server.db = &SRedisDB{
+		data:   dictCreate(&dbDictType),
+		expire: dictCreate(&keyPtrDictType),
+	}
 	server.clients = make(map[int]*SRedisClient)
 	server.fd = TcpServer(server.port)
 	server.el = aeCreateEventLoop()

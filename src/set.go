@@ -17,6 +17,7 @@ type setTypeIterator struct {
 	di       *dictIterator
 }
 
+// return -1 if next entry is nil
 func (si *setTypeIterator) setTypeNext(objEle **SRobj, llEle *int64) int {
 	if si.encoding == REDIS_ENCODING_INTSET {
 		if !assertIntSet(si.subject).intSetGet(uint32(si.ii), llEle) {

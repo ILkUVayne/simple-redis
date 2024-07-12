@@ -24,29 +24,14 @@ type sRedisContext struct {
 	err    error
 }
 
-func sRedisContextInit() *sRedisContext {
-	c := new(sRedisContext)
-	return c
-}
-
-func __sRedisAppendCommand(c *sRedisContext, cmd *string) {
-	c.oBuf = []byte(*cmd)
-}
-
 func sRedisAppendCommandArg(c *sRedisContext, args []string) {
-	var cmd string
-	sRedisFormatCommandArg(&cmd, args)
-	__sRedisAppendCommand(c, &cmd)
-}
-
-// Format args,Compliant with resp specifications
-func sRedisFormatCommandArg(target *string, args []string) {
+	// Format args,Compliant with resp specifications
 	cmd := fmt.Sprintf("*%d\r\n", len(args))
 	for _, v := range args {
 		cmd += fmt.Sprintf("$%d\r\n", len(v))
 		cmd += fmt.Sprintf("%s\r\n", v)
 	}
-	*target = cmd
+	c.oBuf = []byte(cmd)
 }
 
 // parse server response if complete

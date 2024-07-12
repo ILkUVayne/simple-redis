@@ -14,7 +14,7 @@ var context *sRedisContext
  *--------------------------------------------------------------------------- */
 
 func sRedisConnect() *sRedisContext {
-	c := sRedisContextInit()
+	c := new(sRedisContext)
 	c.fd = Connect(utils.StrToHost(CliArgs.hostIp), CliArgs.port)
 	return c
 }

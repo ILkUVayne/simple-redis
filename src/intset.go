@@ -26,20 +26,20 @@ func (is *intSet) _intSetRemove(pos int) {
 	is.contents = append(is.contents[:pos], is.contents[pos+1:]...)
 }
 
-func (is *intSet) intSetSearch(value int64, pos *uint32) uint8 {
+func (is *intSet) intSetSearch(value int64, pos *uint32) bool {
 	minIdx, midIdx, maxIdx := 0, -1, int(is.length)
 	cur := int64(-1)
 	if is.length == 0 {
 		*pos = 0
-		return 0
+		return false
 	}
 	if value > is._intSetGet(int(is.length)-1) {
 		*pos = is.length
-		return 0
+		return false
 	}
 	if value < is._intSetGet(0) {
 		*pos = 0
-		return 0
+		return false
 	}
 	for maxIdx >= minIdx {
 		midIdx = (minIdx + maxIdx) / 2
@@ -56,24 +56,21 @@ func (is *intSet) intSetSearch(value int64, pos *uint32) uint8 {
 
 	if value == cur {
 		*pos = uint32(midIdx)
-		return 1
+		return true
 	}
 	*pos = uint32(minIdx)
-	return 0
+	return false
 }
 
 // return true if existed,false non-existent
 func (is *intSet) intSetFind(value int64) bool {
 	var pos uint32
-	if is.intSetSearch(value, &pos) == 0 {
-		return false
-	}
-	return true
+	return is.intSetSearch(value, &pos)
 }
 
 func (is *intSet) intSetResize() {
 	length := is.length * 2
-	newContents := make([]int64, length, length)
+	newContents := make([]int64, length)
 	copy(newContents, is.contents)
 	is.contents = newContents
 }
@@ -83,7 +80,7 @@ func (is *intSet) intSetAdd(value int64, success *bool) *intSet {
 		is.intSetResize()
 	}
 	var pos uint32
-	if is.intSetSearch(value, &pos) == 1 {
+	if is.intSetSearch(value, &pos) {
 		*success = false
 		return is
 	}
@@ -95,7 +92,7 @@ func (is *intSet) intSetAdd(value int64, success *bool) *intSet {
 
 func (is *intSet) intSetRemove(value int64) {
 	var pos uint32
-	if is.intSetSearch(value, &pos) == 0 {
+	if !is.intSetSearch(value, &pos) {
 		return
 	}
 	is._intSetRemove(int(pos))
@@ -121,6 +118,6 @@ func (is *intSet) intSetLen() uint32 {
 // Create an empty intSet
 func intSetNew() *intSet {
 	is := new(intSet)
-	is.contents = make([]int64, DEFAULT_INTSET_BUF, DEFAULT_INTSET_BUF)
+	is.contents = make([]int64, DEFAULT_INTSET_BUF)
 	return is
 }

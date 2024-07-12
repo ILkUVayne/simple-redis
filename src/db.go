@@ -151,13 +151,6 @@ func (db *SRedisDB) dbDataDi() *dictIterator {
 	return server.db.data.dictGetIterator()
 }
 
-func createSRDB() *SRedisDB {
-	return &SRedisDB{
-		data:   dictCreate(&dbDictType),
-		expire: dictCreate(&keyPtrDictType),
-	}
-}
-
 // 尝试执行一步rehash（如果当前数据库正在rehash）
 func tryRehash() {
 	server.db.data.dictRehashStep()
@@ -234,10 +227,9 @@ func objectCommand(c *SRedisClient) {
 		return
 	}
 	value := c.db.lookupKeyReadOrReply(c, val, nil)
-	if value == nil {
-		return
+	if value != nil {
+		c.addReplyBulk(value.getEncoding())
 	}
-	c.addReplyBulk(value.getEncoding())
 }
 
 // TYPE key
@@ -247,10 +239,9 @@ func typeCommand(c *SRedisClient) {
 		return
 	}
 	value := c.db.lookupKeyReadOrReply(c, val, shared.none)
-	if value == nil {
-		return
+	if value != nil {
+		c.addReplyStatus(value.strType())
 	}
-	c.addReplyStatus(value.strType())
 }
 
 // del key [key ...]

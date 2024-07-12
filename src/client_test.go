@@ -4,6 +4,17 @@ import (
 	"testing"
 )
 
+func TestIsFake(t *testing.T) {
+	c := createSRClient(1)
+	if c.isFake() {
+		t.Error("isFake err: c.fd = ", c.fd)
+	}
+	fakeC := createFakeClient()
+	if !fakeC.isFake() {
+		t.Error("isFake err: c.fd = ", fakeC.fd)
+	}
+}
+
 func TestCreateClient(t *testing.T) {
 	c := createSRClient(4)
 	if c.fd != 4 {

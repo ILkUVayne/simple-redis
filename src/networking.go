@@ -179,10 +179,9 @@ func (c *SRedisClient) addReplyStr(s string) {
 
 // 添加字符串错误返回
 func (c *SRedisClient) addReplyError(err string) {
-	if err == "" {
-		return
+	if err != "" {
+		c.addReplyStr(fmt.Sprintf(RESP_ERR, err))
 	}
-	c.addReplyStr(fmt.Sprintf(RESP_ERR, err))
 }
 
 // 添加浮点数返回
@@ -238,9 +237,8 @@ func (c *SRedisClient) addDeferredMultiBulkLength() *node {
 }
 
 func (c *SRedisClient) setDeferredMultiBulkLength(n *node, length int) {
-	if n == nil {
-		return
+	if n != nil {
+		n.data = createSRobj(SR_STR, fmt.Sprintf("*%d\r\n", length))
+		c.doReply()
 	}
-	n.data = createSRobj(SR_STR, fmt.Sprintf("*%d\r\n", length))
-	c.doReply()
 }
