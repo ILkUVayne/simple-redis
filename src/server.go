@@ -2,6 +2,7 @@ package src
 
 import (
 	"fmt"
+	"github.com/ILkUVayne/utlis-go/v2/time"
 	"os"
 	"simple-redis/utils"
 )
@@ -155,14 +156,14 @@ func initServer() {
 }
 
 func loadDataFromDisk() {
-	start := utils.GetMsTime()
+	start := time.GetMsTime()
 	if server.aofState == REDIS_AOF_ON {
 		loadAppendOnlyFile(server.aofFilename)
-		utils.InfoF("DB loaded from append only file: %.3f seconds", float64(utils.GetMsTime()-start)/1000)
+		utils.InfoF("DB loaded from append only file: %.3f seconds", float64(time.GetMsTime()-start)/1000)
 		return
 	}
 	rdbLoad(&server.rdbFilename)
-	utils.InfoF("DB loaded from disk: %.3f seconds", float64(utils.GetMsTime()-start)/1000)
+	utils.InfoF("DB loaded from disk: %.3f seconds", float64(time.GetMsTime()-start)/1000)
 }
 
 func ServerStart() {

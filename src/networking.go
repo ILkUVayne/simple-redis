@@ -2,6 +2,7 @@ package src
 
 import (
 	"fmt"
+	"github.com/ILkUVayne/utlis-go/v2/time"
 	"golang.org/x/sys/unix"
 	"simple-redis/utils"
 	"strconv"
@@ -107,7 +108,7 @@ func checkPersistence() {
 	// If there is not a background saving/rewrite in progress check if
 	// we have to save/rewrite now
 	for _, v := range server.saveParams {
-		now := utils.GetMsTime()
+		now := time.GetMsTime()
 		if server.dirty > int64(v.changes) &&
 			now-server.lastSave > int64(v.seconds) &&
 			(now-server.lastBgSaveTry > REDIS_BGSAVE_RETRY_DELAY ||

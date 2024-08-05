@@ -2,6 +2,7 @@ package src
 
 import (
 	"fmt"
+	time2 "github.com/ILkUVayne/utlis-go/v2/time"
 	"github.com/hdt3213/rdb/core"
 	"github.com/hdt3213/rdb/encoder"
 	"github.com/hdt3213/rdb/model"
@@ -59,7 +60,7 @@ func rdbCheckExpire(obj parser.RedisObject) int64 {
 	if expire.Before(time.Now()) {
 		return -1
 	}
-	return utils.GetMsTimeByTime(expire)
+	return time2.GetMsTimeByTime(expire)
 }
 
 func rdbLoadExpire(key *SRobj, expire int64) {
@@ -372,7 +373,7 @@ func rdbSave(filename *string) int {
 
 	utils.Info("DB saved on disk")
 	server.dirty = 0
-	server.lastSave = utils.GetMsTime()
+	server.lastSave = time2.GetMsTime()
 	server.lastBgSaveStatus = REDIS_OK
 	return REDIS_OK
 
@@ -392,7 +393,7 @@ func rdbSaveBackground() int {
 	}
 
 	server.dirtyBeforeBgSave = server.dirty
-	server.lastBgSaveTry = utils.GetMsTime()
+	server.lastBgSaveTry = time2.GetMsTime()
 
 	if childPid = fork(); childPid == 0 {
 		if server.fd > 0 {
@@ -415,7 +416,7 @@ func rdbSaveBackground() int {
 // rdb完成后的收尾工作
 func backgroundSaveDoneHandler() {
 	server.dirty = server.dirty - server.dirtyBeforeBgSave
-	server.lastSave = utils.GetMsTime()
+	server.lastSave = time2.GetMsTime()
 	server.lastBgSaveStatus = REDIS_OK
 	server.rdbChildPid = -1
 	server.changeLoadFactor(LOAD_FACTOR)

@@ -6,6 +6,7 @@ package src
 import (
 	"bufio"
 	"fmt"
+	"github.com/ILkUVayne/utlis-go/v2/time"
 	"io"
 	"os"
 	"simple-redis/utils"
@@ -346,7 +347,7 @@ func rewriteDictObject(f *os.File, key, val *SRobj) {
 // Iterator dict and append rewrite command to temp aof file
 func rewriteAppendOnlyFile(filename string) int {
 	tmpFile := utils.PersistenceFile(fmt.Sprintf("temp-rewriteaof-%d.aof", os.Getpid()))
-	now := utils.GetMsTime()
+	now := time.GetMsTime()
 	f, err := os.Create(tmpFile)
 	if err != nil {
 		utils.ErrorP("Opening the temp file for AOF rewrite in rewriteAppendOnlyFile(): ", err)

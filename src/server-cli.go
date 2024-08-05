@@ -3,6 +3,9 @@ package src
 import (
 	"fmt"
 	linenoise "github.com/GeertJohan/go.linenoise"
+	"github.com/ILkUVayne/utlis-go/v2/cli"
+	"github.com/ILkUVayne/utlis-go/v2/str"
+	"github.com/ILkUVayne/utlis-go/v2/ulog"
 	"simple-redis/utils"
 	"strings"
 )
@@ -15,7 +18,11 @@ var context *sRedisContext
 
 func sRedisConnect() *sRedisContext {
 	c := new(sRedisContext)
-	c.fd = Connect(utils.StrToHost(CliArgs.hostIp), CliArgs.port)
+	host, err := str.IPStrToHost(CliArgs.hostIp)
+	if err != nil {
+		ulog.Error(err)
+	}
+	c.fd = Connect(host, CliArgs.port)
 	return c
 }
 
@@ -86,7 +93,7 @@ func parseOptions() {
 
 func repl() {
 	history, hf := false, ""
-	if utils.Isatty() {
+	if cli.Isatty() {
 		history, hf = true, utils.HistoryFile(REDIS_CLI_HISTFILE_DEFAULT)
 		_ = linenoise.LoadHistory(hf)
 	}

@@ -1,6 +1,9 @@
 package src
 
-import "simple-redis/utils"
+import (
+	"github.com/ILkUVayne/utlis-go/v2/time"
+	"simple-redis/utils"
+)
 
 // SRedisDB 数据库结构
 type SRedisDB struct {
@@ -80,7 +83,7 @@ func (db *SRedisDB) expireIfNeeded(key *SRobj) bool {
 }
 
 func (db *SRedisDB) expireIfNeeded1(when int64, key *SRobj) bool {
-	if when > utils.GetMsTime() {
+	if when > time.GetMsTime() {
 		return false
 	}
 	db.dbDel(key)
@@ -182,7 +185,7 @@ func ttlGenericCommand(c *SRedisClient, outputMs bool) {
 		c.addReplyLongLong(-1)
 		return
 	}
-	ttl := expireTime - utils.GetMsTime()
+	ttl := expireTime - time.GetMsTime()
 	if outputMs {
 		c.addReplyLongLong(ttl)
 		return
@@ -210,7 +213,7 @@ func expireCommand(c *SRedisClient) {
 
 	expire := eval
 	if eval < MAX_EXPIRE {
-		expire = utils.GetMsTime() + (eval * 1000)
+		expire = time.GetMsTime() + (eval * 1000)
 	}
 
 	expireObj := createFromInt(expire)
