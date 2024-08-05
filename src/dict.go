@@ -1,10 +1,10 @@
 package src
 
 import (
+	"github.com/ILkUVayne/utlis-go/v2/ulog"
 	"hash/fnv"
 	"math"
 	"math/rand"
-	"simple-redis/utils"
 )
 
 // dict是否能执行缩容
@@ -101,7 +101,7 @@ func SRStrHash(key *SRobj) int64 {
 	hash := fnv.New64()
 	_, err := hash.Write([]byte(key.strVal()))
 	if err != nil {
-		utils.Error("simple-redis server: hashFunc err: ", err)
+		ulog.Error("simple-redis server: hashFunc err: ", err)
 	}
 	return int64(hash.Sum64())
 }

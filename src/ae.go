@@ -5,8 +5,8 @@ package src
 
 import (
 	"github.com/ILkUVayne/utlis-go/v2/time"
+	"github.com/ILkUVayne/utlis-go/v2/ulog"
 	"golang.org/x/sys/unix"
-	"simple-redis/utils"
 )
 
 // FeType fileEvent type
@@ -92,7 +92,7 @@ func (el *aeEventLoop) addFileEvent(fd int, mask FeType, proc aeFileProc, client
 	}
 	em |= fe2ep[mask]
 	if err := unix.EpollCtl(el.ffd, op, fd, &unix.EpollEvent{Events: em, Fd: int32(fd)}); err != nil {
-		utils.Error("simple-redis server: ae epoll_ctl err: ", err)
+		ulog.Error("simple-redis server: ae epoll_ctl err: ", err)
 	}
 	// ae ctl
 	fileEvent := new(aeFileEvent)
@@ -118,7 +118,7 @@ func (el *aeEventLoop) removeFileEvent(fd int, mask FeType) {
 		op = unix.EPOLL_CTL_MOD
 	}
 	if err := unix.EpollCtl(el.ffd, op, fd, &unix.EpollEvent{Events: em, Fd: int32(fd)}); err != nil {
-		utils.Error("simple-redis server: ae epoll_ctl err: ", err)
+		ulog.Error("simple-redis server: ae epoll_ctl err: ", err)
 	}
 	// ae ctl
 	el.fileEvent[feKey(fd, mask)] = nil
@@ -181,7 +181,7 @@ func (el *aeEventLoop) aeProcessEvents() {
 	n, err := unix.EpollWait(el.ffd, events[:], int(timeout))
 	if err != nil {
 		if err != unix.EINTR {
-			utils.ErrorP("simple-redis server: ae epoll_wait err: ", err)
+			ulog.ErrorP("simple-redis server: ae epoll_wait err: ", err)
 		}
 	}
 	//utils.InfoF("simple-redis server: ae epoll get %d events: ", n)
@@ -235,7 +235,7 @@ func aeCreateEventLoop() *aeEventLoop {
 	el.timeEventNextId = 1
 	efd, err := unix.EpollCreate1(0)
 	if err != nil {
-		utils.Error("simple-redis server: aeCreateEventLoop err: ", err)
+		ulog.Error("simple-redis server: aeCreateEventLoop err: ", err)
 	}
 	el.ffd = efd
 	return el

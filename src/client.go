@@ -2,7 +2,7 @@ package src
 
 import (
 	"errors"
-	"simple-redis/utils"
+	"github.com/ILkUVayne/utlis-go/v2/ulog"
 	"strconv"
 	"strings"
 )
@@ -65,7 +65,7 @@ func (c *SRedisClient) pushReply(data *SRobj, where int) {
 	case AL_START_HEAD:
 		c.reply.lPush(data)
 	default:
-		utils.Error("invalid push type: ", where)
+		ulog.Error("invalid push type: ", where)
 	}
 	data.incrRefCount()
 }

@@ -2,6 +2,8 @@ github.com/GeertJohan/go.linenoise v0.0.0-20141120151038-1918ff89d613 h1:6icnpgp
 github.com/GeertJohan/go.linenoise v0.0.0-20141120151038-1918ff89d613/go.mod h1:hjDAY2N/A6k4IInagcBqLG/q8SyECV6TDzEu5dY0Mwg=
 github.com/ILkUVayne/utlis-go/v2 v2.0.1 h1:6szxi4cPpWSJnh+PYT0zLTHRV2rPmR30GQwkZ+WgqHE=
 github.com/ILkUVayne/utlis-go/v2 v2.0.1/go.mod h1:rwI7ntyga0JeVcIhi/Yw9hOLhTxO0zJuV3sca6GWKD0=
+github.com/ILkUVayne/utlis-go/v2 v2.0.2 h1:9nwEcgb3riL8lYKmFXd74Hhknl37+RdOoJXPnrYKQr8=
+github.com/ILkUVayne/utlis-go/v2 v2.0.2/go.mod h1:rwI7ntyga0JeVcIhi/Yw9hOLhTxO0zJuV3sca6GWKD0=
 github.com/bytedance/sonic v1.5.0/go.mod h1:ED5hyg4y6t3/9Ku1R6dU/4KyJ48DZ4jPhfY1O2AihPM=
 github.com/bytedance/sonic v1.8.7/go.mod h1:i736AoUSYt75HyZLoJW9ERYxcy6eaN6h4BZXU064P/U=
 github.com/chenzhuoyu/base64x v0.0.0-20211019084208-fb5309c8db06/go.mod h1:DH46F32mSOjUmXrMHnKwZdA8wcEefY7UVqBKYGjpdQY=

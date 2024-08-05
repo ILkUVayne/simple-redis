@@ -2,6 +2,7 @@ package src
 
 import (
 	"github.com/ILkUVayne/utlis-go/v2/time"
+	"github.com/ILkUVayne/utlis-go/v2/ulog"
 	"simple-redis/utils"
 )
 
@@ -201,8 +202,9 @@ func expireCommand(c *SRedisClient) {
 		return
 	}
 
-	eval, res := val.intVal()
-	if res == REDIS_ERR {
+	eval, err := val.intVal()
+	if err != nil {
+		ulog.ErrorP(err)
 		c.addReply(shared.syntaxErr)
 		return
 	}

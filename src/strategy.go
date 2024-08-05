@@ -3,11 +3,11 @@ package src
 import (
 	"errors"
 	"fmt"
+	"github.com/ILkUVayne/utlis-go/v2/ulog"
 	"github.com/hdt3213/rdb/core"
 	"github.com/hdt3213/rdb/encoder"
 	"github.com/hdt3213/rdb/parser"
 	"os"
-	"simple-redis/utils"
 	"strings"
 )
 
@@ -55,7 +55,7 @@ var aofRWObjectMaps = map[SRType]aofRWObjectFunc{
 func aofRWObject(f *os.File, key, val *SRobj) int {
 	fn, ok := aofRWObjectMaps[val.Typ]
 	if !ok {
-		utils.ErrorP("Unknown object type: ", val.Typ)
+		ulog.ErrorP("Unknown object type: ", val.Typ)
 		return REDIS_ERR
 	}
 	// call
@@ -84,7 +84,7 @@ var rdbLoadObjectMaps = map[string]rdbLoadObjectFunc{
 func rdbLoadObject(obj parser.RedisObject) {
 	fn, ok := rdbLoadObjectMaps[obj.GetType()]
 	if !ok {
-		utils.Error("Unknown object type: ", obj.GetType())
+		ulog.Error("Unknown object type: ", obj.GetType())
 	}
 	fn(obj)
 }
@@ -107,7 +107,7 @@ func _writeObjectHandle(typ SRType, enc *core.Encoder, key string, values any, e
 	var err error
 	fn, ok := writeObjectMaps[typ]
 	if !ok {
-		utils.Error("Unknown object type: ", typ)
+		ulog.Error("Unknown object type: ", typ)
 	}
 	if expire != -1 {
 		err = fn(enc, key, values, encoder.WithTTL(uint64(expire)))
@@ -116,7 +116,7 @@ func _writeObjectHandle(typ SRType, enc *core.Encoder, key string, values any, e
 	}
 
 	if err != nil {
-		utils.ErrorP("rdbSave writeObject err: ", err)
+		ulog.ErrorP("rdbSave writeObject err: ", err)
 		return REDIS_ERR
 	}
 	return REDIS_OK
@@ -137,7 +137,7 @@ var rdbSaveMaps = map[SRType]rdbSaveObjectFunc{
 func rdbWriteObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 	fn, ok := rdbSaveMaps[val.Typ]
 	if !ok {
-		utils.ErrorP("Unknown object type: ", val.Typ)
+		ulog.ErrorP("Unknown object type: ", val.Typ)
 		return REDIS_ERR
 	}
 	return fn(enc, key, val, expire)

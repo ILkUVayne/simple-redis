@@ -1,7 +1,7 @@
 package src
 
 import (
-	"simple-redis/utils"
+	"github.com/ILkUVayne/utlis-go/v2/ulog"
 	"strings"
 )
 
@@ -37,7 +37,7 @@ func lookupCommand(cmdStr string) *SRedisCommand {
 func processCommand(c *SRedisClient) {
 	cmdStr := c.args[0].strVal()
 	if !c.isFake() {
-		utils.Info("process command: ", cmdStr)
+		ulog.Info("process command: ", cmdStr)
 	}
 
 	// Case-insensitive

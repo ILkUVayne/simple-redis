@@ -63,12 +63,12 @@ func cliDisplayPrompt() string {
 }
 
 func cliInputLine() string {
-	str, err := linenoise.Line(cliDisplayPrompt())
+	s, err := linenoise.Line(cliDisplayPrompt())
 	if err != nil {
 		// KillSignalError
 		utils.Exit(0)
 	}
-	return str
+	return s
 }
 
 func printPrompt() {
@@ -100,15 +100,15 @@ func repl() {
 
 	cliRefreshPrompt()
 	for {
-		str := cliInputLine()
-		if len(str) == 0 {
+		s := cliInputLine()
+		if len(s) == 0 {
 			fmt.Println("Invalid argument(s)")
 			continue
 		}
 		if history {
-			_, _ = linenoise.AddHistory(str), linenoise.SaveHistory(hf)
+			_, _ = linenoise.AddHistory(s), linenoise.SaveHistory(hf)
 		}
-		fields := strings.Fields(str)
+		fields := strings.Fields(s)
 		if fields[0] == "quit" || fields[0] == "exit" {
 			utils.Exit(0)
 		}
@@ -116,13 +116,14 @@ func repl() {
 		if cliSendCommand(fields) != CLI_OK {
 			cliConnect(1)
 			if cliSendCommand(fields) != CLI_OK {
-				utils.Error("simple-redis cli: cliSendCommand error")
+				ulog.Error("simple-redis cli: cliSendCommand error")
 			}
 		}
 	}
 }
 
 func noninteractive(args []string) {
+	ulog.Info(args)
 	//
 }
 

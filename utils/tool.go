@@ -1,17 +1,10 @@
 package utils
 
 import (
-	"bytes"
-	"encoding/binary"
 	"github.com/ILkUVayne/utlis-go/v2/flie"
+	"github.com/ILkUVayne/utlis-go/v2/math"
+	"github.com/ILkUVayne/utlis-go/v2/ulog"
 	"os"
-	"strconv"
-	"strings"
-)
-
-const (
-	REDIS_OK  = 0
-	REDIS_ERR = 1
 )
 
 //-----------------------------------------------------------------------------
@@ -21,7 +14,7 @@ const (
 func absolutePath(file string) string {
 	str, err := flie.Home()
 	if err != nil {
-		Error(err)
+		ulog.Error(err)
 	}
 	return str + "/" + file
 }
@@ -36,55 +29,6 @@ func PersistenceFile(file string) string {
 
 func Exit(code int) {
 	os.Exit(code)
-}
-
-//-----------------------------------------------------------------------------
-// transform function
-//-----------------------------------------------------------------------------
-
-func String2Int64(s *string, intVal *int64) int {
-	i, err := strconv.ParseInt(*s, 10, 64)
-	if err != nil {
-		return REDIS_ERR
-	}
-	if intVal != nil {
-		*intVal = i
-	}
-	return REDIS_OK
-}
-
-func String2Float64(s *string, intVal *float64) int {
-	i, err := strconv.ParseFloat(*s, 64)
-	if err != nil {
-		return REDIS_ERR
-	}
-	if intVal != nil {
-		*intVal = i
-	}
-	return REDIS_OK
-}
-
-func uint8ToLower(n uint8) uint8 {
-	return []byte(strings.ToLower(string(n)))[0]
-}
-
-func Int2Bytes(i int) []byte {
-	buf := bytes.NewBuffer([]byte{})
-	err := binary.Write(buf, binary.BigEndian, int64(i))
-	if err != nil {
-		Error("Int2Bytes err: ", err)
-	}
-	return buf.Bytes()
-}
-
-func Bytes2Int64(buff []byte) int64 {
-	var i int64
-	buf := bytes.NewBuffer(buff)
-	err := binary.Read(buf, binary.BigEndian, &i)
-	if err != nil {
-		Error("Bytes2Int64 err: ", err)
-	}
-	return i
 }
 
 //-----------------------------------------------------------------------------
@@ -156,9 +100,9 @@ func StringMatchLen(pattern, str string, patternLen, strLen int, noCase bool) bo
 						end = t
 					}
 					if noCase {
-						start = uint8ToLower(start)
-						end = uint8ToLower(end)
-						c = uint8ToLower(c)
+						start = math.Uint8ToLower(start)
+						end = math.Uint8ToLower(end)
+						c = math.Uint8ToLower(c)
 					}
 					pIdx += 2
 					patternLen -= 2
@@ -170,7 +114,7 @@ func StringMatchLen(pattern, str string, patternLen, strLen int, noCase bool) bo
 						if pattern[pIdx] == str[sIdx] {
 							match = true
 						} else {
-							if uint8ToLower(pattern[pIdx]) == uint8ToLower(str[sIdx]) {
+							if math.Uint8ToLower(pattern[pIdx]) == math.Uint8ToLower(str[sIdx]) {
 								match = true
 							}
 						}
@@ -200,7 +144,7 @@ func StringMatchLen(pattern, str string, patternLen, strLen int, noCase bool) bo
 					return false
 				}
 			} else {
-				if uint8ToLower(pattern[pIdx]) != uint8ToLower(str[sIdx]) {
+				if math.Uint8ToLower(pattern[pIdx]) != math.Uint8ToLower(str[sIdx]) {
 					return false
 				}
 			}

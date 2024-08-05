@@ -1,8 +1,8 @@
 package src
 
 import (
+	"github.com/ILkUVayne/utlis-go/v2/ulog"
 	"simple-redis/cgo/qsort"
-	"simple-redis/utils"
 	"sort"
 )
 
@@ -65,7 +65,7 @@ var setDictType = dictType{
 }
 
 func setTypeCreate(value *SRobj) *SRobj {
-	if value.isObjectRepresentableAsInt64(nil) == REDIS_OK {
+	if value.isObjectRepresentableAsInt64(nil) == nil {
 		return createIntSetObject()
 	}
 	return createSetObject()
@@ -79,7 +79,7 @@ func setTypeAdd(subject, value *SRobj) bool {
 		return assertDict(subject).dictAdd(value, nil)
 	}
 	// intSet
-	if value.isObjectRepresentableAsInt64(&intVal) == REDIS_OK {
+	if value.isObjectRepresentableAsInt64(&intVal) == nil {
 		var success bool
 		assertIntSet(subject).intSetAdd(intVal, &success)
 		return success
@@ -91,7 +91,7 @@ func setTypeAdd(subject, value *SRobj) bool {
 
 func setTypeConvert(setObj *SRobj, enc uint8) {
 	if setObj.Typ != SR_SET || setObj.encoding != REDIS_ENCODING_INTSET {
-		utils.ErrorF("setTypeConvert err: setObj.Typ = %d,setObj.encoding = %d", setObj.Typ, setObj.encoding)
+		ulog.ErrorF("setTypeConvert err: setObj.Typ = %d,setObj.encoding = %d", setObj.Typ, setObj.encoding)
 	}
 	if enc != REDIS_ENCODING_HT {
 		panic("Unsupported set conversion")
@@ -128,24 +128,26 @@ func setTypeIsMember(setObj, value *SRobj) bool {
 		_, e := assertDict(setObj).dictFind(value)
 		return e != nil
 	}
-	if value.isObjectRepresentableAsInt64(&intVal) == REDIS_OK {
+	if value.isObjectRepresentableAsInt64(&intVal) == nil {
 		return assertIntSet(setObj).intSetFind(intVal)
 	}
 	return false
 }
 
 // qSortSet use c qsort function
-// has err: cgo argument has Go pointer to Go pointer
+//
+// has error: cgo argument has Go pointer to Go pointer
+//
 // need set env: export GODEBUG=cgocheck=0
-func qSortSet(set []*SRobj) {
-	qsort.Slice(set, func(a, b int) bool {
-		return setTypeSize(set[a]) < setTypeSize(set[b])
+func qSortSet(sets []*SRobj) {
+	qsort.Slice(sets, func(a, b int) bool {
+		return setTypeSize(sets[a]) < setTypeSize(sets[b])
 	})
 }
 
-func sortSet(set []*SRobj) {
-	sort.Slice(set, func(a, b int) bool {
-		return setTypeSize(set[a]) < setTypeSize(set[b])
+func sortSet(sets []*SRobj) {
+	sort.Slice(sets, func(a, b int) bool {
+		return setTypeSize(sets[a]) < setTypeSize(sets[b])
 	})
 }
 
