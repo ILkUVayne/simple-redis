@@ -122,6 +122,8 @@ The PTTL command checks the remaining expiration time of a Key in milliseconds.W
 ~~~bash
 127.0.0.1:6379> set url www
 OK
+127.0.0.1:6379> set s1 asd
+OK
 127.0.0.1:6379> expire url 50
 OK
 127.0.0.1:6379> pTTL url
@@ -139,6 +141,8 @@ OK
 The PERSIST command is used to remove the expiration time of a specified key, so that the key will never expire
 
 ~~~bash
+127.0.0.1:6379> set url www
+OK
 127.0.0.1:6379> expire url 50
 OK
 127.0.0.1:6379> ttl url

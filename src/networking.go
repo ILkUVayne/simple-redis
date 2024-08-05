@@ -2,8 +2,9 @@ package src
 
 import (
 	"fmt"
+	"github.com/ILkUVayne/utlis-go/v2/time"
+	"github.com/ILkUVayne/utlis-go/v2/ulog"
 	"golang.org/x/sys/unix"
-	"simple-redis/utils"
 	"strconv"
 )
 
@@ -11,7 +12,7 @@ import (
 func acceptTcpHandler(el *aeEventLoop, fd int, _ any) {
 	cfd := Accept(fd)
 	if cfd == AE_ERR {
-		utils.Error("simple-redis server: Accepting client err: cfd == ", cfd)
+		ulog.Error("simple-redis server: Accepting client err: cfd == ", cfd)
 	}
 	client := createSRClient(cfd)
 	server.clients[cfd] = client
@@ -28,14 +29,14 @@ func readQueryFromClient(_ *aeEventLoop, fd int, clientData any) {
 	n, err := Read(fd, c.queryBuf)
 	if err != nil {
 		freeClient(c)
-		utils.ErrorPf("simple-redis server: client %v read err: %v", fd, err)
+		ulog.ErrorPf("simple-redis server: client %v read err: %v", fd, err)
 		return
 	}
 	c.queryLen += n
 	err = processQueryBuf(c)
 	if err != nil {
 		freeClient(c)
-		utils.ErrorP("simple-redis server: process query buf err: ", err)
+		ulog.ErrorP("simple-redis server: process query buf err: ", err)
 		return
 	}
 }
@@ -52,7 +53,7 @@ func SendReplyToClient(el *aeEventLoop, _ int, clientData any) {
 			_, err := Write(c.fd, buf[:])
 			if err != nil {
 				freeClient(c)
-				utils.ErrorP("simple-redis server: SendReplyToClient err: ", err)
+				ulog.ErrorP("simple-redis server: SendReplyToClient err: ", err)
 				return
 			}
 			//c.sentLen += n
@@ -107,12 +108,12 @@ func checkPersistence() {
 	// If there is not a background saving/rewrite in progress check if
 	// we have to save/rewrite now
 	for _, v := range server.saveParams {
-		now := utils.GetMsTime()
+		now := time.GetMsTime()
 		if server.dirty > int64(v.changes) &&
 			now-server.lastSave > int64(v.seconds) &&
 			(now-server.lastBgSaveTry > REDIS_BGSAVE_RETRY_DELAY ||
 				server.lastBgSaveStatus == REDIS_OK) {
-			utils.InfoF("%d changes in %d seconds. Saving...", v.changes, v.seconds)
+			ulog.InfoF("%d changes in %d seconds. Saving...", v.changes, v.seconds)
 			rdbSaveBackground()
 			break
 		}
@@ -128,7 +129,7 @@ func checkPersistence() {
 		}
 		growth := (server.aofCurrentSize*100)/base - 100
 		if growth > int64(server.aofRewritePerc) {
-			utils.InfoF("Starting automatic rewriting of AOF on %d% growth", growth)
+			ulog.InfoF("Starting automatic rewriting of AOF on %d% growth", growth)
 			rewriteAppendOnlyFileBackground()
 		}
 	}

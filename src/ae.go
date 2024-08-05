@@ -4,8 +4,9 @@
 package src
 
 import (
+	"github.com/ILkUVayne/utlis-go/v2/time"
+	"github.com/ILkUVayne/utlis-go/v2/ulog"
 	"golang.org/x/sys/unix"
-	"simple-redis/utils"
 )
 
 // FeType fileEvent type
@@ -91,7 +92,7 @@ func (el *aeEventLoop) addFileEvent(fd int, mask FeType, proc aeFileProc, client
 	}
 	em |= fe2ep[mask]
 	if err := unix.EpollCtl(el.ffd, op, fd, &unix.EpollEvent{Events: em, Fd: int32(fd)}); err != nil {
-		utils.Error("simple-redis server: ae epoll_ctl err: ", err)
+		ulog.Error("simple-redis server: ae epoll_ctl err: ", err)
 	}
 	// ae ctl
 	fileEvent := new(aeFileEvent)
@@ -117,7 +118,7 @@ func (el *aeEventLoop) removeFileEvent(fd int, mask FeType) {
 		op = unix.EPOLL_CTL_MOD
 	}
 	if err := unix.EpollCtl(el.ffd, op, fd, &unix.EpollEvent{Events: em, Fd: int32(fd)}); err != nil {
-		utils.Error("simple-redis server: ae epoll_ctl err: ", err)
+		ulog.Error("simple-redis server: ae epoll_ctl err: ", err)
 	}
 	// ae ctl
 	el.fileEvent[feKey(fd, mask)] = nil
@@ -133,7 +134,7 @@ func (el *aeEventLoop) addTimeEvent(mask TeType, interval int64, proc aeTimeProc
 	te.clientData = clientData
 	te.interval = interval
 	te.mask = mask
-	te.when = utils.GetMsTime() + interval
+	te.when = time.GetMsTime() + interval
 	te.next = el.timeEvent
 	el.timeEvent = te
 	return te.id
@@ -160,7 +161,7 @@ func (el *aeEventLoop) removeTimeEvent(id int) {
 
 // return nearest timeEvent time
 func (el *aeEventLoop) nearestTime() int64 {
-	nearestTime := utils.GetMsTime() + 1000
+	nearestTime := time.GetMsTime() + 1000
 	for p := el.timeEvent; p != nil; p = p.next {
 		if p.when < nearestTime {
 			nearestTime = p.when
@@ -172,7 +173,7 @@ func (el *aeEventLoop) nearestTime() int64 {
 // ae 事件处理
 func (el *aeEventLoop) aeProcessEvents() {
 	// epoll_wait timeout
-	timeout := el.nearestTime() - utils.GetMsTime()
+	timeout := el.nearestTime() - time.GetMsTime()
 	if timeout <= 0 {
 		timeout = 10
 	}
@@ -180,7 +181,7 @@ func (el *aeEventLoop) aeProcessEvents() {
 	n, err := unix.EpollWait(el.ffd, events[:], int(timeout))
 	if err != nil {
 		if err != unix.EINTR {
-			utils.ErrorP("simple-redis server: ae epoll_wait err: ", err)
+			ulog.ErrorP("simple-redis server: ae epoll_wait err: ", err)
 		}
 	}
 	//utils.InfoF("simple-redis server: ae epoll get %d events: ", n)
@@ -203,7 +204,7 @@ func (el *aeEventLoop) aeProcessEvents() {
 	}
 	// 收集时间事件
 	var timeEvents []*aeTimeEvent
-	now := utils.GetMsTime()
+	now := time.GetMsTime()
 	for p := el.timeEvent; p != nil; p = p.next {
 		if p.when <= now {
 			timeEvents = append(timeEvents, p)
@@ -234,7 +235,7 @@ func aeCreateEventLoop() *aeEventLoop {
 	el.timeEventNextId = 1
 	efd, err := unix.EpollCreate1(0)
 	if err != nil {
-		utils.Error("simple-redis server: aeCreateEventLoop err: ", err)
+		ulog.Error("simple-redis server: aeCreateEventLoop err: ", err)
 	}
 	el.ffd = efd
 	return el

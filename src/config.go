@@ -2,9 +2,10 @@ package src
 
 import (
 	"bufio"
+	"github.com/ILkUVayne/utlis-go/v2/str"
+	"github.com/ILkUVayne/utlis-go/v2/ulog"
 	"os"
 	"reflect"
-	"simple-redis/utils"
 	"strings"
 )
 
@@ -21,19 +22,19 @@ func appendServerSaveParams(val string) {
 		return
 	}
 	if firstIdx <= 0 || firstIdx >= len(val)-1 {
-		utils.Error("Invalid save parameters: ", val)
+		ulog.Error("Invalid save parameters: ", val)
 	}
 
 	seconds, changes := val[0:firstIdx], val[firstIdx+1:]
 
 	var intVal int64
 	sp := new(saveParam)
-	if utils.String2Int64(&seconds, &intVal) == REDIS_ERR {
-		utils.Error("Invalid save seconds parameters: ", seconds)
+	if str.String2Int64(&seconds, &intVal) != nil {
+		ulog.Error("Invalid save seconds parameters: ", seconds)
 	}
 	sp.seconds = int(intVal)
-	if utils.String2Int64(&changes, &intVal) == REDIS_ERR {
-		utils.Error("Invalid save changes parameters: ", changes)
+	if str.String2Int64(&changes, &intVal) != nil {
+		ulog.Error("Invalid save changes parameters: ", changes)
 	}
 	sp.changes = int(intVal)
 
@@ -64,13 +65,13 @@ var config *configVal
 func SetupConf(confName string) {
 	f, err := os.Open(confName)
 	if err != nil {
-		utils.Error(err)
+		ulog.Error(err)
 	}
 
 	defer func(f *os.File) {
 		err := f.Close()
 		if err != nil {
-			utils.Error(err)
+			ulog.Error(err)
 		}
 	}(f)
 
@@ -120,7 +121,7 @@ func parse(f *os.File) {
 				fieldVal.SetString(value)
 			case reflect.Int, reflect.Int64:
 				var intVal int64
-				if utils.String2Int64(&value, &intVal) == REDIS_OK {
+				if str.String2Int64(&value, &intVal) == nil {
 					fieldVal.SetInt(intVal)
 				}
 			case reflect.Bool:

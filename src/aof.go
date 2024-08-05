@@ -6,6 +6,9 @@ package src
 import (
 	"bufio"
 	"fmt"
+	str2 "github.com/ILkUVayne/utlis-go/v2/str"
+	"github.com/ILkUVayne/utlis-go/v2/time"
+	"github.com/ILkUVayne/utlis-go/v2/ulog"
 	"io"
 	"os"
 	"simple-redis/utils"
@@ -19,7 +22,7 @@ func aofRewriteBufferWrite(f *os.File) int {
 	}
 	n, err := io.WriteString(f, server.aofRewriteBufBlocks)
 	if err != nil {
-		utils.ErrorP("aofRewriteBufferWrite err: ", err)
+		ulog.ErrorP("aofRewriteBufferWrite err: ", err)
 		return -1
 	}
 	server.aofRewriteBufferReset()
@@ -62,7 +65,7 @@ func aofCheckExpire(args []*SRobj) bool {
 func loadAppendOnlyFile(name string) {
 	fp, err := os.Open(name)
 	if err != nil {
-		utils.Error("Can't open the append-only file: ", err)
+		ulog.Error("Can't open the append-only file: ", err)
 	}
 	defer func() { _ = fp.Close() }()
 
@@ -79,8 +82,8 @@ func loadAppendOnlyFile(name string) {
 		str := scanner.Text()
 		if str[0] == '*' {
 			str = str[1:]
-			if utils.String2Int64(&str, &aLen) == REDIS_ERR {
-				utils.Error("Bad file format reading the append only file")
+			if str2.String2Int64(&str, &aLen) != nil {
+				ulog.Error("Bad file format reading the append only file")
 			}
 			continue
 		}
@@ -117,7 +120,7 @@ func flushAppendOnlyFile() {
 	}
 	n, err := io.WriteString(server.aofFd, server.aofBuf)
 	if err != nil {
-		utils.Error("flushAppendOnlyFile err: ", err)
+		ulog.Error("flushAppendOnlyFile err: ", err)
 	}
 	server.aofCurrentSize += int64(n)
 	server.aofBufReset()
@@ -182,7 +185,7 @@ func (cmd *SRedisCommand) feedAppendOnlyFile(args []*SRobj, argc int) {
 func aofUpdateCurrentSize() {
 	fInfo, err := server.aofFd.Stat()
 	if err != nil {
-		utils.Error("Unable to obtain the AOF file length. stat: ", err)
+		ulog.Error("Unable to obtain the AOF file length. stat: ", err)
 	}
 	server.aofCurrentSize = fInfo.Size()
 }
@@ -192,7 +195,7 @@ func aofUpdateCurrentSize() {
 // s is command string
 func rewrite(f *os.File, s *string) {
 	if _, err := io.WriteString(f, *s); err != nil {
-		utils.Error("rewriteStringObject err: ", err)
+		ulog.Error("rewriteStringObject err: ", err)
 	}
 }
 
@@ -346,10 +349,10 @@ func rewriteDictObject(f *os.File, key, val *SRobj) {
 // Iterator dict and append rewrite command to temp aof file
 func rewriteAppendOnlyFile(filename string) int {
 	tmpFile := utils.PersistenceFile(fmt.Sprintf("temp-rewriteaof-%d.aof", os.Getpid()))
-	now := utils.GetMsTime()
+	now := time.GetMsTime()
 	f, err := os.Create(tmpFile)
 	if err != nil {
-		utils.ErrorP("Opening the temp file for AOF rewrite in rewriteAppendOnlyFile(): ", err)
+		ulog.ErrorP("Opening the temp file for AOF rewrite in rewriteAppendOnlyFile(): ", err)
 		return REDIS_ERR
 	}
 	defer func() { _ = f.Close() }()
@@ -374,12 +377,12 @@ func rewriteAppendOnlyFile(filename string) int {
 	di.dictReleaseIterator()
 
 	if err = os.Rename(tmpFile, filename); err != nil {
-		utils.ErrorP("Error moving temp append only file on the final destination: ", err)
+		ulog.ErrorP("Error moving temp append only file on the final destination: ", err)
 		_ = os.Remove(tmpFile)
 		return REDIS_ERR
 	}
 
-	utils.Info("SYNC append only file rewrite performed")
+	ulog.Info("SYNC append only file rewrite performed")
 	return REDIS_OK
 }
 
@@ -401,7 +404,7 @@ func rewriteAppendOnlyFileBackground() int {
 		}
 		utils.Exit(1)
 	} else {
-		utils.Info("Background append only file rewriting started by pid %d", childPid)
+		ulog.Info("Background append only file rewriting started by pid %d", childPid)
 		server.aofChildPid = childPid
 		server.changeLoadFactor(BG_PERSISTENCE_LOAD_FACTOR)
 		updateDictResizePolicy()
@@ -416,16 +419,16 @@ func backgroundRewriteDoneHandler() {
 	tmpFile := utils.PersistenceFile(fmt.Sprintf("temp-rewriteaof-bg-%d.aof", server.aofChildPid))
 	newFd, err := os.OpenFile(tmpFile, os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
-		utils.ErrorP("Unable to open the temporary AOF produced by the child: ", err)
+		ulog.ErrorP("Unable to open the temporary AOF produced by the child: ", err)
 		goto cleanup
 	}
 	if aofRewriteBufferWrite(newFd) == -1 {
-		utils.ErrorP("Error trying to flush the parent diff to the rewritten AOF: ", err)
+		ulog.ErrorP("Error trying to flush the parent diff to the rewritten AOF: ", err)
 		goto cleanup
 	}
 	// Replace temporary AOF file name to AOF file name
 	if err = os.Rename(tmpFile, server.aofFilename); err != nil {
-		utils.ErrorP("Error trying to rename the temporary AOF file: ", err)
+		ulog.ErrorP("Error trying to rename the temporary AOF file: ", err)
 		_ = newFd.Close()
 		goto cleanup
 	}
@@ -438,7 +441,7 @@ func backgroundRewriteDoneHandler() {
 		server.aofRewriteBaseSize = server.aofCurrentSize
 		server.aofBufReset()
 	}
-	utils.Info("Background AOF rewrite finished successfully")
+	ulog.Info("Background AOF rewrite finished successfully")
 
 cleanup:
 	server.aofRewriteBufferReset()

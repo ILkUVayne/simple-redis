@@ -3,6 +3,9 @@ package src
 import (
 	"fmt"
 	linenoise "github.com/GeertJohan/go.linenoise"
+	"github.com/ILkUVayne/utlis-go/v2/cli"
+	"github.com/ILkUVayne/utlis-go/v2/str"
+	"github.com/ILkUVayne/utlis-go/v2/ulog"
 	"simple-redis/utils"
 	"strings"
 )
@@ -15,7 +18,11 @@ var context *sRedisContext
 
 func sRedisConnect() *sRedisContext {
 	c := new(sRedisContext)
-	c.fd = Connect(utils.StrToHost(CliArgs.hostIp), CliArgs.port)
+	host, err := str.IPStrToHost(CliArgs.hostIp)
+	if err != nil {
+		ulog.Error(err)
+	}
+	c.fd = Connect(host, CliArgs.port)
 	return c
 }
 
@@ -56,12 +63,12 @@ func cliDisplayPrompt() string {
 }
 
 func cliInputLine() string {
-	str, err := linenoise.Line(cliDisplayPrompt())
+	s, err := linenoise.Line(cliDisplayPrompt())
 	if err != nil {
 		// KillSignalError
 		utils.Exit(0)
 	}
-	return str
+	return s
 }
 
 func printPrompt() {
@@ -86,22 +93,22 @@ func parseOptions() {
 
 func repl() {
 	history, hf := false, ""
-	if utils.Isatty() {
+	if cli.Isatty() {
 		history, hf = true, utils.HistoryFile(REDIS_CLI_HISTFILE_DEFAULT)
 		_ = linenoise.LoadHistory(hf)
 	}
 
 	cliRefreshPrompt()
 	for {
-		str := cliInputLine()
-		if len(str) == 0 {
+		s := cliInputLine()
+		if len(s) == 0 {
 			fmt.Println("Invalid argument(s)")
 			continue
 		}
 		if history {
-			_, _ = linenoise.AddHistory(str), linenoise.SaveHistory(hf)
+			_, _ = linenoise.AddHistory(s), linenoise.SaveHistory(hf)
 		}
-		fields := strings.Fields(str)
+		fields := strings.Fields(s)
 		if fields[0] == "quit" || fields[0] == "exit" {
 			utils.Exit(0)
 		}
@@ -109,13 +116,14 @@ func repl() {
 		if cliSendCommand(fields) != CLI_OK {
 			cliConnect(1)
 			if cliSendCommand(fields) != CLI_OK {
-				utils.Error("simple-redis cli: cliSendCommand error")
+				ulog.Error("simple-redis cli: cliSendCommand error")
 			}
 		}
 	}
 }
 
 func noninteractive(args []string) {
+	ulog.Info(args)
 	//
 }
 

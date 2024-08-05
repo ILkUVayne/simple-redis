@@ -1,10 +1,23 @@
 package src
 
 import (
-	"simple-redis/utils"
+	"errors"
+	str2 "github.com/ILkUVayne/utlis-go/v2/str"
+	"github.com/ILkUVayne/utlis-go/v2/ulog"
 	"strconv"
 	"strings"
 )
+
+type SRType uint8
+
+type SRVal any
+
+type SRobj struct {
+	Typ      SRType
+	Val      SRVal
+	encoding uint8
+	refCount int
+}
 
 var encodingMaps = map[uint8]string{
 	REDIS_ENCODING_RAW:        "raw",
@@ -25,16 +38,7 @@ var TypeMaps = map[SRType]string{
 	SR_DICT: "hash",
 }
 
-type SRType uint8
-
-type SRVal any
-
-type SRobj struct {
-	Typ      SRType
-	Val      SRVal
-	encoding uint8
-	refCount int
-}
+var NotStringTypeErr = errors.New("intVal err: type is not string")
 
 func (s *SRobj) strVal() string {
 	if s.Typ != SR_STR {
@@ -59,32 +63,32 @@ func (s *SRobj) decrRefCount() {
 	}
 }
 
-func (s *SRobj) intVal() (int64, int) {
+func (s *SRobj) intVal() (int64, error) {
 	if s.Typ != SR_STR {
-		return 0, REDIS_ERR
+		return 0, NotStringTypeErr
 	}
 	if s.encoding == REDIS_ENCODING_INT {
-		return s.Val.(int64), REDIS_OK
+		return s.Val.(int64), nil
 	}
 	if s.encoding == REDIS_ENCODING_RAW {
 		var i int64
 		str := s.strVal()
-		return i, utils.String2Int64(&str, &i)
+		return i, str2.String2Int64(&str, &i)
 	}
 	panic("Unknown string encoding")
 }
 
-func (s *SRobj) floatVal() (float64, int) {
+func (s *SRobj) floatVal() (float64, error) {
 	if s.Typ != SR_STR {
-		return 0, REDIS_ERR
+		return 0, NotStringTypeErr
 	}
 	if s.encoding == REDIS_ENCODING_INT {
-		return s.Val.(float64), REDIS_OK
+		return s.Val.(float64), nil
 	}
 	if s.encoding == REDIS_ENCODING_RAW {
 		var i float64
 		str := s.strVal()
-		return i, utils.String2Float64(&str, &i)
+		return i, str2.String2Float64(&str, &i)
 	}
 	panic("Unknown string encoding")
 }
@@ -126,7 +130,7 @@ func (s *SRobj) tryObjectEncoding() {
 	// Check if we can represent this string as a long integer
 	var i int64
 	str := s.strVal()
-	if utils.String2Int64(&str, &i) == REDIS_ERR {
+	if str2.String2Int64(&str, &i) != nil {
 		return
 	}
 	s.encoding = REDIS_ENCODING_INT
@@ -141,43 +145,44 @@ func (s *SRobj) getDecodedObject() *SRobj {
 	if s.Typ == SR_STR && s.encoding == REDIS_ENCODING_INT {
 		var intVal int64
 		str := s.strVal()
-		if utils.String2Int64(&str, &intVal) == REDIS_ERR {
-			utils.Error("getDecodedObject err")
+		if err := str2.String2Int64(&str, &intVal); err != nil {
+			ulog.Error("getDecodedObject err: ", err)
 		}
 		return createFromInt(intVal)
 	}
 	panic("Unknown encoding type")
 }
 
-func (s *SRobj) getLongLongFromObject(target *int64) int {
+func (s *SRobj) getLongLongFromObject(target *int64) error {
 	if s == nil {
 		*target = 0
-		return REDIS_OK
+		return nil
 	}
 	if s.Typ != SR_STR {
-		return REDIS_ERR
+		return NotStringTypeErr
 	}
-	intVal, res := s.intVal()
+	intVal, err := s.intVal()
 	*target = intVal
-	return res
+	return err
 }
 
-func (s *SRobj) getFloat64FromObject(target *float64) int {
+func (s *SRobj) getFloat64FromObject(target *float64) error {
 	if s.Typ != SR_STR {
-		return REDIS_ERR
+		return NotStringTypeErr
 	}
-	i, res := s.floatVal()
+	i, err := s.floatVal()
 	*target = i
-	return res
+	return err
 }
 
 func (s *SRobj) getFloat64FromObjectOrReply(c *SRedisClient, target *float64, msg *string) int {
 	var value float64
-	if s.getFloat64FromObject(&value) == REDIS_ERR {
+	if err := s.getFloat64FromObject(&value); err != nil {
 		if msg != nil {
 			c.addReplyError(*msg)
 			return REDIS_ERR
 		}
+		ulog.ErrorP(err)
 		c.addReplyError("value is not an float or out of range")
 		return REDIS_ERR
 	}
@@ -187,11 +192,12 @@ func (s *SRobj) getFloat64FromObjectOrReply(c *SRedisClient, target *float64, ms
 
 func (s *SRobj) getLongLongFromObjectOrReply(c *SRedisClient, target *int64, msg *string) int {
 	var value int64
-	if s.getLongLongFromObject(&value) == REDIS_ERR {
+	if err := s.getLongLongFromObject(&value); err != nil {
 		if msg != nil {
 			c.addReplyError(*msg)
 			return REDIS_ERR
 		}
+		ulog.ErrorP(err)
 		c.addReplyError("value is not an integer or out of range")
 		return REDIS_ERR
 	}
@@ -199,15 +205,15 @@ func (s *SRobj) getLongLongFromObjectOrReply(c *SRedisClient, target *int64, msg
 	return REDIS_OK
 }
 
-func (s *SRobj) isObjectRepresentableAsInt64(intVal *int64) int {
+func (s *SRobj) isObjectRepresentableAsInt64(intVal *int64) error {
 	if s.Typ != SR_STR {
-		utils.ErrorF("isObjectRepresentableAsLongLong err: type fail, value.Typ = %d", s.Typ)
+		ulog.ErrorF("isObjectRepresentableAsLongLong err: type fail, value.Typ = %d", s.Typ)
 	}
-	i, res := s.intVal()
+	i, err := s.intVal()
 	if intVal != nil {
 		*intVal = i
 	}
-	return res
+	return err
 }
 
 //-----------------------------------------------------------------------------
@@ -217,7 +223,7 @@ func (s *SRobj) isObjectRepresentableAsInt64(intVal *int64) int {
 // return 0 obj1 == obj2, 1 obj1 > obj2, -1 obj1 < obj2
 func compareStringObjects(obj1, obj2 *SRobj) int {
 	if obj1.Typ != SR_STR || obj2.Typ != SR_STR {
-		utils.ErrorF("compareStringObjects err: type fail, obj1.Typ = %d obj2.Typ = %d", obj1.Typ, obj2.Typ)
+		ulog.ErrorF("compareStringObjects err: type fail, obj1.Typ = %d obj2.Typ = %d", obj1.Typ, obj2.Typ)
 	}
 	return strings.Compare(obj1.strVal(), obj2.strVal())
 }

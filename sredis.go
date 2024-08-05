@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/ILkUVayne/utlis-go/v2/ulog"
 	"simple-redis/src"
-	"simple-redis/utils"
 )
 
 var banner = `
@@ -21,7 +21,7 @@ const (
 )
 
 func main() {
-	utils.SetLevel(utils.InfoLevel)
+	ulog.SetLevel(ulog.InfoLevel)
 	// initialization
 	fmt.Printf("%s\n\n", banner)
 	fmt.Printf("version: %s\n", VERSION)

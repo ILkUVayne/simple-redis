@@ -2,6 +2,8 @@ package src
 
 import (
 	"fmt"
+	time2 "github.com/ILkUVayne/utlis-go/v2/time"
+	"github.com/ILkUVayne/utlis-go/v2/ulog"
 	"github.com/hdt3213/rdb/core"
 	"github.com/hdt3213/rdb/encoder"
 	"github.com/hdt3213/rdb/model"
@@ -25,20 +27,20 @@ var auxMap = map[string]string{
 func rdbBeforeWrite(enc *core.Encoder) int {
 	err := enc.WriteHeader()
 	if err != nil {
-		utils.ErrorP("rdbSave err: ", err)
+		ulog.ErrorP("rdbSave err: ", err)
 		return REDIS_ERR
 	}
 	for k, v := range auxMap {
 		err = enc.WriteAux(k, v)
 		if err != nil {
-			utils.ErrorP("rdbSave err: ", err)
+			ulog.ErrorP("rdbSave err: ", err)
 			return REDIS_ERR
 		}
 	}
 	// set db index,keyCount,expireCount
 	err = enc.WriteDBHeader(0, uint64(server.db.dbDataSize()), uint64(server.db.dbExpireSize()))
 	if err != nil {
-		utils.ErrorP("rdbSave err: ", err)
+		ulog.ErrorP("rdbSave err: ", err)
 		return REDIS_ERR
 	}
 	return REDIS_OK
@@ -59,7 +61,7 @@ func rdbCheckExpire(obj parser.RedisObject) int64 {
 	if expire.Before(time.Now()) {
 		return -1
 	}
-	return utils.GetMsTimeByTime(expire)
+	return time2.GetMsTimeByTime(expire)
 }
 
 func rdbLoadExpire(key *SRobj, expire int64) {
@@ -78,7 +80,7 @@ func rdbLoadStringObject(obj parser.RedisObject) {
 	}
 	o, ok := obj.(*parser.StringObject)
 	if !ok {
-		utils.Error("rdbLoadStringObject err: invalid obj type")
+		ulog.Error("rdbLoadStringObject err: invalid obj type")
 	}
 	// add key value
 	key, val := createSRobj(SR_STR, o.Key), createSRobj(SR_STR, string(o.Value))
@@ -96,7 +98,7 @@ func rdbLoadListObject(obj parser.RedisObject) {
 	}
 	o, ok := obj.(*parser.ListObject)
 	if !ok {
-		utils.Error("rdbLoadListObject err: invalid obj type")
+		ulog.Error("rdbLoadListObject err: invalid obj type")
 	}
 	key := createSRobj(SR_STR, o.Key)
 	lObj := server.db.lookupKeyWrite(key)
@@ -122,7 +124,7 @@ func rdbLoadHashObject(obj parser.RedisObject) {
 	}
 	o, ok := obj.(*parser.HashObject)
 	if !ok {
-		utils.Error("rdbLoadHashObject err: invalid obj type")
+		ulog.Error("rdbLoadHashObject err: invalid obj type")
 	}
 	key := createSRobj(SR_STR, o.Key)
 
@@ -148,7 +150,7 @@ func rdbLoadZSetObject(obj parser.RedisObject) {
 	}
 	o, ok := obj.(*parser.ZSetObject)
 	if !ok {
-		utils.Error("rdbLoadZSetObject err: invalid obj type")
+		ulog.Error("rdbLoadZSetObject err: invalid obj type")
 	}
 	key := createSRobj(SR_STR, o.Key)
 
@@ -179,7 +181,7 @@ func rdbLoadSetObject(obj parser.RedisObject) {
 	}
 	o, ok := obj.(*parser.SetObject)
 	if !ok {
-		utils.Error("rdbLoadSetObject err: invalid obj type")
+		ulog.Error("rdbLoadSetObject err: invalid obj type")
 	}
 	key := createSRobj(SR_STR, o.Key)
 
@@ -204,13 +206,13 @@ func rdbLoadSetObject(obj parser.RedisObject) {
 func rdbLoad(filename *string) {
 	fd, err := os.OpenFile(*filename, os.O_RDONLY|os.O_CREATE, 0666)
 	if err != nil {
-		utils.Error("Can't open the rdb file: ", err)
+		ulog.Error("Can't open the rdb file: ", err)
 	}
 	defer func() { _ = fd.Close() }()
 
 	fInfo, err := fd.Stat()
 	if err != nil {
-		utils.Error("Unable to obtain the AOF file length. stat: ", err)
+		ulog.Error("Unable to obtain the AOF file length. stat: ", err)
 	}
 	if fInfo.Size() == 0 {
 		return
@@ -224,7 +226,7 @@ func rdbLoad(filename *string) {
 	})
 
 	if err != nil {
-		utils.Error("rdbLoad err: ", err)
+		ulog.Error("rdbLoad err: ", err)
 	}
 }
 
@@ -332,14 +334,14 @@ func rdbSave(filename *string) int {
 	if server.db.dbDataSize() == 0 {
 		_ = os.Remove(*filename)
 		_, _ = os.Create(*filename)
-		utils.Info("database is empty")
+		ulog.Info("database is empty")
 		return REDIS_OK
 	}
 
 	tmpFile := utils.PersistenceFile(fmt.Sprintf("temp-%d.rdb", os.Getpid()))
 	f, err := os.Create(tmpFile)
 	if err != nil {
-		utils.ErrorP("Failed opening .rdb for saving: ", err)
+		ulog.ErrorP("Failed opening .rdb for saving: ", err)
 		return REDIS_ERR
 	}
 	defer func() { _ = f.Close() }()
@@ -361,24 +363,24 @@ func rdbSave(filename *string) int {
 
 	err = enc.WriteEnd()
 	if err != nil {
-		utils.ErrorP("rdbSave err: ", err)
+		ulog.ErrorP("rdbSave err: ", err)
 		return REDIS_ERR
 	}
 	if err = os.Rename(tmpFile, *filename); err != nil {
-		utils.ErrorP("Error moving temp DB file on the final destination: ", err)
+		ulog.ErrorP("Error moving temp DB file on the final destination: ", err)
 		_ = os.Remove(tmpFile)
 		return REDIS_ERR
 	}
 
-	utils.Info("DB saved on disk")
+	ulog.Info("DB saved on disk")
 	server.dirty = 0
-	server.lastSave = utils.GetMsTime()
+	server.lastSave = time2.GetMsTime()
 	server.lastBgSaveStatus = REDIS_OK
 	return REDIS_OK
 
 werr:
 	_ = os.Remove(tmpFile)
-	utils.ErrorP("Write error saving DB on disk: ", err)
+	ulog.ErrorP("Write error saving DB on disk: ", err)
 	di.dictReleaseIterator()
 	return REDIS_ERR
 }
@@ -392,7 +394,7 @@ func rdbSaveBackground() int {
 	}
 
 	server.dirtyBeforeBgSave = server.dirty
-	server.lastBgSaveTry = utils.GetMsTime()
+	server.lastBgSaveTry = time2.GetMsTime()
 
 	if childPid = fork(); childPid == 0 {
 		if server.fd > 0 {
@@ -403,7 +405,7 @@ func rdbSaveBackground() int {
 		}
 		utils.Exit(1)
 	} else {
-		utils.Info("Background saving started by pid %d", childPid)
+		ulog.Info("Background saving started by pid %d", childPid)
 		server.rdbChildPid = childPid
 		server.changeLoadFactor(BG_PERSISTENCE_LOAD_FACTOR)
 		updateDictResizePolicy()
@@ -415,11 +417,11 @@ func rdbSaveBackground() int {
 // rdb完成后的收尾工作
 func backgroundSaveDoneHandler() {
 	server.dirty = server.dirty - server.dirtyBeforeBgSave
-	server.lastSave = utils.GetMsTime()
+	server.lastSave = time2.GetMsTime()
 	server.lastBgSaveStatus = REDIS_OK
 	server.rdbChildPid = -1
 	server.changeLoadFactor(LOAD_FACTOR)
-	utils.Info("Background RDB finished successfully")
+	ulog.Info("Background RDB finished successfully")
 }
 
 //-----------------------------------------------------------------------------

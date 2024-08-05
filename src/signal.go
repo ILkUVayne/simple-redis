@@ -1,6 +1,7 @@
 package src
 
 import (
+	"github.com/ILkUVayne/utlis-go/v2/ulog"
 	"os"
 	"os/signal"
 	"simple-redis/utils"
@@ -29,19 +30,19 @@ func SetupSignalHandler(shutdownFunc func(os.Signal)) {
 //-----------------------------------------------------------------------------
 
 func serverShutdown(sig os.Signal) {
-	utils.InfoF("signal-handler Received %s scheduling shutdown...", sig.String())
+	ulog.InfoF("signal-handler Received %s scheduling shutdown...", sig.String())
 
 	if server.saveParams != nil && server.rdbChildPid == -1 {
-		utils.Info("SYNC rdb save start...")
+		ulog.Info("SYNC rdb save start...")
 		rdbSaveBackground()
 	}
 	if server.aofState == REDIS_AOF_ON && server.aofChildPid == -1 {
-		utils.Info("SYNC append only file rewrite start...")
+		ulog.Info("SYNC append only file rewrite start...")
 		rewriteAppendOnlyFileBackground()
 	}
 	pid, err := wait4(-1, 0)
 	if err != nil {
-		utils.ErrorP("wait4 err: ", err)
+		ulog.ErrorP("wait4 err: ", err)
 	}
 	if pid != 0 && pid != -1 {
 		if pid == server.aofChildPid {
@@ -51,7 +52,7 @@ func serverShutdown(sig os.Signal) {
 			backgroundSaveDoneHandler()
 		}
 	}
-	utils.Info("Simple-Redis is now ready to exit, bye bye...")
+	ulog.Info("Simple-Redis is now ready to exit, bye bye...")
 	utils.Exit(0)
 }
 

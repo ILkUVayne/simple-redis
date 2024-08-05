@@ -2,6 +2,8 @@ package src
 
 import (
 	"fmt"
+	"github.com/ILkUVayne/utlis-go/v2/time"
+	"github.com/ILkUVayne/utlis-go/v2/ulog"
 	"os"
 	"simple-redis/utils"
 )
@@ -143,7 +145,7 @@ func initServer() {
 		server.aofFilename = utils.PersistenceFile(REDIS_AOF_DEFAULT)
 		fd, err := os.OpenFile(server.aofFilename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 		if err != nil {
-			utils.Error("Can't open the append-only file: ", err)
+			ulog.Error("Can't open the append-only file: ", err)
 		}
 		server.aofFd = fd
 		server.aofRewritePerc = REDIS_AOF_REWRITE_PERC
@@ -155,14 +157,14 @@ func initServer() {
 }
 
 func loadDataFromDisk() {
-	start := utils.GetMsTime()
+	start := time.GetMsTime()
 	if server.aofState == REDIS_AOF_ON {
 		loadAppendOnlyFile(server.aofFilename)
-		utils.InfoF("DB loaded from append only file: %.3f seconds", float64(utils.GetMsTime()-start)/1000)
+		ulog.InfoF("DB loaded from append only file: %.3f seconds", float64(time.GetMsTime()-start)/1000)
 		return
 	}
 	rdbLoad(&server.rdbFilename)
-	utils.InfoF("DB loaded from disk: %.3f seconds", float64(utils.GetMsTime()-start)/1000)
+	ulog.InfoF("DB loaded from disk: %.3f seconds", float64(time.GetMsTime()-start)/1000)
 }
 
 func ServerStart() {
@@ -174,12 +176,12 @@ func ServerStart() {
 	initSharedObjects()
 	// init server
 	initServer()
-	utils.Info("* Server initialized")
+	ulog.Info("* Server initialized")
 	// load data from rdb or aof
 	loadDataFromDisk()
 	// set signal handle
 	SetupSignalHandler(serverShutdown)
 	// aeMain loop
-	utils.InfoF("* server started, The server is now ready to accept connections on port %d", server.port)
+	ulog.InfoF("* server started, The server is now ready to accept connections on port %d", server.port)
 	aeMain(server.el)
 }

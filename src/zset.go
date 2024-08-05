@@ -1,9 +1,8 @@
 package src
 
 import (
-	"errors"
+	"github.com/ILkUVayne/utlis-go/v2/str"
 	"math/rand"
-	"simple-redis/utils"
 )
 
 //-----------------------------------------------------------------------------
@@ -19,8 +18,8 @@ type zRangeSpec struct {
 
 func parseParentheses(s *string) (float64, int, error) {
 	var i float64
-	if utils.String2Float64(s, &i) == REDIS_ERR {
-		return 0, 0, errors.New("zset range invalid")
+	if err := str.String2Float64(s, &i); err != nil {
+		return 0, 0, err
 	}
 	return i, 1, nil
 }
