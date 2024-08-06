@@ -84,6 +84,11 @@ func createSRClient(fd int) *SRedisClient {
 	return c
 }
 
+// return a fake client,client.fd == FAKE_CLIENT_FD
+func createFakeClient() *SRedisClient {
+	return createSRClient(FAKE_CLIENT_FD)
+}
+
 func freeArgs(c *SRedisClient) {
 	for _, arg := range c.args {
 		arg.decrRefCount()

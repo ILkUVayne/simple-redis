@@ -163,7 +163,7 @@ func loadDataFromDisk() {
 		ulog.InfoF("DB loaded from append only file: %.3f seconds", float64(time.GetMsTime()-start)/1000)
 		return
 	}
-	rdbLoad(&server.rdbFilename)
+	rdbLoad(server.rdbFilename)
 	ulog.InfoF("DB loaded from disk: %.3f seconds", float64(time.GetMsTime()-start)/1000)
 }
 
@@ -183,5 +183,6 @@ func ServerStart() {
 	SetupSignalHandler(serverShutdown)
 	// aeMain loop
 	ulog.InfoF("* server started, The server is now ready to accept connections on port %d", server.port)
+	// aeMain loop
 	aeMain(server.el)
 }

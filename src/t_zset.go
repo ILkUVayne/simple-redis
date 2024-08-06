@@ -18,7 +18,7 @@ func zAddGenericCommand(c *SRedisClient, incr bool) {
 
 	scores := make([]float64, elements)
 	for i := 0; i < elements; i++ {
-		if c.args[2+i*2].getFloat64FromObjectOrReply(c, &scores[i], nil) == REDIS_ERR {
+		if c.args[2+i*2].getFloat64FromObjectOrReply(c, &scores[i], "") == REDIS_ERR {
 			return
 		}
 	}
@@ -85,8 +85,8 @@ func zRangeGenericCommand(c *SRedisClient, reverse bool) {
 	key := c.args[1]
 	withscores := false
 
-	if c.args[2].getLongLongFromObjectOrReply(c, &start, nil) != REDIS_OK ||
-		c.args[3].getLongLongFromObjectOrReply(c, &end, nil) != REDIS_OK {
+	if c.args[2].getLongLongFromObjectOrReply(c, &start, "") != REDIS_OK ||
+		c.args[3].getLongLongFromObjectOrReply(c, &end, "") != REDIS_OK {
 		return
 	}
 	if len(c.args) > 5 || (len(c.args) == 5 && c.args[4].strVal() != "withscores") {

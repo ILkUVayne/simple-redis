@@ -101,7 +101,6 @@ func (el *aeEventLoop) addFileEvent(fd int, mask FeType, proc aeFileProc, client
 	fileEvent.mask = mask
 	fileEvent.clientData = clientData
 	el.fileEvent[feKey(fd, mask)] = fileEvent
-	//utils.InfoF("simple-redis server: add fileEvent fd %d,mask %d: ", fd, mask)
 }
 
 // epoll_ctl and remove file event from aeEventLoop.fileEvent
@@ -122,7 +121,6 @@ func (el *aeEventLoop) removeFileEvent(fd int, mask FeType) {
 	}
 	// ae ctl
 	el.fileEvent[feKey(fd, mask)] = nil
-	//utils.InfoF("simple-redis server: remove fileEvent fd %d,mask %d: ", fd, mask)
 }
 
 // add time event to aeEventLoop.timeEvent
@@ -184,7 +182,6 @@ func (el *aeEventLoop) aeProcessEvents() {
 			ulog.ErrorP("simple-redis server: ae epoll_wait err: ", err)
 		}
 	}
-	//utils.InfoF("simple-redis server: ae epoll get %d events: ", n)
 	// 收集可执行事件
 	// 收集文件事件
 	var fileEvents []*aeFileEvent
