@@ -29,11 +29,11 @@ func appendServerSaveParams(val string) {
 
 	var intVal int64
 	sp := new(saveParam)
-	if str.String2Int64(&seconds, &intVal) != nil {
+	if str.String2Int64(seconds, &intVal) != nil {
 		ulog.Error("Invalid save seconds parameters: ", seconds)
 	}
 	sp.seconds = int(intVal)
-	if str.String2Int64(&changes, &intVal) != nil {
+	if str.String2Int64(changes, &intVal) != nil {
 		ulog.Error("Invalid save changes parameters: ", changes)
 	}
 	sp.changes = int(intVal)
@@ -121,7 +121,7 @@ func parse(f *os.File) {
 				fieldVal.SetString(value)
 			case reflect.Int, reflect.Int64:
 				var intVal int64
-				if str.String2Int64(&value, &intVal) == nil {
+				if str.String2Int64(value, &intVal) == nil {
 					fieldVal.SetInt(intVal)
 				}
 			case reflect.Bool:

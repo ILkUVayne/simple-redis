@@ -8,7 +8,9 @@ import (
 	"syscall"
 )
 
-func SetupSignalHandler(shutdownFunc func(os.Signal)) {
+type signalHandler func(sig os.Signal)
+
+func SetupSignalHandler(shutdownFunc signalHandler) {
 	closeSignalChan := make(chan os.Signal, 1)
 	signal.Notify(closeSignalChan,
 		os.Kill,

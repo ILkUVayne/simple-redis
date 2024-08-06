@@ -23,3 +23,25 @@ func TestStrType(t *testing.T) {
 		t.Error("strObj.strType() = ", strObj.strType())
 	}
 }
+
+func TestIntVal(t *testing.T) {
+	o := createSRobj(SR_STR, "15")
+	n, err := o.intVal()
+	if err != nil {
+		t.Error(err)
+	}
+	if n != 15 {
+		t.Error("intVal err: n = ", n)
+	}
+}
+
+func TestFloatVal(t *testing.T) {
+	o := createSRobj(SR_STR, "15.5")
+	n, err := o.floatVal()
+	if err != nil {
+		t.Error(err)
+	}
+	if n != 15.5 {
+		t.Error("intVal err: n = ", n)
+	}
+}

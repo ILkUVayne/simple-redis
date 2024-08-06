@@ -16,7 +16,7 @@ type zRangeSpec struct {
 
 // ================================ Parse Range =================================
 
-func parseParentheses(s *string) (float64, int, error) {
+func parseParentheses(s string) (float64, int, error) {
 	var i float64
 	if err := str.String2Float64(s, &i); err != nil {
 		return 0, 0, err

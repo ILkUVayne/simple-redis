@@ -72,8 +72,7 @@ func (s *SRobj) intVal() (int64, error) {
 	}
 	if s.encoding == REDIS_ENCODING_RAW {
 		var i int64
-		str := s.strVal()
-		return i, str2.String2Int64(&str, &i)
+		return i, str2.String2Int64(s.strVal(), &i)
 	}
 	panic("Unknown string encoding")
 }
@@ -87,8 +86,7 @@ func (s *SRobj) floatVal() (float64, error) {
 	}
 	if s.encoding == REDIS_ENCODING_RAW {
 		var i float64
-		str := s.strVal()
-		return i, str2.String2Float64(&str, &i)
+		return i, str2.String2Float64(s.strVal(), &i)
 	}
 	panic("Unknown string encoding")
 }
@@ -129,8 +127,7 @@ func (s *SRobj) tryObjectEncoding() {
 	}
 	// Check if we can represent this string as a long integer
 	var i int64
-	str := s.strVal()
-	if str2.String2Int64(&str, &i) != nil {
+	if str2.String2Int64(s.strVal(), &i) != nil {
 		return
 	}
 	s.encoding = REDIS_ENCODING_INT
@@ -144,8 +141,7 @@ func (s *SRobj) getDecodedObject() *SRobj {
 	}
 	if s.Typ == SR_STR && s.encoding == REDIS_ENCODING_INT {
 		var intVal int64
-		str := s.strVal()
-		if err := str2.String2Int64(&str, &intVal); err != nil {
+		if err := str2.String2Int64(s.strVal(), &intVal); err != nil {
 			ulog.Error("getDecodedObject err: ", err)
 		}
 		return createFromInt(intVal)
@@ -175,30 +171,28 @@ func (s *SRobj) getFloat64FromObject(target *float64) error {
 	return err
 }
 
-func (s *SRobj) getFloat64FromObjectOrReply(c *SRedisClient, target *float64, msg *string) int {
+func (s *SRobj) getFloat64FromObjectOrReply(c *SRedisClient, target *float64, msg string) int {
 	var value float64
 	if err := s.getFloat64FromObject(&value); err != nil {
-		if msg != nil {
-			c.addReplyError(*msg)
-			return REDIS_ERR
+		if msg == "" {
+			msg = "value is not an float or out of range"
 		}
 		ulog.ErrorP(err)
-		c.addReplyError("value is not an float or out of range")
+		c.addReplyError(msg)
 		return REDIS_ERR
 	}
 	*target = value
 	return REDIS_OK
 }
 
-func (s *SRobj) getLongLongFromObjectOrReply(c *SRedisClient, target *int64, msg *string) int {
+func (s *SRobj) getLongLongFromObjectOrReply(c *SRedisClient, target *int64, msg string) int {
 	var value int64
 	if err := s.getLongLongFromObject(&value); err != nil {
-		if msg != nil {
-			c.addReplyError(*msg)
-			return REDIS_ERR
+		if msg == "" {
+			msg = "value is not an integer or out of range"
 		}
 		ulog.ErrorP(err)
-		c.addReplyError("value is not an integer or out of range")
+		c.addReplyError(msg)
 		return REDIS_ERR
 	}
 	*target = value

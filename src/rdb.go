@@ -203,8 +203,8 @@ func rdbLoadSetObject(obj parser.RedisObject) {
 }
 
 // 加载rdb数据到内存中
-func rdbLoad(filename *string) {
-	fd, err := os.OpenFile(*filename, os.O_RDONLY|os.O_CREATE, 0666)
+func rdbLoad(filename string) {
+	fd, err := os.OpenFile(filename, os.O_RDONLY|os.O_CREATE, 0666)
 	if err != nil {
 		ulog.Error("Can't open the rdb file: ", err)
 	}
@@ -267,8 +267,7 @@ func writeListObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 
 	checkListEncoding(val)
 	// encoding is linked list
-	l := assertList(val)
-	li := l.listRewind()
+	li := assertList(val).listRewind()
 	for ln := li.listNext(); ln != nil; ln = li.listNext() {
 		eleObj := ln.nodeValue()
 		values = append(values, []byte(eleObj.strVal()))
@@ -330,10 +329,10 @@ func writeZSetObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 }
 
 // 保存当前内存中的数据到rdb
-func rdbSave(filename *string) int {
+func rdbSave(filename string) int {
 	if server.db.dbDataSize() == 0 {
-		_ = os.Remove(*filename)
-		_, _ = os.Create(*filename)
+		_ = os.Remove(filename)
+		_, _ = os.Create(filename)
 		ulog.Info("database is empty")
 		return REDIS_OK
 	}
@@ -366,7 +365,7 @@ func rdbSave(filename *string) int {
 		ulog.ErrorP("rdbSave err: ", err)
 		return REDIS_ERR
 	}
-	if err = os.Rename(tmpFile, *filename); err != nil {
+	if err = os.Rename(tmpFile, filename); err != nil {
 		ulog.ErrorP("Error moving temp DB file on the final destination: ", err)
 		_ = os.Remove(tmpFile)
 		return REDIS_ERR
@@ -400,7 +399,7 @@ func rdbSaveBackground() int {
 		if server.fd > 0 {
 			Close(server.fd)
 		}
-		if rdbSave(&server.rdbFilename) == REDIS_OK {
+		if rdbSave(server.rdbFilename) == REDIS_OK {
 			utils.Exit(0)
 		}
 		utils.Exit(1)
@@ -434,7 +433,7 @@ func saveCommand(c *SRedisClient) {
 		c.addReplyError("Background save already in progress")
 		return
 	}
-	if rdbSave(&server.rdbFilename) == REDIS_OK {
+	if rdbSave(server.rdbFilename) == REDIS_OK {
 		c.addReply(shared.ok)
 		return
 	}

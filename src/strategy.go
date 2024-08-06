@@ -209,7 +209,7 @@ func strFormatHandle(reply *sRedisReply) string {
 
 // ================================ Parse Range =================================
 
-type parseRangeFunc func(s *string) (float64, int, error)
+type parseRangeFunc func(s string) (float64, int, error)
 
 var parseRangeFuncMaps = map[uint8]parseRangeFunc{
 	'(': parseParentheses,
@@ -224,5 +224,5 @@ func _parseRange(obj *SRobj) (float64, int, error) {
 		return val, 0, nil
 	}
 	str = str[1:]
-	return fn(&str)
+	return fn(str)
 }

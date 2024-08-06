@@ -12,7 +12,7 @@ func incrDecrCommand(c *SRedisClient, incr int64) {
 		return
 	}
 	var value int64
-	if o.getLongLongFromObjectOrReply(c, &value, nil) == REDIS_ERR {
+	if o.getLongLongFromObjectOrReply(c, &value, "") == REDIS_ERR {
 		return
 	}
 	oldValue := value

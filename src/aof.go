@@ -47,11 +47,6 @@ func (s *SRedisServer) aofRewriteBufferReset() {
 // aof loading
 // -----------------------------------------------------------------------------
 
-// return a fake client,client.fd == -1
-func createFakeClient() *SRedisClient {
-	return createSRClient(FAKE_CLIENT_FD)
-}
-
 // if expired,del key
 func aofCheckExpire(args []*SRobj) bool {
 	if args[0].strVal() != EXPIRE {
@@ -82,7 +77,7 @@ func loadAppendOnlyFile(name string) {
 		str := scanner.Text()
 		if str[0] == '*' {
 			str = str[1:]
-			if str2.String2Int64(&str, &aLen) != nil {
+			if str2.String2Int64(str, &aLen) != nil {
 				ulog.Error("Bad file format reading the append only file")
 			}
 			continue
@@ -193,8 +188,8 @@ func aofUpdateCurrentSize() {
 // rewrite command to file.
 //
 // s is command string
-func rewrite(f *os.File, s *string) {
-	if _, err := io.WriteString(f, *s); err != nil {
+func rewrite(f *os.File, s string) {
+	if _, err := io.WriteString(f, s); err != nil {
 		ulog.Error("rewriteStringObject err: ", err)
 	}
 }
@@ -202,16 +197,15 @@ func rewrite(f *os.File, s *string) {
 // e.g. if val == "get" while write "$3\r\nget\r\n"
 func rewriteBulkObject(f *os.File, val *SRobj) {
 	strVal := val.strVal()
-	cmd := fmt.Sprintf(RESP_BULK, len(strVal), strVal)
-	rewrite(f, &cmd)
+	rewrite(f, fmt.Sprintf(RESP_BULK, len(strVal), strVal))
 }
 
 // e.g. if cmd == "*3\r\n$3\r\nSET\r\n"
 // val == ["name", "hello world"]
 //
 // while write "*3\r\n$3\r\nSET\r\n$4\r\nname\r\n$11\r\nhello world\r\n"
-func rewriteObject(f *os.File, cmd *string, val ...*SRobj) {
-	if cmd != nil {
+func rewriteObject(f *os.File, cmd string, val ...*SRobj) {
+	if cmd != "" {
 		rewrite(f, cmd)
 	}
 
@@ -244,16 +238,14 @@ func checkItems(count, items *int) {
 
 // rewrite string object to file
 func rewriteStringObject(f *os.File, key, val *SRobj) {
-	cmd := RESP_STR
 	// set key value
-	rewriteObject(f, &cmd, key, val)
+	rewriteObject(f, RESP_STR, key, val)
 }
 
 // rewrite expire object to file
 func rewriteExpireObject(f *os.File, key, val *SRobj) {
-	cmd := RESP_EXPIRE
 	// expire key expireTime
-	rewriteObject(f, &cmd, key, val)
+	rewriteObject(f, RESP_EXPIRE, key, val)
 }
 
 // rewrite list object to file
@@ -268,10 +260,10 @@ func rewriteListObject(f *os.File, key, val *SRobj) {
 		if count == 0 {
 			cmd := fmt.Sprintf(RESP_LIST_RPUSH, 2+getItems(items))
 			// add key
-			rewriteObject(f, &cmd, key)
+			rewriteObject(f, cmd, key)
 		}
 		// add val
-		rewriteObject(f, nil, eleObj)
+		rewriteObject(f, "", eleObj)
 		checkItems(&count, &items)
 	}
 }
@@ -286,10 +278,10 @@ func rewriteSetObject(f *os.File, key, val *SRobj) {
 			if count == 0 {
 				cmd := fmt.Sprintf(RESP_SET, 2+getItems(items))
 				// add key
-				rewriteObject(f, &cmd, key)
+				rewriteObject(f, cmd, key)
 			}
 			// add val
-			rewriteObject(f, nil, createFromInt(intVal))
+			rewriteObject(f, "", createFromInt(intVal))
 			checkItems(&count, &items)
 		}
 		return
@@ -301,10 +293,10 @@ func rewriteSetObject(f *os.File, key, val *SRobj) {
 		if count == 0 {
 			cmd := fmt.Sprintf(RESP_SET, 2+getItems(items))
 			// add key
-			rewriteObject(f, &cmd, key)
+			rewriteObject(f, cmd, key)
 		}
 		// add val
-		rewriteObject(f, nil, eleObj)
+		rewriteObject(f, "", eleObj)
 		checkItems(&count, &items)
 	}
 	di.dictReleaseIterator()
@@ -322,12 +314,12 @@ func rewriteZSetObject(f *os.File, key, val *SRobj) {
 		if count == 0 {
 			cmd := fmt.Sprintf(RESP_ZSET, 2+getItems(items)*2)
 			// add key
-			rewriteObject(f, &cmd, key)
+			rewriteObject(f, cmd, key)
 		}
 		sf, _ := score.floatVal()
 		str := strconv.FormatFloat(sf, 'f', 2, 64)
 		// add zSetScore and zSetVal
-		rewriteObject(f, nil, createSRobj(SR_STR, str), eleObj)
+		rewriteObject(f, "", createSRobj(SR_STR, str), eleObj)
 		checkItems(&count, &items)
 	}
 	di.dictReleaseIterator()
@@ -341,7 +333,7 @@ func rewriteDictObject(f *os.File, key, val *SRobj) {
 	for de := di.dictNext(); de != nil; de = di.dictNext() {
 		cmd := fmt.Sprintf(RESP_HASH_HSET, 4)
 		// add key hashKey hashVal
-		rewriteObject(f, &cmd, key, de.getKey(), de.getVal())
+		rewriteObject(f, cmd, key, de.getKey(), de.getVal())
 	}
 	di.dictReleaseIterator()
 }
