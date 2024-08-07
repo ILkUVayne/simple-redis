@@ -451,6 +451,31 @@ set
 (error) ERR: Operation against a key holding the wrong kind of value
 ~~~
 
+### hlen
+
+**hlen key**
+
+Get the number of fields in the hash table.
+
+If the key does not exist, return 0.
+
+When the key exists but is not a hash type, an error is returned.
+
+~~~bash
+127.0.0.1:6379> hlen h1
+(integer) 0
+127.0.0.1:6379> hset h1 k1 aaa
+(integer) 1
+127.0.0.1:6379> hset h1 k2 bbb
+(integer) 1
+127.0.0.1:6379> hlen h1
+(integer) 2
+127.0.0.1:6379> set name aaa
+OK
+127.0.0.1:6379> hlen name
+(error) ERR: Operation against a key holding the wrong kind of value
+~~~
+
 ## set
 
 ### sadd

@@ -60,3 +60,11 @@ func hExistsCommand(c *SRedisClient) {
 	}
 	c.addReply(shared.czero)
 }
+
+// hlen key
+func hLenCommand(c *SRedisClient) {
+	o := c.db.lookupKeyReadOrReply(c, c.args[1], shared.czero)
+	if o != nil && o.checkType(c, SR_DICT) {
+		c.addReplyLongLong(hashTypeLength(o))
+	}
+}
