@@ -476,6 +476,24 @@ OK
 (error) ERR: Operation against a key holding the wrong kind of value
 ~~~
 
+### hkeys
+
+**hkeys key**
+
+Return all field in the hash table, When the key does not exist, return an empty list
+
+~~~bash
+127.0.0.1:6379> hkeys h1
+(empty array)
+127.0.0.1:6379> hset h1 k1 aaa
+(integer) 1
+127.0.0.1:6379> hset h1 k2 bbb
+(integer) 1
+127.0.0.1:6379> hkeys h1
+1) "k1"
+2) "k2"
+~~~
+
 ## set
 
 ### sadd
@@ -572,7 +590,7 @@ By using the withscores option, return the member and its score value together.
 
 ~~~bash
 127.0.0.1:6379> zrange z1 0 5 withscores
-(nil)
+(empty array)
 127.0.0.1:6379> zrange zs 0 5 withscores
 1) "z2"
 2) "40.00"

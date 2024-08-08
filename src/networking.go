@@ -166,7 +166,7 @@ func (c *SRedisClient) doReply() {
 // 将查询结果添加到c.reply中,并创建SendReplyToClient事件
 func (c *SRedisClient) addReply(data *SRobj) {
 	c.pushReply(data, AL_START_TAIL)
-	if c.replyReady && !c.isFake() {
+	if c.replyReady && !c.isFake() && c.reply.len() > 0 {
 		server.el.addFileEvent(c.fd, AE_WRITEABLE, SendReplyToClient, c)
 	}
 }
@@ -209,7 +209,8 @@ func (c *SRedisClient) addReplyLongLongWithPrefix(ll int64, prefix string) {
 	c.addReplyStr(str)
 }
 
-func (c *SRedisClient) addReplyMultiBulkLen(length int64) {
+func (c *SRedisClient) addReplyMultiBulkLen(length int64, replyReady bool) {
+	c.replyReady = replyReady
 	c.addReplyLongLongWithPrefix(length, "*")
 }
 
@@ -240,6 +241,5 @@ func (c *SRedisClient) addDeferredMultiBulkLength() *node {
 func (c *SRedisClient) setDeferredMultiBulkLength(n *node, length int) {
 	if n != nil {
 		n.data = createSRobj(SR_STR, fmt.Sprintf("*%d\r\n", length))
-		c.doReply()
 	}
 }
