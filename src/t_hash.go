@@ -99,3 +99,13 @@ func hLenCommand(c *SRedisClient) {
 func hKeysCommand(c *SRedisClient) {
 	genericHGetAllCommand(c, OBJ_HASH_KEY)
 }
+
+// HVALS key
+func hValsCommand(c *SRedisClient) {
+	genericHGetAllCommand(c, OBJ_HASH_VALUE)
+}
+
+// HGETALL key
+func hGetAllCommand(c *SRedisClient) {
+	genericHGetAllCommand(c, OBJ_HASH_KEY|OBJ_HASH_VALUE)
+}

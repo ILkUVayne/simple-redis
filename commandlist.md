@@ -494,6 +494,44 @@ Return all field in the hash table, When the key does not exist, return an empty
 2) "k2"
 ~~~
 
+### hvals
+
+**hvals key**
+
+Return all values in the hash table, When the key does not exist, return an empty list
+
+~~~bash
+127.0.0.1:6379> hvals h1
+(empty array)   
+127.0.0.1:6379> hset h1 k1 aaa
+(integer) 1     
+127.0.0.1:6379> hset h1 k2 bbb
+(integer) 1     
+127.0.0.1:6379> hvals h1
+1) "aaa"
+2) "bbb"
+~~~
+
+### hgetall
+
+**hgetall key**
+
+Return all field and values in the hash table, When the key does not exist, return an empty list
+
+~~~bash
+127.0.0.1:6379> hgetall h1
+(empty array)
+127.0.0.1:6379> hset h1 k1 aaa
+(integer) 1
+127.0.0.1:6379> hset h1 k2 bbb
+(integer) 1
+127.0.0.1:6379> hgetall h1
+1) "k1"
+2) "aaa"
+3) "k2"
+4) "bbb"
+~~~
+
 ## set
 
 ### sadd

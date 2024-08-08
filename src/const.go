@@ -156,6 +156,8 @@ const (
 	H_EXISTS     = "hexists"
 	H_LEN        = "hlen"
 	H_KEYS       = "hkeys"
+	H_VALS       = "hvals"
+	H_GETALL     = "hgetall"
 )
 
 //-----------------------------------------------------------------------------

@@ -122,5 +122,7 @@ var commandMaps = map[string]SRedisCommand{
 	H_EXISTS: {H_EXISTS, hExistsCommand, 3},
 	H_LEN:    {H_LEN, hLenCommand, 2},
 	H_KEYS:   {H_KEYS, hKeysCommand, 2},
+	H_VALS:   {H_VALS, hValsCommand, 2},
+	H_GETALL: {H_GETALL, hGetAllCommand, 2},
 	// to be continued ! ! !
 }
