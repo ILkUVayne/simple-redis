@@ -4,6 +4,32 @@ package src
 // Hash type commands
 //-----------------------------------------------------------------------------
 
+func genericHGetAllCommand(c *SRedisClient, flags int) {
+	o := c.db.lookupKeyReadOrReply(c, c.args[1], shared.emptyMultiBulk)
+	if o == nil || !o.checkType(c, SR_DICT) {
+		return
+	}
+	multiplier := int64(0)
+	if flags&OBJ_HASH_KEY == OBJ_HASH_KEY {
+		multiplier++
+	}
+	if flags&OBJ_HASH_VALUE == OBJ_HASH_VALUE {
+		multiplier++
+	}
+	length := hashTypeLength(o) * multiplier
+	c.addReplyMultiBulkLen(length, false)
+
+	hi := assertDict(o).dictGetIterator()
+	for de := hi.dictNext(); de != nil; de = hi.dictNext() {
+		if flags&OBJ_HASH_KEY == OBJ_HASH_KEY {
+			c.addReplyBulk(de.getKey())
+		}
+		if flags&OBJ_HASH_VALUE == OBJ_HASH_VALUE {
+			c.addReplyBulk(de.getVal())
+		}
+	}
+}
+
 // hset key field value
 func hSetCommand(c *SRedisClient) {
 	o := hashTypeLookupWriteOrCreate(c, c.args[1])
@@ -67,4 +93,19 @@ func hLenCommand(c *SRedisClient) {
 	if o != nil && o.checkType(c, SR_DICT) {
 		c.addReplyLongLong(hashTypeLength(o))
 	}
+}
+
+// HKEYS key
+func hKeysCommand(c *SRedisClient) {
+	genericHGetAllCommand(c, OBJ_HASH_KEY)
+}
+
+// HVALS key
+func hValsCommand(c *SRedisClient) {
+	genericHGetAllCommand(c, OBJ_HASH_VALUE)
+}
+
+// HGETALL key
+func hGetAllCommand(c *SRedisClient) {
+	genericHGetAllCommand(c, OBJ_HASH_KEY|OBJ_HASH_VALUE)
 }

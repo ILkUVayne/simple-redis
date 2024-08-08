@@ -140,8 +140,7 @@ func zRangeGenericCommand(c *SRedisClient, reverse bool) {
 	if withscores {
 		arrayLen *= 2
 	}
-	c.replyReady = false
-	c.addReplyMultiBulkLen(arrayLen)
+	c.addReplyMultiBulkLen(arrayLen, false)
 	for ; rangeLen > 0; rangeLen-- {
 		ele := ln.obj
 		c.addReplyBulk(ele)
@@ -154,7 +153,6 @@ func zRangeGenericCommand(c *SRedisClient, reverse bool) {
 			ln = ln.level[0].forward
 		}
 	}
-	c.doReply()
 }
 
 // zrange key min max [withscores]

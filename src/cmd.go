@@ -67,6 +67,8 @@ func processCommand(c *SRedisClient) {
 func call(c *SRedisClient) {
 	dirty := server.dirty
 	c.cmd.proc(c)
+	// try doReply,if c.reply.len > 0
+	c.doReply()
 	// aof
 	dirty = server.dirty - dirty
 	if dirty > 0 {
@@ -119,5 +121,8 @@ var commandMaps = map[string]SRedisCommand{
 	H_DEL:    {H_DEL, hDelCommand, -3},
 	H_EXISTS: {H_EXISTS, hExistsCommand, 3},
 	H_LEN:    {H_LEN, hLenCommand, 2},
+	H_KEYS:   {H_KEYS, hKeysCommand, 2},
+	H_VALS:   {H_VALS, hValsCommand, 2},
+	H_GETALL: {H_GETALL, hGetAllCommand, 2},
 	// to be continued ! ! !
 }

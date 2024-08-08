@@ -155,6 +155,9 @@ const (
 	H_DEL        = "hdel"
 	H_EXISTS     = "hexists"
 	H_LEN        = "hlen"
+	H_KEYS       = "hkeys"
+	H_VALS       = "hvals"
+	H_GETALL     = "hgetall"
 )
 
 //-----------------------------------------------------------------------------
@@ -238,6 +241,9 @@ const (
 	BG_PERSISTENCE_LOAD_FACTOR       = 5 // BG_PERSISTENCE_LOAD_FACTOR bgsave或者bgrewriteaof 的负载因子
 
 	HT_MIN_FILL = 10
+
+	OBJ_HASH_KEY   = 1
+	OBJ_HASH_VALUE = 2
 )
 
 //-----------------------------------------------------------------------------
