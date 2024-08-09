@@ -115,6 +115,7 @@ var commandMaps = map[string]SRedisCommand{
 	L_PUSH: {L_PUSH, lPushCommand, -3},
 	R_POP:  {R_POP, rPopCommand, 2},
 	L_POP:  {L_POP, lPopCommand, 2},
+	L_LEN:  {L_LEN, lLenCommand, 2},
 	// hash
 	H_SET:    {H_SET, hSetCommand, 4},
 	H_GET:    {H_GET, hGetCommand, 3},

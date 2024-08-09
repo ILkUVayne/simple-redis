@@ -377,6 +377,23 @@ Remove and return the header element of the list key.
 "7k7k.com"
 ~~~
 
+### llen
+
+**llen key**
+
+Returns the length of the list stored at key. If key does not exist, it is interpreted as an empty list and 0 is returned. An error is returned when the value stored at key is not a list.
+
+~~~bash
+127.0.0.1:6379> rpush list1 foo
+(integer) 1
+127.0.0.1:6379> rpush list1 bar
+(integer) 2
+127.0.0.1:6379> llen list1
+(integer) 2
+127.0.0.1:6379> llen list2
+(integer) 0
+~~~
+
 ## hash
 
 ### hset

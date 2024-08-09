@@ -25,16 +25,6 @@ func pushGenericCommand(c *SRedisClient, where int) {
 	server.incrDirtyCount(c, pushed)
 }
 
-// lpush key value [value ...]
-func lPushCommand(c *SRedisClient) {
-	pushGenericCommand(c, AL_START_HEAD)
-}
-
-// rpush key value [value ...]
-func rPushCommand(c *SRedisClient) {
-	pushGenericCommand(c, AL_START_TAIL)
-}
-
 func popGenericCommand(c *SRedisClient, where int) {
 	lObj := c.db.lookupKeyReadOrReply(c, c.args[1], nil)
 	if lObj == nil || !lObj.checkType(c, SR_LIST) {
@@ -54,6 +44,16 @@ func popGenericCommand(c *SRedisClient, where int) {
 	server.incrDirtyCount(c, 1)
 }
 
+// lpush key value [value ...]
+func lPushCommand(c *SRedisClient) {
+	pushGenericCommand(c, AL_START_HEAD)
+}
+
+// rpush key value [value ...]
+func rPushCommand(c *SRedisClient) {
+	pushGenericCommand(c, AL_START_TAIL)
+}
+
 // lpop key
 func lPopCommand(c *SRedisClient) {
 	popGenericCommand(c, AL_START_HEAD)
@@ -62,4 +62,12 @@ func lPopCommand(c *SRedisClient) {
 // rpop key
 func rPopCommand(c *SRedisClient) {
 	popGenericCommand(c, AL_START_TAIL)
+}
+
+// LLEN key
+func lLenCommand(c *SRedisClient) {
+	o := c.db.lookupKeyReadOrReply(c, c.args[1], shared.czero)
+	if o != nil && o.checkType(c, SR_LIST) {
+		c.addReplyLongLong(int64(listTypeLength(o)))
+	}
 }
