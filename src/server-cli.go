@@ -7,7 +7,6 @@ import (
 	"github.com/ILkUVayne/utlis-go/v2/str"
 	"github.com/ILkUVayne/utlis-go/v2/ulog"
 	"simple-redis/utils"
-	"strings"
 )
 
 var context *sRedisContext
@@ -83,6 +82,13 @@ func printPrompt() {
 	fmt.Println(reader.str)
 }
 
+// Trim args
+//
+// e.g. "set" '"name"' "'aaa'" => set "name" 'aaa'
+func cliTrimArgs(line string) []string {
+	return splitArgs(line)
+}
+
 /*------------------------------------------------------------------------------
  * User interface
  *--------------------------------------------------------------------------- */
@@ -101,14 +107,14 @@ func repl() {
 	cliRefreshPrompt()
 	for {
 		s := cliInputLine()
-		if len(s) == 0 {
+		fields := cliTrimArgs(s)
+		if len(s) == 0 || fields == nil {
 			fmt.Println("Invalid argument(s)")
 			continue
 		}
 		if history {
 			_, _ = linenoise.AddHistory(s), linenoise.SaveHistory(hf)
 		}
-		fields := strings.Fields(s)
 		if fields[0] == "quit" || fields[0] == "exit" {
 			utils.Exit(0)
 		}

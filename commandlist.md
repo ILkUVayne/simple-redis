@@ -262,6 +262,8 @@ Set the value stored in the key. When the key has already stored other values, t
 ~~~bash
 127.0.0.1:6379> set k1 hello
 OK
+127.0.0.1:6379> set k2 "hello world"
+OK
 ~~~
 
 ### get 
@@ -273,6 +275,8 @@ Returns the string value stored by the key. If the key does not exist, it return
 ~~~bash
 127.0.0.1:6379> get k1
 "hello"
+127.0.0.1:6379> get k2
+"hello world"
 ~~~
 
 ### incr
@@ -462,6 +466,8 @@ Check if the given field exists in the hash table key.
 (integer) 0
 127.0.0.1:6379> hexists h3 k2
 (integer) 0
+127.0.0.1:6379> sadd s1 as asdas
+(integer) 2
 127.0.0.1:6379> type s1
 set
 127.0.0.1:6379> hexists s1 k2

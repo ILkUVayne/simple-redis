@@ -31,6 +31,12 @@ const (
 	REDIS_BGSAVE_RETRY_DELAY = 5
 
 	CONFIG = "./sredis.conf"
+
+	// splitArgs status
+
+	SPA_CONTINUE   = 1
+	SPA_DONE       = 2
+	SPA_TERMINATED = 3
 )
 
 //-----------------------------------------------------------------------------

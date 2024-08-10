@@ -140,8 +140,8 @@ func inlineBufHandle(c *SRedisClient) (bool, error) {
 	if idx < 0 {
 		return false, err
 	}
-	// 通过空格分割字符串
-	strs := strings.Split(string(c.queryBuf[:idx]), " ")
+	// 分割字符串
+	strs := splitArgs(string(c.queryBuf[:idx]))
 	c.queryBuf = c.queryBuf[idx+2:]
 	c.queryLen -= idx + 2
 	c.args = make([]*SRobj, len(strs))
