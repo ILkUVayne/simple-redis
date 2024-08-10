@@ -262,6 +262,8 @@ Set the value stored in the key. When the key has already stored other values, t
 ~~~bash
 127.0.0.1:6379> set k1 hello
 OK
+127.0.0.1:6379> set k2 "hello world"
+OK
 ~~~
 
 ### get 
@@ -273,6 +275,8 @@ Returns the string value stored by the key. If the key does not exist, it return
 ~~~bash
 127.0.0.1:6379> get k1
 "hello"
+127.0.0.1:6379> get k2
+"hello world"
 ~~~
 
 ### incr
@@ -377,6 +381,23 @@ Remove and return the header element of the list key.
 "7k7k.com"
 ~~~
 
+### llen
+
+**llen key**
+
+Returns the length of the list stored at key. If key does not exist, it is interpreted as an empty list and 0 is returned. An error is returned when the value stored at key is not a list.
+
+~~~bash
+127.0.0.1:6379> rpush list1 foo
+(integer) 1
+127.0.0.1:6379> rpush list1 bar
+(integer) 2
+127.0.0.1:6379> llen list1
+(integer) 2
+127.0.0.1:6379> llen list2
+(integer) 0
+~~~
+
 ## hash
 
 ### hset
@@ -445,6 +466,8 @@ Check if the given field exists in the hash table key.
 (integer) 0
 127.0.0.1:6379> hexists h3 k2
 (integer) 0
+127.0.0.1:6379> sadd s1 as asdas
+(integer) 2
 127.0.0.1:6379> type s1
 set
 127.0.0.1:6379> hexists s1 k2

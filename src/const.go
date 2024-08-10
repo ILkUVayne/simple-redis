@@ -31,6 +31,12 @@ const (
 	REDIS_BGSAVE_RETRY_DELAY = 5
 
 	CONFIG = "./sredis.conf"
+
+	// splitArgs status
+
+	SPA_CONTINUE   = 1
+	SPA_DONE       = 2
+	SPA_TERMINATED = 3
 )
 
 //-----------------------------------------------------------------------------
@@ -122,6 +128,8 @@ const (
 
 	MAX_EXPIRE = 1000000000
 
+	// db command
+
 	EXPIRE       = "expire"
 	OBJECT       = "object"
 	DEL          = "del"
@@ -136,28 +144,44 @@ const (
 	BGREWRITEAOF = "bgrewriteaof"
 	BGSAVE       = "bgsave"
 	SAVE         = "save"
-	GET          = "get"
-	SET          = "set"
-	INCR         = "incr"
-	DECR         = "decr"
-	Z_ADD        = "zadd"
-	Z_RANGE      = "zrange"
+
+	// string command
+
+	GET  = "get"
+	SET  = "set"
+	INCR = "incr"
+	DECR = "decr"
+
+	// zset command
+
+	Z_ADD   = "zadd"
+	Z_RANGE = "zrange"
+
+	// set command
+
 	S_ADD        = "sadd"
 	SMEMBERS     = "smembers"
 	SINTER       = "sinter"
 	SINTER_STORE = "sinterstore"
-	R_PUSH       = "rpush"
-	L_PUSH       = "lpush"
-	R_POP        = "rpop"
-	L_POP        = "lpop"
-	H_SET        = "hset"
-	H_GET        = "hget"
-	H_DEL        = "hdel"
-	H_EXISTS     = "hexists"
-	H_LEN        = "hlen"
-	H_KEYS       = "hkeys"
-	H_VALS       = "hvals"
-	H_GETALL     = "hgetall"
+
+	// list command
+
+	R_PUSH = "rpush"
+	L_PUSH = "lpush"
+	R_POP  = "rpop"
+	L_POP  = "lpop"
+	L_LEN  = "llen"
+
+	// hash command
+
+	H_SET    = "hset"
+	H_GET    = "hget"
+	H_DEL    = "hdel"
+	H_EXISTS = "hexists"
+	H_LEN    = "hlen"
+	H_KEYS   = "hkeys"
+	H_VALS   = "hvals"
+	H_GETALL = "hgetall"
 )
 
 //-----------------------------------------------------------------------------
