@@ -43,7 +43,7 @@ func checkTerminated(line, key string, i int) (status int) {
 	return SPA_CONTINUE
 }
 
-func normalHandle(line string, i int) (string, int, int) {
+func normalArgs(line string, i int) (string, int, int) {
 	current := ""
 	for ; i < len(line); i++ {
 		if unicode.IsSpace(rune(line[i])) {
@@ -54,9 +54,9 @@ func normalHandle(line string, i int) (string, int, int) {
 	return current, i, SPA_DONE
 }
 
-func quotesHandle(line string, i int) (string, int, int) {
+func quotesArgs(line string, i int) (string, int, int) {
 	current := ""
-	for ; i < len(line); i++ {
+	for i++; i < len(line); i++ {
 		// e.g. \r \n \" and so on
 		if string(line[i]) == "\\" && i+1 < len(line) {
 			i++
@@ -78,9 +78,9 @@ func quotesHandle(line string, i int) (string, int, int) {
 	return current, i, SPA_DONE
 }
 
-func singleQuotesHandle(line string, i int) (string, int, int) {
+func singleQuotesArgs(line string, i int) (string, int, int) {
 	current := ""
-	for ; i < len(line); i++ {
+	for i++; i < len(line); i++ {
 		// e.g. \r \n \" and so on
 		if string(line[i]) == "\\" && i+1 < len(line) && string(line[i+1]) == "'" {
 			current += "'"
@@ -97,30 +97,22 @@ func singleQuotesHandle(line string, i int) (string, int, int) {
 	return current, i, SPA_DONE
 }
 
-func splitArgs(line string) []string {
+func splitArgs(line string) (args []string) {
 	if len(line) == 0 {
 		return nil
 	}
-	var args []string
 	// skip space
 	i := nextLineIdx(line, 0)
 	for i < len(line) {
 		current, status := "", 0
-		switch string(line[i]) {
-		case "\"":
-			current, i, status = quotesHandle(line, i+1)
-		case "'":
-			current, i, status = singleQuotesHandle(line, i+1)
-		default:
-			current, i, status = normalHandle(line, i)
-		}
+		current, i, status = splitArgsHandle(string(line[i]), line, i)
 		if status == SPA_TERMINATED {
 			return nil
 		}
 		args = append(args, current)
 		i = nextLineIdx(line, i+1)
 	}
-	return args
+	return
 }
 
 // ----------------------------- server args -------------------------

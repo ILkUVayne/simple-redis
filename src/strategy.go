@@ -11,6 +11,28 @@ import (
 	"strings"
 )
 
+// -----------------------------------------------------------------------------
+// args
+// -----------------------------------------------------------------------------
+
+// ============================= splitArgs handle ==============================
+
+type splitArgsHandleFunc func(line string, i int) (string, int, int)
+
+var splitArgsHandleMap = map[string]splitArgsHandleFunc{
+	"normal": normalArgs,
+	"\"":     quotesArgs,
+	"'":      singleQuotesArgs,
+}
+
+func splitArgsHandle(initial, line string, i int) (string, int, int) {
+	fn, ok := splitArgsHandleMap[initial]
+	if !ok {
+		fn = splitArgsHandleMap["normal"]
+	}
+	return fn(line, i)
+}
+
 //-----------------------------------------------------------------------------
 // client
 //-----------------------------------------------------------------------------
