@@ -9,7 +9,6 @@ import (
 	"github.com/hdt3213/rdb/model"
 	"github.com/hdt3213/rdb/parser"
 	"os"
-	"simple-redis/utils"
 	"strconv"
 	"time"
 )
@@ -337,7 +336,7 @@ func rdbSave(filename string) int {
 		return REDIS_OK
 	}
 
-	tmpFile := utils.PersistenceFile(fmt.Sprintf("temp-%d.rdb", os.Getpid()))
+	tmpFile := PersistenceFile(fmt.Sprintf("temp-%d.rdb", os.Getpid()))
 	f, err := os.Create(tmpFile)
 	if err != nil {
 		ulog.ErrorP("Failed opening .rdb for saving: ", err)
@@ -400,9 +399,9 @@ func rdbSaveBackground() int {
 			Close(server.fd)
 		}
 		if rdbSave(server.rdbFilename) == REDIS_OK {
-			utils.Exit(0)
+			os.Exit(0)
 		}
-		utils.Exit(1)
+		os.Exit(1)
 	} else {
 		ulog.Info("Background saving started by pid %d", childPid)
 		server.rdbChildPid = childPid

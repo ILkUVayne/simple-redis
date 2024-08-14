@@ -5,7 +5,6 @@ import (
 	"github.com/ILkUVayne/utlis-go/v2/time"
 	"github.com/ILkUVayne/utlis-go/v2/ulog"
 	"os"
-	"simple-redis/utils"
 )
 
 // 全局共享SRobj对象结构体，用以复用常用的命令返回对象
@@ -142,7 +141,7 @@ func initServer() {
 	// AOF fd
 	server.aofChildPid = -1
 	if server.aofState == REDIS_AOF_ON {
-		server.aofFilename = utils.PersistenceFile(REDIS_AOF_DEFAULT)
+		server.aofFilename = PersistenceFile(REDIS_AOF_DEFAULT)
 		fd, err := os.OpenFile(server.aofFilename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 		if err != nil {
 			ulog.Error("Can't open the append-only file: ", err)
@@ -153,7 +152,7 @@ func initServer() {
 	}
 	// rdb
 	server.rdbChildPid = -1
-	server.rdbFilename = utils.PersistenceFile(REDIS_RDB_DEFAULT)
+	server.rdbFilename = PersistenceFile(REDIS_RDB_DEFAULT)
 }
 
 func loadDataFromDisk() {

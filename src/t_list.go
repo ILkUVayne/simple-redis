@@ -38,7 +38,7 @@ func popGenericCommand(c *SRedisClient, where int) {
 	}
 	c.addReplyBulk(value)
 	value.decrRefCount()
-	if assertList(lObj).len() == 0 {
+	if isEmpty(assertList(lObj)) {
 		c.db.dbDel(c.args[1])
 	}
 	server.incrDirtyCount(c, 1)

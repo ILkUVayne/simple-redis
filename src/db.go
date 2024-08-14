@@ -3,7 +3,6 @@ package src
 import (
 	"github.com/ILkUVayne/utlis-go/v2/time"
 	"github.com/ILkUVayne/utlis-go/v2/ulog"
-	"simple-redis/utils"
 )
 
 // SRedisDB 数据库结构
@@ -40,7 +39,7 @@ func (db *SRedisDB) dbDel(key *SRobj) int {
 	// 重新创建一个新的key，如果直接用传入的key是expire库的key
 	// 删除expire后会被提前释放(s.refCount == 0),导致dictDel报错
 	key = createSRobj(SR_STR, key.strVal())
-	if db.expire.dictSize() > 0 {
+	if !isEmpty(db.expire) {
 		db.expireDel(key)
 	}
 	return db.dictDel(key)
@@ -272,7 +271,7 @@ func keysCommand(c *SRedisClient) {
 	di := c.db.data.dictGetIterator()
 	for de := di.dictNext(); de != nil; de = di.dictNext() {
 		key := de.getKey()
-		if allKeys || utils.StringMatch(pattern, key.strVal(), false) {
+		if allKeys || StringMatch(pattern, key.strVal(), false) {
 			if !c.db.expireIfNeeded(key) {
 				c.addReplyBulk(key)
 				numKeys++

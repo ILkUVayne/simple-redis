@@ -6,7 +6,7 @@ import (
 	"github.com/ILkUVayne/utlis-go/v2/cli"
 	"github.com/ILkUVayne/utlis-go/v2/str"
 	"github.com/ILkUVayne/utlis-go/v2/ulog"
-	"simple-redis/utils"
+	"os"
 )
 
 var context *sRedisContext
@@ -65,7 +65,7 @@ func cliInputLine() string {
 	s, err := linenoise.Line(cliDisplayPrompt())
 	if err != nil {
 		// KillSignalError
-		utils.Exit(0)
+		os.Exit(0)
 	}
 	return s
 }
@@ -100,7 +100,7 @@ func parseOptions() {
 func repl() {
 	history, hf := false, ""
 	if cli.Isatty() {
-		history, hf = true, utils.HistoryFile(REDIS_CLI_HISTFILE_DEFAULT)
+		history, hf = true, HistoryFile(REDIS_CLI_HISTFILE_DEFAULT)
 		_ = linenoise.LoadHistory(hf)
 	}
 
@@ -116,7 +116,7 @@ func repl() {
 			_, _ = linenoise.AddHistory(s), linenoise.SaveHistory(hf)
 		}
 		if fields[0] == "quit" || fields[0] == "exit" {
-			utils.Exit(0)
+			os.Exit(0)
 		}
 		// cliSendCommand
 		if cliSendCommand(fields) != CLI_OK {
@@ -144,7 +144,7 @@ func CliStart(args []string) {
 
 	// Otherwise, we have some arguments to execute
 	if cliConnect(0) == CLI_ERR {
-		utils.Exit(1)
+		os.Exit(1)
 	}
 	noninteractive(args)
 }
