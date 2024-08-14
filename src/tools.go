@@ -1,11 +1,18 @@
-package utils
+package src
 
 import (
 	"github.com/ILkUVayne/utlis-go/v2/flie"
 	"github.com/ILkUVayne/utlis-go/v2/math"
 	"github.com/ILkUVayne/utlis-go/v2/ulog"
-	"os"
 )
+
+//-----------------------------------------------------------------------------
+// common function
+//-----------------------------------------------------------------------------
+
+func isEmpty(e empty) bool {
+	return e.isEmpty()
+}
 
 //-----------------------------------------------------------------------------
 // sys function
@@ -25,10 +32,6 @@ func HistoryFile(file string) string {
 
 func PersistenceFile(file string) string {
 	return absolutePath(file)
-}
-
-func Exit(code int) {
-	os.Exit(code)
 }
 
 //-----------------------------------------------------------------------------

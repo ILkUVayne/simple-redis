@@ -115,6 +115,10 @@ func (is *intSet) intSetLen() uint32 {
 	return is.length
 }
 
+func (is *intSet) isEmpty() bool {
+	return is.length == 0
+}
+
 // Create an empty intSet
 func intSetNew() *intSet {
 	is := new(intSet)

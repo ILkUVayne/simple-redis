@@ -44,7 +44,7 @@ func readQueryFromClient(_ *aeEventLoop, fd int, clientData any) {
 // SendReplyToClient send query result to client
 func SendReplyToClient(el *aeEventLoop, _ int, clientData any) {
 	c := assertClient(clientData)
-	for c.reply.len() > 0 {
+	for !isEmpty(c.reply) {
 		resp := c.reply.first()
 		buf := []byte(resp.data.strVal())
 		bufLen := len(buf)
@@ -65,7 +65,7 @@ func SendReplyToClient(el *aeEventLoop, _ int, clientData any) {
 			resp.data.decrRefCount()
 		}
 	}
-	if c.reply.len() == 0 {
+	if isEmpty(c.reply) {
 		c.sentLen = 0
 		el.removeFileEvent(c.fd, AE_WRITEABLE)
 	}
@@ -166,7 +166,7 @@ func (c *SRedisClient) doReply() {
 // 将查询结果添加到c.reply中,并创建SendReplyToClient事件
 func (c *SRedisClient) addReply(data *SRobj) {
 	c.pushReply(data, AL_START_TAIL)
-	if c.replyReady && !c.isFake() && c.reply.len() > 0 {
+	if c.replyReady && !c.isFake() && !isEmpty(c.reply) {
 		server.el.addFileEvent(c.fd, AE_WRITEABLE, SendReplyToClient, c)
 	}
 }

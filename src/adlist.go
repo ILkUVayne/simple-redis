@@ -3,11 +3,6 @@
 // lib list provides methods for creating linked lists and adding/deleting queries
 package src
 
-type Pusher interface {
-	rPush(data *SRobj)
-	lPush(data *SRobj)
-}
-
 // list dictType
 var lType = dictType{
 	hashFunc:      nil,
@@ -76,6 +71,10 @@ var _ Pusher = (*list)(nil)
 
 func (l *list) len() int {
 	return l.length
+}
+
+func (l *list) isEmpty() bool {
+	return l.len() == 0
 }
 
 func (l *list) first() *node {

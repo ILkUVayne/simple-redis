@@ -155,6 +155,10 @@ func (d *dict) dictSize() int64 {
 	return s
 }
 
+func (d *dict) isEmpty() bool {
+	return d.dictSize() == 0
+}
+
 // return dict iterators
 func (d *dict) dictGetIterator() *dictIterator {
 	di := new(dictIterator)
@@ -458,7 +462,7 @@ func (d *dict) dictGetRandomKey1() *dictEntry {
 
 // get a random key
 func (d *dict) dictGetRandomKey() *dictEntry {
-	if d.dictSize() == 0 {
+	if isEmpty(d) {
 		return nil
 	}
 	if d.isRehash() {

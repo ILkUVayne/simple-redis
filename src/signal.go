@@ -4,7 +4,6 @@ import (
 	"github.com/ILkUVayne/utlis-go/v2/ulog"
 	"os"
 	"os/signal"
-	"simple-redis/utils"
 	"syscall"
 )
 
@@ -55,7 +54,7 @@ func serverShutdown(sig os.Signal) {
 		}
 	}
 	ulog.Info("Simple-Redis is now ready to exit, bye bye...")
-	utils.Exit(0)
+	os.Exit(0)
 }
 
 //-----------------------------------------------------------------------------
