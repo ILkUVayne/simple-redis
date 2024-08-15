@@ -271,7 +271,7 @@ func keysCommand(c *SRedisClient) {
 	di := c.db.data.dictGetIterator()
 	for de := di.dictNext(); de != nil; de = di.dictNext() {
 		key := de.getKey()
-		if allKeys || StringMatch(pattern, key.strVal(), false) {
+		if allKeys || StringMatchLen(pattern, key.strVal(), false) {
 			if !c.db.expireIfNeeded(key) {
 				c.addReplyBulk(key)
 				numKeys++
