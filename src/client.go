@@ -74,14 +74,14 @@ func (c *SRedisClient) pushReply(data *SRobj, where int) {
 //
 // fd: client accept fd
 func createSRClient(fd int) *SRedisClient {
-	c := new(SRedisClient)
-	c.fd = fd
-	c.db = server.db
-	c.cmdTyp = CMD_UNKNOWN
-	c.reply = listCreate(&lType)
-	c.queryBuf = make([]byte, SREDIS_IO_BUF)
-	c.replyReady = true
-	return c
+	return &SRedisClient{
+		fd:         fd,
+		db:         server.db,
+		cmdTyp:     CMD_UNKNOWN,
+		reply:      listCreate(&lType),
+		queryBuf:   make([]byte, SREDIS_IO_BUF),
+		replyReady: true,
+	}
 }
 
 // return a fake client,client.fd == FAKE_CLIENT_FD

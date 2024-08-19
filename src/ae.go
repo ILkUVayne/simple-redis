@@ -95,12 +95,7 @@ func (el *aeEventLoop) addFileEvent(fd int, mask FeType, proc aeFileProc, client
 		ulog.Error("simple-redis server: ae epoll_ctl err: ", err)
 	}
 	// ae ctl
-	fileEvent := new(aeFileEvent)
-	fileEvent.fd = fd
-	fileEvent.proc = proc
-	fileEvent.mask = mask
-	fileEvent.clientData = clientData
-	el.fileEvent[feKey(fd, mask)] = fileEvent
+	el.fileEvent[feKey(fd, mask)] = &aeFileEvent{fd: fd, proc: proc, mask: mask, clientData: clientData}
 }
 
 // epoll_ctl and remove file event from aeEventLoop.fileEvent

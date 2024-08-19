@@ -254,38 +254,31 @@ func createFloatSRobj(typ SRType, ptr any) *SRobj {
 }
 
 func createZsetSRobj() *SRobj {
-	zs := new(zSet)
-	zs.zsl = zslCreate()
-	zs.d = dictCreate(&zSetDictType)
-	o := createSRobj(SR_ZSET, zs)
+	o := createSRobj(SR_ZSET, zSetCreate())
 	o.encoding = REDIS_ENCODING_SKIPLIST
 	return o
 }
 
 func createIntSetObject() *SRobj {
-	is := intSetNew()
-	o := createSRobj(SR_SET, is)
+	o := createSRobj(SR_SET, intSetNew())
 	o.encoding = REDIS_ENCODING_INTSET
 	return o
 }
 
 func createSetObject() *SRobj {
-	d := dictCreate(&setDictType)
-	o := createSRobj(SR_SET, d)
+	o := createSRobj(SR_SET, dictCreate(&setDictType))
 	o.encoding = REDIS_ENCODING_HT
 	return o
 }
 
 func createListObject() *SRobj {
-	l := listCreate(&lType)
-	o := createSRobj(SR_LIST, l)
+	o := createSRobj(SR_LIST, listCreate(&lType))
 	o.encoding = REDIS_ENCODING_LINKEDLIST
 	return o
 }
 
 func createHashObject() *SRobj {
-	h := dictCreate(&dbDictType)
-	o := createSRobj(SR_DICT, h)
+	o := createSRobj(SR_DICT, dictCreate(&dbDictType))
 	o.encoding = REDIS_ENCODING_HT
 	return o
 }

@@ -28,6 +28,9 @@ func TestSRStrCompare(t *testing.T) {
 
 func TestDictCreate(t *testing.T) {
 	d := dictCreate(&dbDictType)
+	if d.dictSize() != 0 {
+		t.Error("dictCreate err: d.dictSize() != 0")
+	}
 	if d.rehashIdx != -1 {
 		t.Error("dict init rehashidx err: rehashidx == ", d.rehashIdx)
 	}
@@ -234,4 +237,24 @@ func TestDictGetRandomKey(t *testing.T) {
 		t.Error("dictGetRandomKey err")
 	}
 	fmt.Println(e.val.strVal())
+}
+
+func TestDictGetIterator(t *testing.T) {
+	d := dictCreate(&dbDictType)
+	di := d.dictGetIterator()
+	if di.d != d {
+		t.Error("dictGetIterator err: di.d != d")
+	}
+	if di.table != 0 {
+		t.Error("dictGetIterator err: di.table != 0")
+	}
+	if di.index != -1 {
+		t.Error("dictGetIterator err: di.index != -1")
+	}
+	if di.entry != nil {
+		t.Error("dictGetIterator err: di.entry != nil")
+	}
+	if di.nextEntry != nil {
+		t.Error("dictGetIterator err: di.nextEntry != nil")
+	}
 }

@@ -121,7 +121,5 @@ func (is *intSet) isEmpty() bool {
 
 // Create an empty intSet
 func intSetNew() *intSet {
-	is := new(intSet)
-	is.contents = make([]int64, DEFAULT_INTSET_BUF)
-	return is
+	return &intSet{contents: make([]int64, DEFAULT_INTSET_BUF)}
 }

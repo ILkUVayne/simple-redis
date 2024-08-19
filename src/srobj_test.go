@@ -45,3 +45,68 @@ func TestFloatVal(t *testing.T) {
 		t.Error("intVal err: n = ", n)
 	}
 }
+
+func TestCreateZsetSRobj(t *testing.T) {
+	zs := createZsetSRobj()
+	if zs == nil {
+		t.Error("createZsetSRobj err: zs == nil")
+	}
+	if zs.Typ != SR_ZSET {
+		t.Error("createZsetSRobj err: zs.Typ != SR_ZSET")
+	}
+	if assertZSet(zs).zsl.length != 0 {
+		t.Error("createZsetSRobj err: assertZSet(zs).zsl.length != 0")
+	}
+}
+
+func TestCreateIntSetObject(t *testing.T) {
+	is := createIntSetObject()
+	if is == nil {
+		t.Error("createIntSetObject err: is == nil")
+	}
+	if is.Typ != SR_SET {
+		t.Error("createIntSetObject err: is.Typ != SR_SET")
+	}
+	if assertIntSet(is).intSetLen() != 0 {
+		t.Error("createIntSetObject err: assertIntSet(is).intSetLen() != 0")
+	}
+}
+
+func TestCreateSetObject(t *testing.T) {
+	set := createSetObject()
+	if set == nil {
+		t.Error("createSetObject err: is == nil")
+	}
+	if set.Typ != SR_SET {
+		t.Error("createSetObject err: set.Typ != SR_SET")
+	}
+	if assertDict(set).dictSize() != 0 {
+		t.Error("createSetObject err: assertDict(set).dictSize() != 0")
+	}
+}
+
+func TestCreateListObject(t *testing.T) {
+	l := createListObject()
+	if l == nil {
+		t.Error("createListObject err: is == nil")
+	}
+	if l.Typ != SR_LIST {
+		t.Error("createListObject err: l.Typ != SR_LIST")
+	}
+	if assertList(l).len() != 0 {
+		t.Error("createListObject err: assertList(l).len() != 0")
+	}
+}
+
+func TestCreateHashObject(t *testing.T) {
+	h := createHashObject()
+	if h == nil {
+		t.Error("createHashObject err: is == nil")
+	}
+	if h.Typ != SR_DICT {
+		t.Error("createHashObject err: h.Typ != SR_DICT")
+	}
+	if assertDict(h).dictSize() != 0 {
+		t.Error("createHashObject err: assertDict(h).dictSize() != 0")
+	}
+}

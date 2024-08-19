@@ -161,30 +161,22 @@ func (d *dict) isEmpty() bool {
 
 // return dict iterators
 func (d *dict) dictGetIterator() *dictIterator {
-	di := new(dictIterator)
-	di.d = d
-	di.table = 0
-	di.index = -1
-	di.entry = nil
-	di.nextEntry = nil
-	return di
+	return &dictIterator{d: d, table: 0, index: -1}
 }
 
 func (d *dict) initHt() {
-	ht := new(dictht)
-	ht.mask = DICT_HT_INITIAL_SIZE - 1
-	ht.size = DICT_HT_INITIAL_SIZE
-	ht.used = 0
-	ht.table = make([]*dictEntry, DICT_HT_INITIAL_SIZE)
-	d.ht[0] = ht
+	d.ht[0] = &dictht{
+		mask:  DICT_HT_INITIAL_SIZE - 1,
+		size:  DICT_HT_INITIAL_SIZE,
+		table: make([]*dictEntry, DICT_HT_INITIAL_SIZE),
+	}
 	d.rehashIdx = -1
 	d.iterators = 0
 }
 
 // return new dict
 func dictCreate(dType *dictType) *dict {
-	d := new(dict)
-	d.dType = dType
+	d := &dict{dType: dType}
 	d.initHt()
 	return d
 }

@@ -9,12 +9,12 @@ import (
 // Sorted set commands API
 //-----------------------------------------------------------------------------
 
+// ================================ Parse Range =================================
+
 type zRangeSpec struct {
 	min, max     float64
 	minex, maxex int
 }
-
-// ================================ Parse Range =================================
 
 func parseParentheses(s string) (float64, int, error) {
 	var i float64
@@ -47,6 +47,8 @@ type zSkipListNodeLevel struct {
 	span    uint           // 跨度
 }
 
+// ================================ skipList node =================================
+
 type zSkipListNode struct {
 	obj      *SRobj                // 成员对象
 	score    float64               // 分数
@@ -71,6 +73,8 @@ func zslCreateNode(level int, score float64, obj *SRobj) *zSkipListNode {
 	}
 	return zsln
 }
+
+// ================================== skipList ===================================
 
 type zSkipList struct {
 	header, tail *zSkipListNode // 表头、表尾节点指针
@@ -201,6 +205,21 @@ func (z *zSkipList) getElementByRank(rank uint) *zSkipListNode {
 	return nil
 }
 
+func zslCreate() *zSkipList {
+	zsl := new(zSkipList)
+	zsl.level = 1
+	zsl.header = zslCreateNode(ZSKIPLIST_MAXLEVEL, 0, nil)
+	for i := 0; i < ZSKIPLIST_MAXLEVEL; i++ {
+		zsl.header.level[i].forward = nil
+		zsl.header.level[i].span = 0
+	}
+	zsl.header.backward = nil
+	zsl.tail = nil
+	return zsl
+}
+
+// ==================================== zSet =====================================
+
 type zSet struct {
 	zsl *zSkipList
 	d   *dict
@@ -221,18 +240,8 @@ func zslRandomLevel() int {
 	return level
 }
 
-func zslCreate() *zSkipList {
-	zsl := new(zSkipList)
-	zsl.length = 0
-	zsl.level = 1
-	zsl.header = zslCreateNode(ZSKIPLIST_MAXLEVEL, 0, nil)
-	for i := 0; i < ZSKIPLIST_MAXLEVEL; i++ {
-		zsl.header.level[i].forward = nil
-		zsl.header.level[i].span = 0
-	}
-	zsl.header.backward = nil
-	zsl.tail = nil
-	return zsl
+func zSetCreate() *zSet {
+	return &zSet{zsl: zslCreate(), d: dictCreate(&zSetDictType)}
 }
 
 func checkZSetEncoding(subject *SRobj) {

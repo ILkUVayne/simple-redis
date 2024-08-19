@@ -173,18 +173,12 @@ func (l *list) del(data *SRobj) {
 
 // return head list iterators
 func (l *list) listRewind() *listIter {
-	li := new(listIter)
-	li.next = l.head
-	li.direction = AL_START_HEAD
-	return li
+	return &listIter{next: l.head, direction: AL_START_HEAD}
 }
 
 // return tail list iterators
 func (l *list) listRewindTail() *listIter {
-	li := new(listIter)
-	li.next = l.tail
-	li.direction = AL_START_TAIL
-	return li
+	return &listIter{next: l.tail, direction: AL_START_TAIL}
 }
 
 // -----------------------------------------------------------------------------
@@ -193,7 +187,5 @@ func (l *list) listRewindTail() *listIter {
 
 // create new list
 func listCreate(lType *dictType) *list {
-	l := new(list)
-	l.lType = lType
-	return l
+	return &list{lType: lType}
 }
