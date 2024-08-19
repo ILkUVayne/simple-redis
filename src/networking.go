@@ -146,7 +146,7 @@ func databaseCorn() {
 	}
 }
 
-// run cronjob, default 100ms
+// server cronjob, default 100ms
 func serverCron(*aeEventLoop, int, any) {
 	// database corn
 	databaseCorn()

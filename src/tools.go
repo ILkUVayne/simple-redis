@@ -39,15 +39,15 @@ func PersistenceFile(file string) string {
 // match function
 //-----------------------------------------------------------------------------
 
-func StringMatchLen(pattern, str string, patternLen, strLen int, noCase bool) bool {
-	pIdx, sIdx := 0, 0
+func StringMatchLen(pattern, str string, noCase bool) bool {
+	pIdx, sIdx, patternLen, strLen := 0, 0, len(pattern), len(str)
+	if patternLen == 1 && pattern == "*" {
+		return true
+	}
 	for patternLen > 0 {
 		switch pattern[pIdx] {
 		case '*':
-			if patternLen == 1 {
-				return true
-			}
-			for pattern[pIdx+1] == '*' {
+			for patternLen > 1 && pattern[pIdx+1] == '*' {
 				pIdx++
 				patternLen--
 			}
@@ -55,7 +55,7 @@ func StringMatchLen(pattern, str string, patternLen, strLen int, noCase bool) bo
 				return true
 			}
 			for strLen > 0 {
-				if StringMatchLen(pattern[pIdx+1:], str[sIdx:], patternLen-1, strLen, noCase) {
+				if StringMatchLen(pattern[pIdx+1:], str[sIdx:], noCase) {
 					return true
 				}
 				sIdx++
@@ -170,8 +170,4 @@ func StringMatchLen(pattern, str string, patternLen, strLen int, noCase bool) bo
 		return true
 	}
 	return false
-}
-
-func StringMatch(pattern, str string, noCase bool) bool {
-	return StringMatchLen(pattern, str, len(pattern), len(str), noCase)
 }
