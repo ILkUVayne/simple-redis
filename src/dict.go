@@ -161,7 +161,7 @@ func (d *dict) isEmpty() bool {
 
 // return dict iterators
 func (d *dict) dictGetIterator() *dictIterator {
-	return &dictIterator{d: d, table: 0, index: -1}
+	return &dictIterator{d: d, index: -1}
 }
 
 func (d *dict) initHt() {
