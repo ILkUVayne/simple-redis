@@ -103,7 +103,7 @@ func zRangeGenericCommand(c *SRedisClient, reverse bool) {
 	}
 
 	zs := assertZSet(zobj)
-	llen := int64(zs.zSetLength())
+	llen := sLen(zs)
 	if start < 0 {
 		start = llen + start
 	}
@@ -128,12 +128,12 @@ func zRangeGenericCommand(c *SRedisClient, reverse bool) {
 	if reverse {
 		ln = zsl.tail
 		if start > 0 {
-			ln = zsl.getElementByRank(uint(llen - start))
+			ln = zsl.getElementByRank(llen - start)
 		}
 	} else {
 		ln = zsl.header.level[0].forward
 		if start > 0 {
-			ln = zsl.getElementByRank(uint(start + 1))
+			ln = zsl.getElementByRank(start + 1)
 		}
 	}
 	arrayLen := rangeLen

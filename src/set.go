@@ -12,7 +12,7 @@ import (
 
 type setTypeIterator struct {
 	subject  *SRobj
-	ii       int
+	ii       int64
 	encoding uint8
 	di       *dictIterator
 }
@@ -20,7 +20,7 @@ type setTypeIterator struct {
 // return -1 if next entry is nil
 func (si *setTypeIterator) setTypeNext(objEle **SRobj, llEle *int64) int {
 	if si.encoding == REDIS_ENCODING_INTSET {
-		if !assertIntSet(si.subject).intSetGet(uint32(si.ii), llEle) {
+		if !assertIntSet(si.subject).intSetGet(si.ii, llEle) {
 			return -1
 		}
 		si.ii++
@@ -98,7 +98,7 @@ func setTypeConvert(setObj *SRobj, enc uint8) {
 	}
 
 	d := dictCreate(&setDictType)
-	d.dictExpand(int64(assertIntSet(setObj).intSetLen()))
+	d.dictExpand(sLen(assertIntSet(setObj)))
 	si := setTypeInitIterator(setObj)
 	var intEle int64
 	for si.setTypeNext(nil, &intEle) != -1 {
@@ -115,10 +115,10 @@ func setTypeConvert(setObj *SRobj, enc uint8) {
 func setTypeSize(setObj *SRobj) int64 {
 	checkSetEncoding(setObj)
 	if setObj.encoding == REDIS_ENCODING_HT {
-		return assertDict(setObj).dictSize()
+		return sLen(assertDict(setObj))
 	}
 	// REDIS_ENCODING_INTSET
-	return int64(assertIntSet(setObj).intSetLen())
+	return sLen(assertIntSet(setObj))
 }
 
 func setTypeIsMember(setObj, value *SRobj) bool {

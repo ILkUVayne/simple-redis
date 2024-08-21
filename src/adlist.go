@@ -64,17 +64,17 @@ type list struct {
 	lType  *dictType
 	head   *node
 	tail   *node
-	length int
+	length int64
 }
 
 var _ Pusher = (*list)(nil)
 
-func (l *list) len() int {
+func (l *list) len() int64 {
 	return l.length
 }
 
 func (l *list) isEmpty() bool {
-	return l.len() == 0
+	return sLen(l) == 0
 }
 
 func (l *list) first() *node {

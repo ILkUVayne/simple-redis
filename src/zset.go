@@ -44,7 +44,7 @@ var zSetDictType = dictType{
 
 type zSkipListNodeLevel struct {
 	forward *zSkipListNode // 前进指针
-	span    uint           // 跨度
+	span    int64          // 跨度
 }
 
 // ================================ skipList node =================================
@@ -78,7 +78,7 @@ func zslCreateNode(level int, score float64, obj *SRobj) *zSkipListNode {
 
 type zSkipList struct {
 	header, tail *zSkipListNode // 表头、表尾节点指针
-	length       uint           // 节点数量
+	length       int64          // 节点数量
 	level        int            // 表中节点最高的层数
 }
 
@@ -95,9 +95,9 @@ func (z *zSkipList) free() {
 	z.tail = nil
 }
 
-func (z *zSkipList) _getUpdateAndRank(score float64, obj *SRobj) (*[32]*zSkipListNode, *[32]uint, *zSkipListNode) {
+func (z *zSkipList) _getUpdateAndRank(score float64, obj *SRobj) (*[32]*zSkipListNode, *[32]int64, *zSkipListNode) {
 	var update [ZSKIPLIST_MAXLEVEL]*zSkipListNode
-	var rank [ZSKIPLIST_MAXLEVEL]uint
+	var rank [ZSKIPLIST_MAXLEVEL]int64
 
 	x := z.header
 	for i := z.level - 1; i >= 0; i-- {
@@ -190,8 +190,8 @@ func (z *zSkipList) delete(score float64, obj *SRobj) bool {
 	return false
 }
 
-func (z *zSkipList) getElementByRank(rank uint) *zSkipListNode {
-	var traversed uint
+func (z *zSkipList) getElementByRank(rank int64) *zSkipListNode {
+	var traversed int64
 	x := z.header
 	for i := z.level - 1; i >= 0; i-- {
 		for x.level[i].forward != nil && (traversed+x.level[i].span) <= rank {
@@ -225,7 +225,7 @@ type zSet struct {
 	d   *dict
 }
 
-func (z *zSet) zSetLength() uint {
+func (z *zSet) len() int64 {
 	return z.zsl.length
 }
 
@@ -250,7 +250,7 @@ func checkZSetEncoding(subject *SRobj) {
 	}
 }
 
-func zSetLength(o *SRobj) uint {
+func zSetLength(o *SRobj) int64 {
 	checkZSetEncoding(o)
-	return assertZSet(o).zSetLength()
+	return sLen(assertZSet(o))
 }

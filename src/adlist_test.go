@@ -8,12 +8,12 @@ import (
 func TestLen(t *testing.T) {
 	l := listCreate(&lType)
 	data := createSRobj(SR_STR, "name1")
-	if l.len() != 0 {
-		t.Error("get len err: len == ", l.len())
+	if sLen(l) != 0 {
+		t.Error("get len err: len == ", sLen(l))
 	}
 	l.lPush(data)
-	if l.len() != 1 {
-		t.Error("get len err: len == ", l.len())
+	if sLen(l) != 1 {
+		t.Error("get len err: len == ", sLen(l))
 	}
 }
 

@@ -281,7 +281,7 @@ func writeSetObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 
 	if val.encoding == REDIS_ENCODING_INTSET {
 		var intVal int64
-		for ii := 0; assertIntSet(val).intSetGet(uint32(ii), &intVal); ii++ {
+		for ii := int64(0); assertIntSet(val).intSetGet(ii, &intVal); ii++ {
 			values = append(values, []byte(strconv.FormatInt(intVal, 10)))
 		}
 	}

@@ -138,7 +138,7 @@ func (d *dict) dictFreeVal(de *dictEntry) {
 }
 
 // return dict current size
-func (d *dict) dictSlots() int64 {
+func (d *dict) cap() int64 {
 	s := d.ht[0].size
 	if d.ht[1] != nil {
 		s += d.ht[1].size
@@ -147,7 +147,7 @@ func (d *dict) dictSlots() int64 {
 }
 
 // return dict current used
-func (d *dict) dictSize() int64 {
+func (d *dict) len() int64 {
 	s := d.ht[0].used
 	if d.ht[1] != nil {
 		s += d.ht[1].used
@@ -156,7 +156,7 @@ func (d *dict) dictSize() int64 {
 }
 
 func (d *dict) isEmpty() bool {
-	return d.dictSize() == 0
+	return sLen(d) == 0
 }
 
 // return dict iterators
@@ -256,7 +256,7 @@ func (d *dict) dictNextPower(size int64) int64 {
 //
 // used使用量占比小于10%时，需要调整dict容量
 func (d *dict) htNeedResize() bool {
-	size, used := d.dictSlots(), d.dictSize()
+	size, used := sCap(d), sLen(d)
 	return size > DICT_HT_INITIAL_SIZE && (used*100/size < HT_MIN_FILL)
 }
 
@@ -265,7 +265,7 @@ func (d *dict) dictResize() int {
 	if !dictCanResize || d.isRehash() {
 		return DICT_ERR
 	}
-	minimal := d.dictSize()
+	minimal := sLen(d)
 	if minimal < DICT_HT_INITIAL_SIZE {
 		minimal = DICT_HT_INITIAL_SIZE
 	}
@@ -436,7 +436,7 @@ func (d *dict) dictGetRandomKey1() *dictEntry {
 	var slotIdx int64
 	if d.isRehash() {
 		for he == nil {
-			slotIdx = rand.Int63n(d.dictSlots())
+			slotIdx = rand.Int63n(sCap(d))
 			if slotIdx >= d.ht[0].size {
 				he = d.ht[1].table[slotIdx-d.ht[0].size]
 				continue

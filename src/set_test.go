@@ -30,7 +30,7 @@ func TestSetTypeAdd(t *testing.T) {
 	if set.encoding != REDIS_ENCODING_HT {
 		t.Error("setTypeAdd err: res.encoding = ", set.encoding)
 	}
-	if set.Val.(*dict).dictSize() != 2 {
-		t.Error("setTypeAdd err: set.Val.(*dict).dictSize() = ", set.Val.(*dict).dictSize())
+	if sLen(assertDict(set)) != 2 {
+		t.Error("setTypeAdd err: sLen(assertDict(set)) = ", sLen(assertDict(set)))
 	}
 }

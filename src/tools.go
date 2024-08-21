@@ -15,6 +15,22 @@ func isEmpty(e empty) bool {
 	return e == nil || e.isEmpty()
 }
 
+// return length of obj , if l is nil , sLen(l) is zero.
+func sLen(l length) int64 {
+	if l == nil {
+		return 0
+	}
+	return l.len()
+}
+
+// return capacity of obj , if c is nil , sCap(c) is zero.
+func sCap(c capacity) int64 {
+	if c == nil {
+		return 0
+	}
+	return c.cap()
+}
+
 //-----------------------------------------------------------------------------
 // sys function
 //-----------------------------------------------------------------------------

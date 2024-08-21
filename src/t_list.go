@@ -21,7 +21,7 @@ func pushGenericCommand(c *SRedisClient, where int) {
 		listTypePush(lObj, c.args[i], where)
 		pushed++
 	}
-	c.addReplyLongLong(int64(assertList(lObj).len()))
+	c.addReplyLongLong(sLen(assertList(lObj)))
 	server.incrDirtyCount(c, pushed)
 }
 
@@ -68,6 +68,6 @@ func rPopCommand(c *SRedisClient) {
 func lLenCommand(c *SRedisClient) {
 	o := c.db.lookupKeyReadOrReply(c, c.args[1], shared.czero)
 	if o != nil && o.checkType(c, SR_LIST) {
-		c.addReplyLongLong(int64(listTypeLength(o)))
+		c.addReplyLongLong(listTypeLength(o))
 	}
 }

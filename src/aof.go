@@ -219,7 +219,7 @@ func rewriteObject(f *os.File, cmd string, val ...*SRobj) {
 // Obtain the number of items, which cannot exceed REDIS_AOF_REWRITE_ITEMS_PER_CMD
 //
 // e.g. rpush key value [value ...],items is numbers of values
-func getItems(items int) int {
+func getItems(items int64) int64 {
 	cmdItems := items
 	if items > REDIS_AOF_REWRITE_ITEMS_PER_CMD {
 		cmdItems = REDIS_AOF_REWRITE_ITEMS_PER_CMD
@@ -227,7 +227,7 @@ func getItems(items int) int {
 	return cmdItems
 }
 
-func checkItems(count, items *int) {
+func checkItems(count, items *int64) {
 	*count++
 	if *count == REDIS_AOF_REWRITE_ITEMS_PER_CMD {
 		*count = 0
@@ -249,7 +249,7 @@ func rewriteExpireObject(f *os.File, key, val *SRobj) {
 
 // rewrite list object to file
 func rewriteListObject(f *os.File, key, val *SRobj) {
-	count, items := 0, listTypeLength(val)
+	count, items := int64(0), listTypeLength(val)
 	// encoding is linked list
 	checkListEncoding(val)
 	l := assertList(val)
@@ -269,11 +269,11 @@ func rewriteListObject(f *os.File, key, val *SRobj) {
 
 // rewrite set object to file
 func rewriteSetObject(f *os.File, key, val *SRobj) {
-	count, items := 0, int(setTypeSize(val))
+	count, items := int64(0), setTypeSize(val)
 	// encoding is intSet
 	if val.encoding == REDIS_ENCODING_INTSET {
 		var intVal int64
-		for ii := 0; assertIntSet(val).intSetGet(uint32(ii), &intVal); ii++ {
+		for ii := int64(0); assertIntSet(val).intSetGet(ii, &intVal); ii++ {
 			if count == 0 {
 				cmd := fmt.Sprintf(RESP_SET, 2+getItems(items))
 				// add key
@@ -303,7 +303,7 @@ func rewriteSetObject(f *os.File, key, val *SRobj) {
 
 // rewrite zSet object to file
 func rewriteZSetObject(f *os.File, key, val *SRobj) {
-	count, items := 0, int(zSetLength(val))
+	count, items := int64(0), zSetLength(val)
 	// encoding is skip list
 	zs := assertZSet(val)
 	di := zs.d.dictGetIterator()

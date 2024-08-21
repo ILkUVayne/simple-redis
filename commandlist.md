@@ -11,8 +11,12 @@
 The EXPIRE command is used to set the expiration time of a key in seconds. When the key expires, it cannot be used again.
 
 ~~~bash
+127.0.0.1:6379> set name "hello world"
+OK
 127.0.0.1:6379> expire name 5
 OK
+127.0.0.1:6379> ttl name
+(integer) 3
 ~~~
 
 ### object encoding

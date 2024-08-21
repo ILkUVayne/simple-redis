@@ -4,7 +4,7 @@ import "testing"
 
 func TestIntSetNew(t *testing.T) {
 	is := intSetNew()
-	if is.intSetLen() != 0 {
+	if sLen(is) != 0 {
 		t.Error("intSetNew err: is.length = ", is.length)
 	}
 	if len(is.contents) != DEFAULT_INTSET_BUF {
@@ -16,11 +16,11 @@ func TestIntSetAdd(t *testing.T) {
 	is := intSetNew()
 	var success bool
 	is.intSetAdd(10, &success)
-	if is.intSetLen() != 1 {
+	if sLen(is) != 1 {
 		t.Error("intSetAdd err: is.length = ", is.length)
 	}
 	is.intSetAdd(10, &success)
-	if is.intSetLen() != 1 {
+	if sLen(is) != 1 {
 		t.Error("intSetAdd err: is.length = ", is.length)
 	}
 	is.intSetAdd(7, &success)
@@ -34,7 +34,7 @@ func TestIntSetAdd(t *testing.T) {
 	is.intSetAdd(5, &success)
 	is.intSetAdd(9, &success)
 	is.intSetAdd(1, &success)
-	if is.intSetLen() != 6 {
+	if sLen(is) != 6 {
 		t.Error("intSetAdd err: is.length = ", is.length)
 	}
 }
@@ -50,7 +50,7 @@ func TestIntSetRemove(t *testing.T) {
 	is.intSetAdd(10, &success)
 	is.intSetAdd(13, &success)
 	is.intSetRemove(10)
-	if is.intSetLen() != 5 {
+	if sLen(is) != 5 {
 		t.Error("intSetRemove err: is.length = ", is.length)
 	}
 }
