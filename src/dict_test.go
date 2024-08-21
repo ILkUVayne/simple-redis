@@ -28,8 +28,8 @@ func TestSRStrCompare(t *testing.T) {
 
 func TestDictCreate(t *testing.T) {
 	d := dictCreate(&dbDictType)
-	if d.dictSize() != 0 {
-		t.Error("dictCreate err: d.dictSize() != 0")
+	if sLen(d) != 0 {
+		t.Error("dictCreate err: sLen(d) != 0")
 	}
 	if d.rehashIdx != -1 {
 		t.Error("dict init rehashidx err: rehashidx == ", d.rehashIdx)

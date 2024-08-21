@@ -5,16 +5,16 @@ import (
 )
 
 type intSet struct {
-	length   uint32
+	length   int64
 	contents []int64
 }
 
-func (is *intSet) _intSetGet(pos int) int64 {
+func (is *intSet) _intSetGet(pos int64) int64 {
 	return is.contents[pos]
 }
 
-func (is *intSet) _intSetSet(pos int, value int64) {
-	if pos > int(is.length) {
+func (is *intSet) _intSetSet(pos int64, value int64) {
+	if pos > sLen(is) {
 		is.contents[pos] = value
 		return
 	}
@@ -22,19 +22,19 @@ func (is *intSet) _intSetSet(pos int, value int64) {
 	is.contents[pos] = value
 }
 
-func (is *intSet) _intSetRemove(pos int) {
+func (is *intSet) _intSetRemove(pos int64) {
 	is.contents = append(is.contents[:pos], is.contents[pos+1:]...)
 }
 
-func (is *intSet) intSetSearch(value int64, pos *uint32) bool {
-	minIdx, midIdx, maxIdx := 0, -1, int(is.length)
+func (is *intSet) intSetSearch(value int64, pos *int64) bool {
+	minIdx, midIdx, maxIdx := int64(0), int64(-1), sLen(is)
 	cur := int64(-1)
-	if is.length == 0 {
+	if sLen(is) == 0 {
 		*pos = 0
 		return false
 	}
-	if value > is._intSetGet(int(is.length)-1) {
-		*pos = is.length
+	if value > is._intSetGet(sLen(is)-1) {
+		*pos = sLen(is)
 		return false
 	}
 	if value < is._intSetGet(0) {
@@ -55,68 +55,67 @@ func (is *intSet) intSetSearch(value int64, pos *uint32) bool {
 	}
 
 	if value == cur {
-		*pos = uint32(midIdx)
+		*pos = midIdx
 		return true
 	}
-	*pos = uint32(minIdx)
+	*pos = minIdx
 	return false
 }
 
 // return true if existed,false non-existent
 func (is *intSet) intSetFind(value int64) bool {
-	var pos uint32
+	var pos int64
 	return is.intSetSearch(value, &pos)
 }
 
 func (is *intSet) intSetResize() {
-	length := is.length * 2
-	newContents := make([]int64, length)
+	newContents := make([]int64, sLen(is)*2)
 	copy(newContents, is.contents)
 	is.contents = newContents
 }
 
 func (is *intSet) intSetAdd(value int64, success *bool) *intSet {
-	if is.length == uint32(len(is.contents)) {
+	if sLen(is) == int64(len(is.contents)) {
 		is.intSetResize()
 	}
-	var pos uint32
+	var pos int64
 	if is.intSetSearch(value, &pos) {
 		*success = false
 		return is
 	}
-	is._intSetSet(int(pos), value)
+	is._intSetSet(pos, value)
 	is.length++
 	*success = true
 	return is
 }
 
 func (is *intSet) intSetRemove(value int64) {
-	var pos uint32
+	var pos int64
 	if !is.intSetSearch(value, &pos) {
 		return
 	}
-	is._intSetRemove(int(pos))
+	is._intSetRemove(pos)
 	is.length--
 }
 
 func (is *intSet) intSetRandom() int64 {
-	return is._intSetGet(rand.Intn(int(is.length)))
+	return is._intSetGet(rand.Int63n(sLen(is)))
 }
 
-func (is *intSet) intSetGet(pos uint32, value *int64) bool {
-	if pos < is.length {
-		*value = is._intSetGet(int(pos))
+func (is *intSet) intSetGet(pos int64, value *int64) bool {
+	if pos < sLen(is) {
+		*value = is._intSetGet(pos)
 		return true
 	}
 	return false
 }
 
-func (is *intSet) intSetLen() uint32 {
+func (is *intSet) len() int64 {
 	return is.length
 }
 
 func (is *intSet) isEmpty() bool {
-	return is.length == 0
+	return sLen(is) == 0
 }
 
 // Create an empty intSet

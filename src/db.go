@@ -142,11 +142,11 @@ func (db *SRedisDB) dbRandomKey() *SRobj {
 }
 
 func (db *SRedisDB) dbExpireSize() int64 {
-	return db.expire.dictSize()
+	return sLen(db.expire)
 }
 
 func (db *SRedisDB) dbDataSize() int64 {
-	return db.data.dictSize()
+	return sLen(db.data)
 }
 
 // 获取一个数据库迭代器（dictIterator）

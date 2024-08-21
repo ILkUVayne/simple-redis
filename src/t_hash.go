@@ -56,7 +56,7 @@ func hGetCommand(c *SRedisClient) {
 
 // HDEL key field [field ...]
 func hDelCommand(c *SRedisClient) {
-	deleted := 0
+	deleted := int64(0)
 	o := c.db.lookupKeyReadOrReply(c, c.args[1], nil)
 	if o == nil || !o.checkType(c, SR_DICT) {
 		return
@@ -71,7 +71,7 @@ func hDelCommand(c *SRedisClient) {
 			break
 		}
 	}
-	c.addReplyLongLong(int64(deleted))
+	c.addReplyLongLong(deleted)
 }
 
 // hexists key field

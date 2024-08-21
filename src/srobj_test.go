@@ -67,7 +67,7 @@ func TestCreateIntSetObject(t *testing.T) {
 	if is.Typ != SR_SET {
 		t.Error("createIntSetObject err: is.Typ != SR_SET")
 	}
-	if assertIntSet(is).intSetLen() != 0 {
+	if sLen(assertIntSet(is)) != 0 {
 		t.Error("createIntSetObject err: assertIntSet(is).intSetLen() != 0")
 	}
 }
@@ -80,8 +80,8 @@ func TestCreateSetObject(t *testing.T) {
 	if set.Typ != SR_SET {
 		t.Error("createSetObject err: set.Typ != SR_SET")
 	}
-	if assertDict(set).dictSize() != 0 {
-		t.Error("createSetObject err: assertDict(set).dictSize() != 0")
+	if sLen(assertDict(set)) != 0 {
+		t.Error("createSetObject err: sLen(assertDict(set)) != 0")
 	}
 }
 
@@ -93,7 +93,7 @@ func TestCreateListObject(t *testing.T) {
 	if l.Typ != SR_LIST {
 		t.Error("createListObject err: l.Typ != SR_LIST")
 	}
-	if assertList(l).len() != 0 {
+	if sLen(assertList(l)) != 0 {
 		t.Error("createListObject err: assertList(l).len() != 0")
 	}
 }
@@ -106,7 +106,7 @@ func TestCreateHashObject(t *testing.T) {
 	if h.Typ != SR_DICT {
 		t.Error("createHashObject err: h.Typ != SR_DICT")
 	}
-	if assertDict(h).dictSize() != 0 {
-		t.Error("createHashObject err: assertDict(h).dictSize() != 0")
+	if sLen(assertDict(h)) != 0 {
+		t.Error("createHashObject err: sLen(assertDict(h)) != 0")
 	}
 }

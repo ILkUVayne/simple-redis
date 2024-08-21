@@ -69,7 +69,7 @@ func addHashFieldToReply(c *SRedisClient, o, field *SRobj) {
 // return hash ogj length by encoding
 func hashTypeLength(o *SRobj) int64 {
 	checkHashEncoding(o)
-	return assertDict(o).dictSize()
+	return sLen(assertDict(o))
 }
 
 func hashTypeDel(o, field *SRobj) bool {

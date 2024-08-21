@@ -37,7 +37,7 @@ func listTypePop(subject *SRobj, where int) *SRobj {
 	return value
 }
 
-func listTypeLength(subject *SRobj) int {
+func listTypeLength(subject *SRobj) int64 {
 	checkListEncoding(subject)
-	return assertList(subject).len()
+	return sLen(assertList(subject))
 }
