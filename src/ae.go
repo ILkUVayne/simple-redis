@@ -63,7 +63,7 @@ func feKey(fd int, mask FeType) int {
 	return -1
 }
 
-// 获取 fd 对应的 epoll Mask.
+// 获取 fd 对应的 epoll Mask. 默认返回0，表示未绑定事件.
 //
 // em == unix.EPOLLIN 时，表示已绑定AE_READABLE事件.
 //
