@@ -40,6 +40,7 @@ type aeTimeEvent struct {
 	mask       TeType // ae time event type, AE_NORMAL and AE_ONCE
 }
 
+// ae 事件循环
 type aeEventLoop struct {
 	fileEvent       map[int]*aeFileEvent // file event maps
 	timeEvent       *aeTimeEvent         // time event list
@@ -62,19 +63,25 @@ func feKey(fd int, mask FeType) int {
 	return -1
 }
 
+// 获取 fd 对应的 epoll Mask.
+//
+// em == unix.EPOLLIN 时，表示已绑定AE_READABLE事件.
+//
+// em == unix.EPOLLOUT 时，表示已绑定AE_WRITEABLE事件.
+//
+// em == unix.EPOLLIN | unix.EPOLLOUT 时，表示已绑定AE_READABLE和AE_WRITEABLE事件.
 func (el *aeEventLoop) epollMask(fd int) uint32 {
 	var em uint32
 	// 该fd上已存在AE_READABLE事件
 	if el.fileEvent[feKey(fd, AE_READABLE)] != nil {
-		// em == unix.EPOLLIN
+		// em |= unix.EPOLLIN
 		em |= fe2ep[AE_READABLE]
 	}
 	// 该fd上已存在AE_WRITEABLE事件
 	if el.fileEvent[feKey(fd, AE_WRITEABLE)] != nil {
-		// em == unix.EPOLLIN | unix.EPOLLOUT
+		// em |= unix.EPOLLOUT
 		em |= fe2ep[AE_WRITEABLE]
 	}
-	// default em == 0
 	return em
 }
 
