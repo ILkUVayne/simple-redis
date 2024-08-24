@@ -69,8 +69,7 @@ func SetupConf(confName string) {
 	}
 
 	defer func(f *os.File) {
-		err := f.Close()
-		if err != nil {
+		if err := f.Close(); err != nil {
 			ulog.Error(err)
 		}
 	}(f)

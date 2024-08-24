@@ -27,14 +27,17 @@ var keyPtrDictType = dictType{
 	valDestructor: ObjectDestructor,
 }
 
+// del SRedisDB.data by key
 func (db *SRedisDB) dictDel(key *SRobj) int {
 	return db.data.dictDelete(key)
 }
 
+// del SRedisDB.expire by key
 func (db *SRedisDB) expireDel(key *SRobj) int {
 	return db.expire.dictDelete(key)
 }
 
+// del SRedisDB.data and SRedisDB.expire by key if exist
 func (db *SRedisDB) dbDel(key *SRobj) int {
 	// 重新创建一个新的key，如果直接用传入的key是expire库的key
 	// 删除expire后会被提前释放(s.refCount == 0),导致dictDel报错
@@ -45,10 +48,12 @@ func (db *SRedisDB) dbDel(key *SRobj) int {
 	return db.dictDel(key)
 }
 
+// get SRedisDB.data by key
 func (db *SRedisDB) dictGet(key *SRobj) *SRobj {
 	return db.data.dictGet(key)
 }
 
+// get SRedisDB.expire by key
 func (db *SRedisDB) expireGet(key *SRobj) *SRobj {
 	return db.expire.dictGet(key)
 }
@@ -63,10 +68,12 @@ func (db *SRedisDB) expireTime(key *SRobj) int64 {
 	return t
 }
 
+// set SRedisDB.data
 func (db *SRedisDB) dictSet(key *SRobj, val *SRobj) {
 	server.db.data.dictSet(key, val)
 }
 
+// set SRedisDB.expire
 func (db *SRedisDB) expireSet(key *SRobj, val *SRobj) {
 	server.db.expire.dictSet(key, val)
 }
@@ -90,18 +97,16 @@ func (db *SRedisDB) expireIfNeeded1(when int64, key *SRobj) bool {
 	return true
 }
 
-func (db *SRedisDB) lookupKey(key *SRobj) *SRobj {
+// check if it is expired and return SRedisDB.data by key, return nil if it is expired or not exists.
+func (db *SRedisDB) lookupKeyWrite(key *SRobj) *SRobj {
+	db.expireIfNeeded(key)
 	return db.dictGet(key)
 }
 
-func (db *SRedisDB) lookupKeyWrite(key *SRobj) *SRobj {
-	db.expireIfNeeded(key)
-	return db.lookupKey(key)
-}
-
+// check if it is expired and return SRedisDB.data by key, return nil if it is expired or not exists.
 func (db *SRedisDB) lookupKeyRead(key *SRobj) *SRobj {
 	db.expireIfNeeded(key)
-	return db.lookupKey(key)
+	return db.dictGet(key)
 }
 
 // return db value,if null while reply error to client
@@ -141,10 +146,12 @@ func (db *SRedisDB) dbRandomKey() *SRobj {
 	}
 }
 
+// return SRedisDB.expire size
 func (db *SRedisDB) dbExpireSize() int64 {
 	return sLen(db.expire)
 }
 
+// return SRedisDB.data size
 func (db *SRedisDB) dbDataSize() int64 {
 	return sLen(db.data)
 }
@@ -175,8 +182,7 @@ func tryResizeHashTables() {
 
 func ttlGenericCommand(c *SRedisClient, outputMs bool) {
 	key := c.args[1]
-	c.db.expireIfNeeded(key)
-	if c.db.lookupKey(key) == nil {
+	if c.db.lookupKeyRead(key) == nil {
 		c.addReplyLongLong(-2)
 		return
 	}
@@ -286,8 +292,7 @@ func keysCommand(c *SRedisClient) {
 func existsCommand(c *SRedisClient) {
 	count := 0
 	for i := 1; i < len(c.args); i++ {
-		c.db.expireIfNeeded(c.args[i])
-		if c.db.lookupKey(c.args[i]) != nil {
+		if c.db.lookupKeyRead(c.args[i]) != nil {
 			count++
 		}
 	}

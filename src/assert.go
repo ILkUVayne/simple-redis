@@ -4,6 +4,7 @@ import (
 	"github.com/ILkUVayne/utlis-go/v2/ulog"
 )
 
+// 断言 *list 类型
 func assertList(o *SRobj) *list {
 	l, ok := o.Val.(*list)
 	if !ok {
@@ -12,6 +13,7 @@ func assertList(o *SRobj) *list {
 	return l
 }
 
+// 断言 *SRedisClient 类型
 func assertClient(o any) *SRedisClient {
 	c, ok := o.(*SRedisClient)
 	if !ok {
@@ -20,6 +22,7 @@ func assertClient(o any) *SRedisClient {
 	return c
 }
 
+// 断言 *dict 类型
 func assertDict(o *SRobj) *dict {
 	d, ok := o.Val.(*dict)
 	if !ok {
@@ -28,6 +31,7 @@ func assertDict(o *SRobj) *dict {
 	return d
 }
 
+// 断言 *intSet 类型
 func assertIntSet(o *SRobj) *intSet {
 	is, ok := o.Val.(*intSet)
 	if !ok {
@@ -36,6 +40,7 @@ func assertIntSet(o *SRobj) *intSet {
 	return is
 }
 
+// 断言 *zSet 类型
 func assertZSet(o *SRobj) *zSet {
 	zs, ok := o.Val.(*zSet)
 	if !ok {
