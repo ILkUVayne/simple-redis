@@ -18,6 +18,7 @@ type dictIterator struct {
 	entry, nextEntry *dictEntry
 }
 
+// return next dictEntry by dictIterator
 func (di *dictIterator) dictNext() *dictEntry {
 	for {
 		if di.entry != nil {
@@ -47,6 +48,7 @@ func (di *dictIterator) dictNext() *dictEntry {
 	return nil
 }
 
+// Release dict Iterator
 func (di *dictIterator) dictReleaseIterator() {
 	if !(di.index == -1 && di.table == 0) {
 		di.d.iterators--
@@ -56,44 +58,51 @@ func (di *dictIterator) dictReleaseIterator() {
 	di.nextEntry = nil
 }
 
+// dictEntry 结构体
 type dictEntry struct {
 	key  *SRobj
 	val  *SRobj
-	next *dictEntry
+	next *dictEntry // next dictEntry 用于处理哈希冲突（头插法）
 }
 
+// return dictEntry.key
 func (de *dictEntry) getKey() *SRobj {
 	return de.key
 }
 
+// return dictEntry.val
 func (de *dictEntry) getVal() *SRobj {
 	return de.val
 }
 
+// dictType 声明了一些通用的函数
 type dictType struct {
-	hashFunc      func(key *SRobj) int64
-	keyCompare    func(key1, key2 *SRobj) bool
-	keyDestructor func(key *SRobj)
-	valDestructor func(val *SRobj)
+	hashFunc      func(key *SRobj) int64       // 哈希函数
+	keyCompare    func(key1, key2 *SRobj) bool // 关键字比较函数
+	keyDestructor func(key *SRobj)             // 关键字销毁（释放）函数
+	valDestructor func(val *SRobj)             // 值销毁（释放）函数
 }
 
+// dictht 哈希表结构
 type dictht struct {
-	table []*dictEntry
-	size  int64
-	used  int64
-	mask  int64
+	table []*dictEntry // 哈希表
+	size  int64        // 哈希表容量（因为存在哈希冲突，在还没有触发rehash时，实际存储数据量可能会超过）
+	used  int64        // 已存储的数据量
+	mask  int64        // 哈希表大小掩码，用于计算关键字索引，等于size-1
 }
 
+// dict 字典结构
 type dict struct {
 	dType     *dictType
-	ht        [2]*dictht
-	rehashIdx int64
+	ht        [2]*dictht // 哈希表，ht[1]用于rehash
+	rehashIdx int64      // rehash索引，默认-1，表示当前未进行rehash
 	// iterators
 	iterators int64
 }
 
 // ----------------------------- dict type func -------------------------
 
+// SRStrHash 计算哈希值函数
 func SRStrHash(key *SRobj) int64 {
 	if key.Typ != SR_STR {
 		return 0
@@ -106,6 +115,7 @@ func SRStrHash(key *SRobj) int64 {
 	return int64(hash.Sum64())
 }
 
+// SRStrCompare 键比较函数
 func SRStrCompare(key1, key2 *SRobj) bool {
 	if key1.Typ != SR_STR || key2.Typ != SR_STR {
 		return false
@@ -113,10 +123,12 @@ func SRStrCompare(key1, key2 *SRobj) bool {
 	return key1.strVal() == key2.strVal()
 }
 
+// SRStrDestructor 键销毁函数
 func SRStrDestructor(key *SRobj) {
 	key.decrRefCount()
 }
 
+// ObjectDestructor 值销毁函数
 func ObjectDestructor(val *SRobj) {
 	if val != nil {
 		val.decrRefCount()
@@ -125,16 +137,24 @@ func ObjectDestructor(val *SRobj) {
 
 // -------------------------------- api ----------------------------
 
+// free dict key by dictEntry
 func (d *dict) dictFreeKey(de *dictEntry) {
 	if d.dType.keyDestructor != nil {
 		d.dType.keyDestructor(de.getKey())
 	}
 }
 
+// free dict val by dictEntry
 func (d *dict) dictFreeVal(de *dictEntry) {
 	if d.dType.valDestructor != nil {
 		d.dType.valDestructor(de.getVal())
 	}
+}
+
+// free dict key and val by dictEntry
+func (d *dict) dictFreeEntry(e *dictEntry) {
+	d.dictFreeKey(e)
+	d.dictFreeVal(e)
 }
 
 // return dict current size
@@ -155,6 +175,7 @@ func (d *dict) len() int64 {
 	return s
 }
 
+// check if it is Empty
 func (d *dict) isEmpty() bool {
 	return sLen(d) == 0
 }
@@ -164,6 +185,7 @@ func (d *dict) dictGetIterator() *dictIterator {
 	return &dictIterator{d: d, index: -1}
 }
 
+// init or reset dict.ht
 func (d *dict) initHt() {
 	d.ht[0] = &dictht{
 		mask:  DICT_HT_INITIAL_SIZE - 1,
@@ -172,18 +194,6 @@ func (d *dict) initHt() {
 	}
 	d.rehashIdx = -1
 	d.iterators = 0
-}
-
-// return new dict
-func dictCreate(dType *dictType) *dict {
-	d := &dict{dType: dType}
-	d.initHt()
-	return d
-}
-
-func freeDictEntry(e *dictEntry) {
-	e.key.decrRefCount()
-	e.val.decrRefCount()
 }
 
 // check if the current rehash is in progress
@@ -358,6 +368,7 @@ func (d *dict) dictAddRaw(key *SRobj) *dictEntry {
 	return &entry
 }
 
+// dict add by key and val
 func (d *dict) dictAdd(key, val *SRobj) bool {
 	entry := d.dictAddRaw(key)
 	if entry == nil {
@@ -386,6 +397,7 @@ func (d *dict) dictSet(key, val *SRobj) int {
 	return DICT_REP
 }
 
+// dict get val by key
 func (d *dict) dictGet(key *SRobj) *SRobj {
 	_, entry := d.dictFind(key)
 	if entry == nil {
@@ -394,6 +406,7 @@ func (d *dict) dictGet(key *SRobj) *SRobj {
 	return entry.val
 }
 
+// dict del by key
 func (d *dict) dictDelete(key *SRobj) int {
 	if d.ht[0].size == 0 {
 		return DICT_ERR
@@ -416,7 +429,7 @@ func (d *dict) dictDelete(key *SRobj) int {
 				} else {
 					preHe.next = he.next
 				}
-				freeDictEntry(he)
+				d.dictFreeEntry(he)
 				d.ht[table].used--
 				return DICT_OK
 			}
@@ -476,6 +489,7 @@ func (d *dict) dictGetRandomKey() *dictEntry {
 	return he
 }
 
+// 清空哈希表数据
 func (d *dict) _dictClear(ht *dictht) int {
 	var he *dictEntry
 
@@ -489,17 +503,20 @@ func (d *dict) _dictClear(ht *dictht) int {
 		}
 		for he != nil {
 			nextHe := he.next
-			d.dictFreeKey(he)
-			d.dictFreeVal(he)
-			freeDictEntry(he)
+			d.dictFreeEntry(he)
 			ht.used--
 			he = nextHe
 		}
 	}
-	_dictReset(ht)
+	// 重置哈希表
+	ht.table = nil
+	ht.size = 0
+	ht.used = 0
+	ht.mask = 0
 	return DICT_OK
 }
 
+// 清空数据库（字典）中的数据
 func (d *dict) dictEmpty() {
 	d._dictClear(d.ht[0])
 	d._dictClear(d.ht[1])
@@ -507,17 +524,19 @@ func (d *dict) dictEmpty() {
 	d.iterators = 0
 }
 
-func _dictReset(ht *dictht) {
-	ht.table = nil
-	ht.size = 0
-	ht.used = 0
-	ht.mask = 0
+// return new dict
+func dictCreate(dType *dictType) *dict {
+	d := &dict{dType: dType}
+	d.initHt()
+	return d
 }
 
+// 启用数据库缩容
 func dictEnableResize() {
 	dictCanResize = true
 }
 
+// 禁用数据库缩容
 func dictDisableResize() {
 	dictCanResize = false
 }

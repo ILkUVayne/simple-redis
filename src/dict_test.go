@@ -39,18 +39,16 @@ func TestDictCreate(t *testing.T) {
 	}
 }
 
-func TestFreeDictEntry(t *testing.T) {
+func TestDictFreeEntry(t *testing.T) {
 	key := createSRobj(SR_STR, "name")
 	val := createSRobj(SR_STR, "ly")
-	e := new(dictEntry)
-	e.key = key
-	e.key.incrRefCount()
-	e.val = val
-	e.val.incrRefCount()
+	d := dictCreate(&dbDictType)
+	d.dictSet(key, val)
+	_, e := d.dictFind(key)
 	if e.key.refCount != 2 || e.val.refCount != 2 {
 		t.Errorf("incrRefCount err: key = %d, val = %d", e.key.refCount, e.val.refCount)
 	}
-	freeDictEntry(e)
+	d.dictFreeEntry(e)
 	if e.key.refCount != 1 || e.val.refCount != 1 {
 		t.Errorf("incrRefCount err: key = %d, val = %d", e.key.refCount, e.val.refCount)
 	}
