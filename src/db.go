@@ -89,6 +89,9 @@ func (db *SRedisDB) expireIfNeeded(key *SRobj) bool {
 	return db.expireIfNeeded1(when, key)
 }
 
+// 检查是否过期，如果过期了，就删除
+//
+// when 表示key的过期时间戳
 func (db *SRedisDB) expireIfNeeded1(when int64, key *SRobj) bool {
 	if when > time.GetMsTime() {
 		return false
