@@ -8,6 +8,7 @@ import (
 	"unicode"
 )
 
+// 需要转义的字符串map
 var transChar = map[string]string{
 	"n": "\n",
 	"r": "\r",
@@ -28,21 +29,27 @@ func nextLineIdx(line string, i int) int {
 	return i
 }
 
+// check double quotes string or single quotes string is Terminated,closing quote
+// must be followed by a space or nothing at all.
+//
+// return SPA_CONTINUE, if string is not complete.
+// return SPA_DONE, if string is complete and valid.
+// return SPA_TERMINATED, if string is invalid.
 func checkTerminated(line, key string, i int) (status int) {
-	// closing quote must be followed by a space or nothing at all
 	if string(line[i]) == key {
 		if i+1 < len(line) && !unicode.IsSpace(rune(line[i+1])) {
 			return SPA_TERMINATED
 		}
 		return SPA_DONE
 	}
-	// unterminated quotes
+	// unterminated quotes. e.g. "hello   or 'hello
 	if i+1 == len(line) {
 		return SPA_TERMINATED
 	}
 	return SPA_CONTINUE
 }
 
+// 没有单引号或双引号包裹的普通字符串参数
 func normalArgs(line string, i int) (string, int, int) {
 	current := ""
 	for ; i < len(line); i++ {
@@ -54,6 +61,7 @@ func normalArgs(line string, i int) (string, int, int) {
 	return current, i, SPA_DONE
 }
 
+// 双引号包裹的字符串参数
 func quotesArgs(line string, i int) (string, int, int) {
 	current := ""
 	for i++; i < len(line); i++ {
@@ -78,6 +86,7 @@ func quotesArgs(line string, i int) (string, int, int) {
 	return current, i, SPA_DONE
 }
 
+// 单引号包裹的字符串参数
 func singleQuotesArgs(line string, i int) (string, int, int) {
 	current := ""
 	for i++; i < len(line); i++ {
@@ -97,6 +106,7 @@ func singleQuotesArgs(line string, i int) (string, int, int) {
 	return current, i, SPA_DONE
 }
 
+// 解析拆分字符串命令
 func splitArgs(line string) (args []string) {
 	if len(line) == 0 {
 		return nil

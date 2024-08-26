@@ -18,6 +18,7 @@ func hashTypeLookupWriteOrCreate(c *SRedisClient, key *SRobj) *SRobj {
 	return o
 }
 
+// tryObjectEncoding o1 and o2
 func hashTypeTryObjectEncoding(subject, o1, o2 *SRobj) {
 	checkHashEncoding(subject)
 	if o1 != nil {
@@ -28,6 +29,7 @@ func hashTypeTryObjectEncoding(subject, o1, o2 *SRobj) {
 	}
 }
 
+// 检查hash对象的encoding是否合法
 func checkHashEncoding(subject *SRobj) {
 	if subject.encoding != REDIS_ENCODING_HT {
 		panic("Unknown hash encoding")
@@ -51,6 +53,7 @@ func hashTypeGetFromHashTable(o, field *SRobj, value **SRobj) bool {
 	return true
 }
 
+// 获取哈希对象 o 中的关键字 field 对应的值 value ，并添加到reply中。若不存在则返回nil
 func addHashFieldToReply(c *SRedisClient, o, field *SRobj) {
 	if o == nil {
 		c.addReply(shared.nullBulk)
@@ -72,6 +75,7 @@ func hashTypeLength(o *SRobj) int64 {
 	return sLen(assertDict(o))
 }
 
+// del hash data by field
 func hashTypeDel(o, field *SRobj) bool {
 	checkHashEncoding(o)
 	deleted := false
@@ -85,6 +89,7 @@ func hashTypeDel(o, field *SRobj) bool {
 	return deleted
 }
 
+// 检查field对应的值是否存在
 func hashTypeExists(o, field *SRobj) bool {
 	checkHashEncoding(o)
 	var value *SRobj

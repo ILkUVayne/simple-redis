@@ -5,6 +5,7 @@ import (
 	"fmt"
 )
 
+// server 返回的数据结构
 type sRedisReply struct {
 	typ    int    // respType
 	buf    []byte // server reply buff
@@ -13,6 +14,7 @@ type sRedisReply struct {
 	length int
 }
 
+// Format server reply string by sRedisReply.typ
 func (r *sRedisReply) strFormat() {
 	r.fStr = strFormatHandle(r)
 }
@@ -24,12 +26,14 @@ type sRedisContext struct {
 	err    error
 }
 
+// build bulk command from args.
+//
+// e.g. args = ["get", "name"], sRedisAppendCommandArg(c, args) => "*2\r\n$3\r\nget\r\n$4\r\nname\r\n"
 func sRedisAppendCommandArg(c *sRedisContext, args []string) {
 	// Format args,Compliant with resp specifications
 	cmd := fmt.Sprintf("*%d\r\n", len(args))
 	for _, v := range args {
-		cmd += fmt.Sprintf("$%d\r\n", len(v))
-		cmd += fmt.Sprintf("%s\r\n", v)
+		cmd += fmt.Sprintf("$%d\r\n%s\r\n", len(v), v)
 	}
 	c.oBuf = []byte(cmd)
 }

@@ -89,12 +89,14 @@ func createFakeClient() *SRedisClient {
 	return createSRClient(FAKE_CLIENT_FD)
 }
 
+// free SRedisClient.args
 func freeArgs(c *SRedisClient) {
 	for _, arg := range c.args {
 		arg.decrRefCount()
 	}
 }
 
+// free SRedisClient.reply
 func freeReplyList(c *SRedisClient) {
 	for c.reply.length != 0 {
 		n := c.reply.head
@@ -103,6 +105,7 @@ func freeReplyList(c *SRedisClient) {
 	}
 }
 
+// free client
 func freeClient(c *SRedisClient) {
 	freeArgs(c)
 	delete(server.clients, c.fd)

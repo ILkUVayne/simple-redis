@@ -43,9 +43,16 @@ func TestEpollMask(t *testing.T) {
 	if em != unix.EPOLLIN {
 		t.Error("el.epollMask err: em==", em)
 	}
+
 	el.fileEvent[feKey(fd, AE_WRITEABLE)] = new(aeFileEvent)
 	em = el.epollMask(fd)
 	if em != (unix.EPOLLIN | unix.EPOLLOUT) {
+		t.Error("el.epollMask err: em==", em)
+	}
+
+	el.fileEvent[feKey(fd, AE_READABLE)] = nil
+	em = el.epollMask(fd)
+	if em != unix.EPOLLOUT {
 		t.Error("el.epollMask err: em==", em)
 	}
 }
