@@ -15,6 +15,7 @@ var context *sRedisContext
  * Networking / parsing
  *--------------------------------------------------------------------------- */
 
+// connect server
 func sRedisConnect() *sRedisContext {
 	c := new(sRedisContext)
 	host, err := str.IPStrToHost(CliArgs.hostIp)
@@ -25,6 +26,7 @@ func sRedisConnect() *sRedisContext {
 	return c
 }
 
+// try to connect server
 func cliConnect(force int) int {
 	if context == nil || force > 0 {
 		context = sRedisConnect()
@@ -34,6 +36,7 @@ func cliConnect(force int) int {
 	return CLI_OK
 }
 
+// send cli command to server and get reply
 func cliSendCommand(args []string) int {
 	if context == nil {
 		return CLI_ERR
@@ -70,6 +73,7 @@ func cliInputLine() string {
 	return s
 }
 
+// print server reply
 func printPrompt() {
 	if context.err != nil {
 		fmt.Printf("(error) ERR: " + context.err.Error())
@@ -97,6 +101,7 @@ func parseOptions() {
 
 }
 
+// interactive mode loop
 func repl() {
 	history, hf := false, ""
 	if cli.Isatty() {

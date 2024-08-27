@@ -35,6 +35,7 @@ func (si *setTypeIterator) setTypeNext(objEle **SRobj, llEle *int64) int {
 	return int(si.encoding)
 }
 
+// release set iterator
 func (si *setTypeIterator) setTypeReleaseIterator() {
 	if si.encoding == REDIS_ENCODING_HT {
 		si.di.dictReleaseIterator()
@@ -43,6 +44,7 @@ func (si *setTypeIterator) setTypeReleaseIterator() {
 	si.subject = nil
 }
 
+// return a setTypeIterator
 func setTypeInitIterator(subject *SRobj) *setTypeIterator {
 	checkSetEncoding(subject)
 	si := new(setTypeIterator)
@@ -64,6 +66,10 @@ var setDictType = dictType{
 	valDestructor: nil,
 }
 
+// create set obj.
+//
+// return intset obj if value is int.
+// return dict obj if value is not int.
 func setTypeCreate(value *SRobj) *SRobj {
 	if value.isObjectRepresentableAsInt64(nil) == nil {
 		return createIntSetObject()
@@ -71,6 +77,7 @@ func setTypeCreate(value *SRobj) *SRobj {
 	return createSetObject()
 }
 
+// 往集合中添加数据，当底层结构是intset但需添加的数据不是数字时，会先转换为哈希表并存储
 func setTypeAdd(subject, value *SRobj) bool {
 	checkSetEncoding(subject)
 	var intVal int64
@@ -89,6 +96,7 @@ func setTypeAdd(subject, value *SRobj) bool {
 	return assertDict(subject).dictAdd(value, nil)
 }
 
+// 转换intset为哈希表并且数据迁移
 func setTypeConvert(setObj *SRobj, enc uint8) {
 	if setObj.Typ != SR_SET || setObj.encoding != REDIS_ENCODING_INTSET {
 		ulog.ErrorF("setTypeConvert err: setObj.Typ = %d,setObj.encoding = %d", setObj.Typ, setObj.encoding)
@@ -112,6 +120,7 @@ func setTypeConvert(setObj *SRobj, enc uint8) {
 	setObj.Val = d
 }
 
+// return set length
 func setTypeSize(setObj *SRobj) int64 {
 	checkSetEncoding(setObj)
 	if setObj.encoding == REDIS_ENCODING_HT {
@@ -121,6 +130,7 @@ func setTypeSize(setObj *SRobj) int64 {
 	return sLen(assertIntSet(setObj))
 }
 
+// 验证value是否是集合的成员
 func setTypeIsMember(setObj, value *SRobj) bool {
 	var intVal int64
 	checkSetEncoding(setObj)
@@ -145,6 +155,7 @@ func qSortSet(sets []*SRobj) {
 	})
 }
 
+// 集合切片容量从小到大排序
 func sortSet(sets []*SRobj) {
 	sort.Slice(sets, func(a, b int) bool {
 		return setTypeSize(sets[a]) < setTypeSize(sets[b])

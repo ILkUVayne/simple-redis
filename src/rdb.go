@@ -23,6 +23,7 @@ var auxMap = map[string]string{
 	"aof-preamble": "0",
 }
 
+// rdb前置准备工作
 func rdbBeforeWrite(enc *core.Encoder) int {
 	err := enc.WriteHeader()
 	if err != nil {
@@ -63,6 +64,7 @@ func rdbCheckExpire(obj parser.RedisObject) int64 {
 	return time2.GetMsTimeByTime(expire)
 }
 
+// load expireTime if it has
 func rdbLoadExpire(key *SRobj, expire int64) {
 	if expire == 0 {
 		return
@@ -72,6 +74,7 @@ func rdbLoadExpire(key *SRobj, expire int64) {
 	expireObj.decrRefCount()
 }
 
+// load string obj from rdb
 func rdbLoadStringObject(obj parser.RedisObject) {
 	expire := rdbCheckExpire(obj)
 	if expire == -1 {
@@ -90,6 +93,7 @@ func rdbLoadStringObject(obj parser.RedisObject) {
 	rdbLoadExpire(key, expire)
 }
 
+// load string list from rdb
 func rdbLoadListObject(obj parser.RedisObject) {
 	expire := rdbCheckExpire(obj)
 	if expire == -1 {
@@ -116,6 +120,7 @@ func rdbLoadListObject(obj parser.RedisObject) {
 	rdbLoadExpire(key, expire)
 }
 
+// load hash obj from rdb
 func rdbLoadHashObject(obj parser.RedisObject) {
 	expire := rdbCheckExpire(obj)
 	if expire == -1 {
@@ -142,6 +147,7 @@ func rdbLoadHashObject(obj parser.RedisObject) {
 	rdbLoadExpire(key, expire)
 }
 
+// load zset obj from rdb
 func rdbLoadZSetObject(obj parser.RedisObject) {
 	expire := rdbCheckExpire(obj)
 	if expire == -1 {
@@ -173,6 +179,7 @@ func rdbLoadZSetObject(obj parser.RedisObject) {
 	rdbLoadExpire(key, expire)
 }
 
+// load set obj from rdb
 func rdbLoadSetObject(obj parser.RedisObject) {
 	expire := rdbCheckExpire(obj)
 	if expire == -1 {
@@ -235,32 +242,39 @@ func rdbLoad(filename string) {
 
 // ================================ write rdb data to disk =================================
 
+// write string obj to disk (dump.rdb)
 func _writeStringObject(enc *core.Encoder, key string, value any, options ...any) error {
 	return enc.WriteStringObject(key, value.([]byte), options)
 }
 
+// write list obj to disk (dump.rdb)
 func _writeListObject(enc *core.Encoder, key string, value any, options ...any) error {
 	return enc.WriteListObject(key, value.([][]byte), options)
 }
 
+// write set obj to disk (dump.rdb)
 func _writeSetObject(enc *core.Encoder, key string, value any, options ...any) error {
 	return enc.WriteSetObject(key, value.([][]byte), options)
 }
 
+// write zset obj to disk (dump.rdb)
 func _writeZSetObject(enc *core.Encoder, key string, value any, options ...any) error {
 	return enc.WriteZSetObject(key, value.([]*model.ZSetEntry), options)
 }
 
+// write hash obj to disk (dump.rdb)
 func _writeDictObject(enc *core.Encoder, key string, value any, options ...any) error {
 	return enc.WriteHashMapObject(key, value.(map[string][]byte), options)
 }
 
 // ================================ build rdb save data =================================
 
+// build string obj and write to rdb
 func writeStringObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 	return _writeObjectHandle(val.Typ, enc, key.strVal(), []byte(val.strVal()), expire)
 }
 
+// build list obj and write to rdb
 func writeListObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 	values := make([][]byte, 0)
 
@@ -274,6 +288,7 @@ func writeListObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 	return _writeObjectHandle(val.Typ, enc, key.strVal(), values, expire)
 }
 
+// build set obj and write to rdb
 func writeSetObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 	values := make([][]byte, 0)
 
@@ -296,6 +311,7 @@ func writeSetObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 	return _writeObjectHandle(val.Typ, enc, key.strVal(), values, expire)
 }
 
+// build hash obj and write to rdb
 func writeDictObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 	checkHashEncoding(val)
 	values := make(map[string][]byte)
@@ -308,6 +324,7 @@ func writeDictObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 	return _writeObjectHandle(val.Typ, enc, key.strVal(), values, expire)
 }
 
+// build zset obj and write to rdb
 func writeZSetObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 	checkZSetEncoding(val)
 

@@ -135,7 +135,12 @@ func checkPersistence() {
 	}
 }
 
-func databaseCorn() {
+// database cronjob
+//
+// 1. check and delete some expire key.
+// 2. try to resize hashtable.
+// 3. try to Rehash.
+func databaseCron() {
 	// check expire key
 	activeExpireCycle()
 	if server.aofChildPid == -1 && server.rdbChildPid == -1 {
@@ -149,7 +154,7 @@ func databaseCorn() {
 // server cronjob, default 100ms
 func serverCron(*aeEventLoop, int, any) {
 	// database corn
-	databaseCorn()
+	databaseCron()
 	// flush aof_buf on disk
 	flushAppendOnlyFile()
 	// Check if a background saving or AOF rewrite in progress terminated.
@@ -158,6 +163,7 @@ func serverCron(*aeEventLoop, int, any) {
 
 // ================================ addReply =================================
 
+// set SRedisClient.replyReady = true and try to send reply
 func (c *SRedisClient) doReply() {
 	c.replyReady = true
 	c.addReply(nil)
@@ -188,7 +194,7 @@ func (c *SRedisClient) addReplyError(err string) {
 // 添加浮点数返回
 func (c *SRedisClient) addReplyDouble(f float64) {
 	str := strconv.FormatFloat(f, 'f', 2, 64)
-	c.addReplyStr(fmt.Sprintf("$%d\r\n%s\r\n", len(str), str))
+	c.addReplyStr(fmt.Sprintf(RESP_BULK, len(str), str))
 }
 
 // 添加整数返回
@@ -201,43 +207,61 @@ func (c *SRedisClient) addReplyLongLong(ll int64) {
 		c.addReply(shared.cone)
 		return
 	}
-	c.addReplyStr(fmt.Sprintf(":%d\r\n", ll))
+	c.addReplyStr(fmt.Sprintf(RESP_INT, ll))
 }
 
+// build length Prefix and add to SRedisClient.reply.
+//
+// e.g. addReplyLongLongWithPrefix(10, "*") = "*10\r\n"
 func (c *SRedisClient) addReplyLongLongWithPrefix(ll int64, prefix string) {
-	str := prefix + strconv.FormatInt(ll, 10) + "\r\n"
-	c.addReplyStr(str)
+	c.addReplyStr(prefix + strconv.FormatInt(ll, 10))
+	c.addReply(shared.crlf)
 }
 
+// add array length to SRedisClient.reply, will not send reply if replyReady = false
 func (c *SRedisClient) addReplyMultiBulkLen(length int64, replyReady bool) {
 	c.replyReady = replyReady
 	c.addReplyLongLongWithPrefix(length, "*")
 }
 
+// add bulk length to SRedisClient.reply
 func (c *SRedisClient) addReplyBulkLen(data *SRobj) {
 	c.addReplyLongLongWithPrefix(int64(len(data.strVal())), "$")
 }
 
+// add bulk message to SRedisClient.reply and send reply
 func (c *SRedisClient) addReplyBulk(data *SRobj) {
 	c.addReplyBulkLen(data)
 	c.addReplyStr(fmt.Sprintf("%s", data.strVal()))
 	c.addReply(shared.crlf)
 }
 
+// add bulk int to SRedisClient.reply and send reply.
+//
+// e.g. addReplyBulkInt(15) = "$2\r\n15\r\n"
 func (c *SRedisClient) addReplyBulkInt(ll int64) {
 	c.addReplyBulk(createSRobj(SR_STR, strconv.FormatInt(ll, 10)))
 }
 
+// add status reply.
+//
+// e.g. addReplyStatus("success") = "+success\r\n"
 func (c *SRedisClient) addReplyStatus(s string) {
-	c.addReplyStr(fmt.Sprintf("+%s\r\n", s))
+	c.addReplyStr(fmt.Sprintf("+%s", s))
+	c.addReply(shared.crlf)
 }
 
+// add deferred array length to SRedisClient.reply, will not send reply.
+// use with setDeferredMultiBulkLength.
+//
+// e.g. addDeferredMultiBulkLength() => c.reply.first().data = nil
 func (c *SRedisClient) addDeferredMultiBulkLength() *node {
 	c.replyReady = false
 	c.pushReply(createSRobj(SR_STR, nil), AL_START_TAIL)
 	return c.reply.first()
 }
 
+// set deferred array length to SRedisClient.reply. use with addDeferredMultiBulkLength
 func (c *SRedisClient) setDeferredMultiBulkLength(n *node, length int) {
 	if n != nil {
 		n.data = createSRobj(SR_STR, fmt.Sprintf("*%d\r\n", length))
