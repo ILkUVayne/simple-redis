@@ -49,6 +49,7 @@ type zSkipListNodeLevel struct {
 
 // ================================ skipList node =================================
 
+// 跳表节点
 type zSkipListNode struct {
 	obj      *SRobj                // 成员对象
 	score    float64               // 分数
@@ -63,6 +64,7 @@ func (zn *zSkipListNode) freeNode() {
 	zn.level = nil
 }
 
+// create zSkipListNode
 func zslCreateNode(level int, score float64, obj *SRobj) *zSkipListNode {
 	zsln := new(zSkipListNode)
 	zsln.obj = obj
@@ -76,6 +78,7 @@ func zslCreateNode(level int, score float64, obj *SRobj) *zSkipListNode {
 
 // ================================== skipList ===================================
 
+// 跳表
 type zSkipList struct {
 	header, tail *zSkipListNode // 表头、表尾节点指针
 	length       int64          // 节点数量
@@ -205,6 +208,7 @@ func (z *zSkipList) getElementByRank(rank int64) *zSkipListNode {
 	return nil
 }
 
+// create zSkipList
 func zslCreate() *zSkipList {
 	zsl := new(zSkipList)
 	zsl.level = 1
@@ -220,9 +224,10 @@ func zslCreate() *zSkipList {
 
 // ==================================== zSet =====================================
 
+// 有序集合
 type zSet struct {
-	zsl *zSkipList
-	d   *dict
+	zsl *zSkipList // 跳表，存储有序的元素及分数
+	d   *dict      // 冗余的dict，存储元素和分数的映射，用于快速查询元素对应的分数
 }
 
 func (z *zSet) len() int64 {

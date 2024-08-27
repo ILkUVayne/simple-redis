@@ -70,6 +70,7 @@ type SRedisServer struct {
 	lastSave          int64
 }
 
+// incr SRedisServer.dirty
 func (s *SRedisServer) incrDirtyCount(c *SRedisClient, num int64) {
 	if !c.isFake() {
 		s.dirty += num
@@ -102,6 +103,7 @@ func updateDictResizePolicy() {
 	dictDisableResize()
 }
 
+// init server config
 func initServerConfig() {
 	server.port = DEFAULT_PORT
 	if config.Port > 0 {
@@ -125,6 +127,7 @@ func initServerConfig() {
 
 var server SRedisServer
 
+// init server
 func initServer() {
 	server.db = &SRedisDB{
 		data:   dictCreate(&dbDictType),
@@ -155,6 +158,7 @@ func initServer() {
 	server.rdbFilename = PersistenceFile(REDIS_RDB_DEFAULT)
 }
 
+// load data from aof or rdb
 func loadDataFromDisk() {
 	start := time.GetMsTime()
 	if server.aofState == REDIS_AOF_ON {
@@ -166,6 +170,7 @@ func loadDataFromDisk() {
 	ulog.InfoF("DB loaded from disk: %.3f seconds", float64(time.GetMsTime()-start)/1000)
 }
 
+// ServerStart server entry
 func ServerStart() {
 	// load config
 	SetupConf(ServerArgs.confPath)

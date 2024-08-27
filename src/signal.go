@@ -9,6 +9,7 @@ import (
 
 type signalHandler func(sig os.Signal)
 
+// SetupSignalHandler 信号处理
 func SetupSignalHandler(shutdownFunc signalHandler) {
 	closeSignalChan := make(chan os.Signal, 1)
 	signal.Notify(closeSignalChan,
@@ -30,6 +31,7 @@ func SetupSignalHandler(shutdownFunc signalHandler) {
 // server
 //-----------------------------------------------------------------------------
 
+// server 退出信号处理
 func serverShutdown(sig os.Signal) {
 	ulog.InfoF("signal-handler Received %s scheduling shutdown...", sig.String())
 

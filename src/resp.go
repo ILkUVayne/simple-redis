@@ -7,6 +7,7 @@ import (
 	"strings"
 )
 
+// resp type mapping
 var respType = map[byte]int{
 	'+': SIMPLE_STR,
 	'-': SIMPLE_ERROR,
@@ -33,6 +34,9 @@ func getRespType(t byte) int {
 	return typ
 }
 
+// e.g. queryLen = "get name\r\n" return 8
+//
+// queryLen = "$3\r\nget\r\n$4\r\nname\r\n" return 2
 func getQueryLine(buf []byte, queryLen int) (int, error) {
 	idx := strings.Index(string(buf), "\r\n")
 	if idx < 0 && queryLen > SREDIS_MAX_INLINE {
@@ -43,6 +47,7 @@ func getQueryLine(buf []byte, queryLen int) (int, error) {
 
 // ================================ Parse resp data =================================
 
+// e.g. "+OK\r\n" => "OK"
 func respParseSimpleStr(buf []byte, length int) (string, error) {
 	idx, err := getQueryLine(buf, length)
 	if err != nil || idx < 0 {
@@ -52,6 +57,7 @@ func respParseSimpleStr(buf []byte, length int) (string, error) {
 	return str, nil
 }
 
+// e.g. "$5\r\nhello\r\n" => "hello"
 func respParseBulk(buf []byte, length int) (string, error) {
 	idx, err := getQueryLine(buf, length)
 	if err != nil || idx < 0 {
@@ -76,6 +82,7 @@ func respParseBulk(buf []byte, length int) (string, error) {
 	return str, nil
 }
 
+// e.g. ":3\r\n" => 3
 func respParseIntegers(buf []byte, length int) (string, error) {
 	idx, err := getQueryLine(buf, length)
 	if err != nil || idx < 0 {
@@ -85,7 +92,7 @@ func respParseIntegers(buf []byte, length int) (string, error) {
 	return str, nil
 }
 
-// *2\r\n$2\r\nxx\r\n$3\r\nccc\r\n
+// e.g. *2\r\n$2\r\nxx\r\n$3\r\nccc\r\n => "1) \"xx\"\r\n2) \"ccc\"\r\n"
 func respParseArrays(buf []byte, length int) (string, error) {
 	idx, err := getQueryLine(buf, length)
 	if err != nil || idx < 0 {
@@ -135,6 +142,7 @@ func respParseArrays(buf []byte, length int) (string, error) {
 
 // ================================ format response string =================================
 
+// e.g. "hello" => "\"hello\""
 func bulkStrFormat(s string) string {
 	if s != NIL_STR {
 		return fmt.Sprintf("\"%s\"", s)
@@ -142,10 +150,12 @@ func bulkStrFormat(s string) string {
 	return ""
 }
 
+// e.g. "ERR: xxxx" => "(error) ERR: xxxx"
 func simpleErrStrFormat(s string) string {
 	return fmt.Sprintf("(error) %s", s)
 }
 
+// e.g. "15" => "(integer) 15"
 func intStrFormat(s string) string {
 	return fmt.Sprintf("(integer) %s", s)
 }

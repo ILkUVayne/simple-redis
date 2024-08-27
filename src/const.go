@@ -70,6 +70,7 @@ const (
 	RESP_OK  = "+OK\r\n"
 	RESP_ERR = "-ERR: %s\r\n"
 
+	RESP_INT        = ":%d\r\n"
 	RESP_BULK       = "$%d\r\n%v\r\n"
 	RESP_ARRAY      = "*%d\r\n"
 	RESP_STR        = "*3\r\n$3\r\nSET\r\n"

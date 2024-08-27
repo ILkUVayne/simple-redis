@@ -12,10 +12,11 @@ type SRType uint8
 
 type SRVal any
 
+// SRobj simple-redis 的基本存储对象结构
 type SRobj struct {
-	Typ      SRType
-	Val      SRVal
-	encoding uint8
+	Typ      SRType // simple-redis定义的type，例如： SR_STR
+	Val      SRVal  // 实际存储的值，可以是任意类型
+	encoding uint8  // val实际的编码格式，例如： REDIS_ENCODING_INT
 	refCount int
 }
 
@@ -40,6 +41,7 @@ var TypeMaps = map[SRType]string{
 
 var NotStringTypeErr = errors.New("intVal err: type is not string")
 
+// 尝试将 SRobj.Val 转换为字符串并返会
 func (s *SRobj) strVal() string {
 	if s.Typ != SR_STR {
 		return ""
@@ -63,6 +65,7 @@ func (s *SRobj) decrRefCount() {
 	}
 }
 
+// 尝试将 SRobj.Val 转换为数字并返会
 func (s *SRobj) intVal() (int64, error) {
 	if s.Typ != SR_STR {
 		return 0, NotStringTypeErr
@@ -77,6 +80,7 @@ func (s *SRobj) intVal() (int64, error) {
 	panic("Unknown string encoding")
 }
 
+// 尝试将 SRobj.Val 转换为浮点数并返会
 func (s *SRobj) floatVal() (float64, error) {
 	if s.Typ != SR_STR {
 		return 0, NotStringTypeErr
@@ -113,6 +117,7 @@ func (s *SRobj) getType() *SRobj {
 	return createSRobj(SR_STR, s.strType())
 }
 
+// 检查 SRobj.Typ 是否与传入的typ相等
 func (s *SRobj) checkType(c *SRedisClient, typ SRType) bool {
 	if s.Typ != typ {
 		c.addReply(shared.wrongTypeErr)
@@ -121,6 +126,7 @@ func (s *SRobj) checkType(c *SRedisClient, typ SRType) bool {
 	return true
 }
 
+// try to get SRobj.Val encoding
 func (s *SRobj) tryObjectEncoding() {
 	if s.encoding != REDIS_ENCODING_RAW || s.refCount > 1 || s.Typ != SR_STR {
 		return
