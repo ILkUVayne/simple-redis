@@ -35,6 +35,7 @@ func sCap(c capacity) int64 {
 // sys function
 //-----------------------------------------------------------------------------
 
+// 以home路径为基础拼接绝对路径
 func absolutePath(file string) string {
 	str, err := flie.Home()
 	if err != nil {
@@ -43,10 +44,12 @@ func absolutePath(file string) string {
 	return str + "/" + file
 }
 
+// HistoryFile cli历史命令文件绝对路径
 func HistoryFile(file string) string {
 	return absolutePath(file)
 }
 
+// PersistenceFile 持久化文件绝对路径
 func PersistenceFile(file string) string {
 	return absolutePath(file)
 }
@@ -55,6 +58,7 @@ func PersistenceFile(file string) string {
 // match function
 //-----------------------------------------------------------------------------
 
+// StringMatchLen keys命令字符串匹配函数
 func StringMatchLen(pattern, str string, noCase bool) bool {
 	pIdx, sIdx, patternLen, strLen := 0, 0, len(pattern), len(str)
 	if patternLen == 1 && pattern == "*" {

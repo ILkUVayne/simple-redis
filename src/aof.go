@@ -269,36 +269,29 @@ func rewriteListObject(f *os.File, key, val *SRobj) {
 
 // rewrite set object to file
 func rewriteSetObject(f *os.File, key, val *SRobj) {
+	var eleObj *SRobj
+	var intObj int64
+
 	count, items := int64(0), setTypeSize(val)
-	// encoding is intSet
-	if val.encoding == REDIS_ENCODING_INTSET {
-		var intVal int64
-		for ii := int64(0); assertIntSet(val).intSetGet(ii, &intVal); ii++ {
-			if count == 0 {
-				cmd := fmt.Sprintf(RESP_SET, 2+getItems(items))
-				// add key
-				rewriteObject(f, cmd, key)
-			}
-			// add val
-			rewriteObject(f, "", createFromInt(intVal))
-			checkItems(&count, &items)
-		}
-		return
-	}
-	// encoding is hash table
-	di := assertDict(val).dictGetIterator()
-	for de := di.dictNext(); de != nil; de = di.dictNext() {
-		eleObj := de.getKey()
+	si := setTypeInitIterator(val)
+	for encoding := si.setTypeNext(&eleObj, &intObj); encoding != -1; encoding = si.setTypeNext(&eleObj, &intObj) {
 		if count == 0 {
 			cmd := fmt.Sprintf(RESP_SET, 2+getItems(items))
 			// add key
 			rewriteObject(f, cmd, key)
 		}
 		// add val
-		rewriteObject(f, "", eleObj)
+		var setVal *SRobj
+		if uint8(encoding) == REDIS_ENCODING_INTSET {
+			setVal = createFromInt(intObj)
+		}
+		if uint8(encoding) == REDIS_ENCODING_HT {
+			setVal = eleObj
+		}
+		rewriteObject(f, "", setVal)
 		checkItems(&count, &items)
 	}
-	di.dictReleaseIterator()
+	si.setTypeReleaseIterator()
 }
 
 // rewrite zSet object to file

@@ -290,24 +290,21 @@ func writeListObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 
 // build set obj and write to rdb
 func writeSetObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
+	var eleObj *SRobj
+	var intObj int64
 	values := make([][]byte, 0)
 
 	checkSetEncoding(val)
-
-	if val.encoding == REDIS_ENCODING_INTSET {
-		var intVal int64
-		for ii := int64(0); assertIntSet(val).intSetGet(ii, &intVal); ii++ {
-			values = append(values, []byte(strconv.FormatInt(intVal, 10)))
+	si := setTypeInitIterator(val)
+	for encoding := si.setTypeNext(&eleObj, &intObj); encoding != -1; encoding = si.setTypeNext(&eleObj, &intObj) {
+		if uint8(encoding) == REDIS_ENCODING_INTSET {
+			values = append(values, []byte(strconv.FormatInt(intObj, 10)))
+			continue
 		}
+		// REDIS_ENCODING_HT
+		values = append(values, []byte(eleObj.strVal()))
 	}
-	if val.encoding == REDIS_ENCODING_HT {
-		di := assertDict(val).dictGetIterator()
-		for de := di.dictNext(); de != nil; de = di.dictNext() {
-			eleObj := de.getKey()
-			values = append(values, []byte(eleObj.strVal()))
-		}
-		di.dictReleaseIterator()
-	}
+	si.setTypeReleaseIterator()
 	return _writeObjectHandle(val.Typ, enc, key.strVal(), values, expire)
 }
 
