@@ -1,14 +1,14 @@
 package src
 
 import (
+	"github.com/ILkUVayne/utlis-go/v2/ulog"
 	"golang.org/x/sys/unix"
-	"log/slog"
 )
 
 // fork child process
 func fork() int {
 	id, _, err := unix.Syscall(unix.SYS_FORK, 0, 0, 0)
-	slog.Error("fork err: ", err)
+	ulog.ErrorP("fork err: ", err)
 	return int(id)
 }
 
