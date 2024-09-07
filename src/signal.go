@@ -7,6 +7,10 @@ import (
 	"syscall"
 )
 
+//-----------------------------------------------------------------------------
+// recv
+//-----------------------------------------------------------------------------
+
 type signalHandler func(sig os.Signal)
 
 // SetupSignalHandler 信号处理
@@ -27,19 +31,18 @@ func SetupSignalHandler(shutdownFunc signalHandler) {
 	}()
 }
 
-//-----------------------------------------------------------------------------
-// server
-//-----------------------------------------------------------------------------
+// ================================ server =================================
 
 // server 退出信号处理
 func serverShutdown(sig os.Signal) {
+	sendKill(server.rdbChildPid, server.aofChildPid)
 	ulog.InfoF("signal-handler Received %s scheduling shutdown...", sig.String())
 
-	if server.saveParams != nil && server.rdbChildPid == -1 {
+	if server.saveParams != nil {
 		ulog.Info("SYNC rdb save start...")
 		rdbSaveBackground()
 	}
-	if server.aofState == REDIS_AOF_ON && server.aofChildPid == -1 {
+	if server.aofState == REDIS_AOF_ON && server.saveParams == nil {
 		ulog.Info("SYNC append only file rewrite start...")
 		rewriteAppendOnlyFileBackground()
 	}
@@ -60,5 +63,15 @@ func serverShutdown(sig os.Signal) {
 }
 
 //-----------------------------------------------------------------------------
-// cli
+// send
 //-----------------------------------------------------------------------------
+
+// 向指定的pid发送kill信号
+func sendKill(PIDs ...int) {
+	for _, pid := range PIDs {
+		if pid == -1 {
+			continue
+		}
+		_ = syscall.Kill(pid, syscall.SIGINT)
+	}
+}
