@@ -5,6 +5,9 @@ import (
 )
 
 // fork child process
+//
+// 多线程情况下，fork可能发生死锁（偶发现象）。
+// 该方法仅为还原redis的fork操作，生产级应用还是推荐使用协程实现。
 func fork() int {
 	id, _, _ := unix.Syscall(unix.SYS_FORK, 0, 0, 0)
 	return int(id)
