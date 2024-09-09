@@ -419,6 +419,7 @@ func rdbSaveBackground() int {
 	} else {
 		ulog.Info("Background saving started by pid %d", childPid)
 		server.rdbChildPid = childPid
+		server.rdbStartTime = time2.GetMsTime()
 		server.changeLoadFactor(BG_PERSISTENCE_LOAD_FACTOR)
 		updateDictResizePolicy()
 		return REDIS_OK
@@ -432,6 +433,7 @@ func backgroundSaveDoneHandler() {
 	server.lastSave = time2.GetMsTime()
 	server.lastBgSaveStatus = REDIS_OK
 	server.rdbChildPid = -1
+	server.rdbStartTime = 0
 	server.changeLoadFactor(LOAD_FACTOR)
 	ulog.Info("Background RDB finished successfully")
 }

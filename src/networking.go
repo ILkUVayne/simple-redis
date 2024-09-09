@@ -151,6 +151,23 @@ func databaseCron() {
 	}
 }
 
+// 检查bgSave 或者 BGREWRITEAOF 执行事件是否超过阈值,
+// 若超过了（可能是子进程死锁阻塞了），则手动发送中断信号kill子进程
+func checkRdbOrAofExecTimeout() {
+	// check rdb
+	if server.rdbChildPid != -1 && (time.GetMsTime()-server.rdbStartTime) > C_PROC_MAX_TIME {
+		sendKill(server.rdbChildPid)
+		ulog.Info("rdb bgSave exec timeout, childPid = ", server.rdbChildPid)
+		server.rdbChildPid = -1
+	}
+	// check aof
+	if server.aofChildPid != -1 && (time.GetMsTime()-server.aofStartTime) > C_PROC_MAX_TIME {
+		sendKill(server.aofChildPid)
+		ulog.Info("aof bgRewriteAof exec timeout, childPid = ", server.aofChildPid)
+		server.aofChildPid = -1
+	}
+}
+
 // server cronjob, default 100ms
 func serverCron(*aeEventLoop, int, any) {
 	// database corn
@@ -159,6 +176,8 @@ func serverCron(*aeEventLoop, int, any) {
 	flushAppendOnlyFile()
 	// Check if a background saving or AOF rewrite in progress terminated.
 	checkPersistence()
+	// check bgSave or BGREWRITEAOF timeout
+	checkRdbOrAofExecTimeout()
 }
 
 // ================================ addReply =================================

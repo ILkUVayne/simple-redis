@@ -37,6 +37,10 @@ const (
 	SPA_CONTINUE   = 1
 	SPA_DONE       = 2
 	SPA_TERMINATED = 3
+
+	// bgSave 或者 BGREWRITEAOF (child process) 执行时间阈值
+
+	C_PROC_MAX_TIME int64 = 1000 * 60 * 20 // 单位毫秒,默认20分钟
 )
 
 //-----------------------------------------------------------------------------
