@@ -57,6 +57,7 @@ type SRedisServer struct {
 	aofRewriteBufBlocks string // AOF rewrite buffer
 	aofRewritePerc      int
 	aofRewriteMinSize   int64
+	aofStartTime        int64
 
 	// RDB persistence
 
@@ -68,6 +69,7 @@ type SRedisServer struct {
 	rdbChildPid       int
 	rdbFilename       string
 	lastSave          int64
+	rdbStartTime      int64
 }
 
 // incr SRedisServer.dirty

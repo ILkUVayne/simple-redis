@@ -390,6 +390,7 @@ func rewriteAppendOnlyFileBackground() int {
 	} else {
 		ulog.Info("Background append only file rewriting started by pid %d", childPid)
 		server.aofChildPid = childPid
+		server.aofStartTime = time.GetMsTime()
 		server.changeLoadFactor(BG_PERSISTENCE_LOAD_FACTOR)
 		updateDictResizePolicy()
 		return REDIS_OK
@@ -432,6 +433,7 @@ cleanup:
 	_ = os.Remove(tmpFile)
 	// reset aofChildPid == -1
 	server.aofChildPid = -1
+	server.aofStartTime = 0
 	// Recovery load factor
 	server.changeLoadFactor(LOAD_FACTOR)
 }
