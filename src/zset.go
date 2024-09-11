@@ -230,10 +230,12 @@ type zSet struct {
 	d   *dict      // 冗余的dict，存储元素和分数的映射，用于快速查询元素对应的分数
 }
 
+// return skipList node numbers
 func (z *zSet) len() int64 {
 	return z.zsl.length
 }
 
+// return a random skipList level
 func zslRandomLevel() int {
 	level := 1
 	for float64(rand.Int63()&0xFFFF) < (ZSKIPLIST_P * 0xFFFF) {
@@ -245,16 +247,19 @@ func zslRandomLevel() int {
 	return level
 }
 
+// create a new zSet
 func zSetCreate() *zSet {
 	return &zSet{zsl: zslCreate(), d: dictCreate(&zSetDictType)}
 }
 
+// 检查有序集合的encoding是否正确，不正确时会抛出panic
 func checkZSetEncoding(subject *SRobj) {
 	if subject.encoding != REDIS_ENCODING_SKIPLIST {
 		panic("Unknown sorted zset encoding")
 	}
 }
 
+// 验证有序集合encoding，并返回有序集合元素数量
 func zSetLength(o *SRobj) int64 {
 	checkZSetEncoding(o)
 	return sLen(assertZSet(o))
