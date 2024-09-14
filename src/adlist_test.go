@@ -62,7 +62,7 @@ func TestRPush(t *testing.T) {
 	l := listCreate(&lType)
 	data := createSRobj(SR_STR, "name1")
 	l.rPush(data)
-	data1 := createSRobj(SR_STR, "name1")
+	data1 := createSRobj(SR_STR, "name2")
 	l.rPush(data1)
 	n := l.first()
 	if !l.lType.keyCompare(n.data, data) {
