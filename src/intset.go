@@ -99,11 +99,10 @@ func (is *intSet) intSetAdd(value int64, success *bool) *intSet {
 // remove value from intSet if exist
 func (is *intSet) intSetRemove(value int64) {
 	var pos int64
-	if !is.intSetSearch(value, &pos) {
-		return
+	if is.intSetSearch(value, &pos) {
+		is._intSetRemove(pos)
+		is.length--
 	}
-	is._intSetRemove(pos)
-	is.length--
 }
 
 // return a Random value from intSet
