@@ -156,14 +156,12 @@ func (l *list) find(data *SRobj) *node {
 
 // 根据 node 结点删除
 func (l *list) delNode(n *node) {
-	if n == nil {
+	if n == nil || l.isEmpty() {
 		return
 	}
-	if l.length == 0 {
-		return
-	}
-	l.length--
 
+	l.length--
+	// 删除的结点为头结点
 	if l.head == n {
 		if n.next != nil {
 			n.next.prev = nil
@@ -172,7 +170,7 @@ func (l *list) delNode(n *node) {
 		n.next = nil
 		return
 	}
-
+	// 删除的结点为尾结点
 	if l.tail == n {
 		if n.prev != nil {
 			n.prev.next = nil
@@ -181,7 +179,7 @@ func (l *list) delNode(n *node) {
 		n.prev = nil
 		return
 	}
-
+	// 删除的结点为其他结点
 	if n.prev != nil {
 		n.prev.next = n.next
 	}
