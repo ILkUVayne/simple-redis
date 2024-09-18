@@ -34,6 +34,11 @@ func TestAeFeKey(t *testing.T) {
 func TestEpollMask(t *testing.T) {
 	fd := 7
 	el := aeCreateEventLoop()
+
+	if el.stop {
+		t.Error("default el.stop == true")
+	}
+
 	em := el.epollMask(fd)
 	if em != 0 {
 		t.Error("el.epollMask err: em==", em)

@@ -25,7 +25,7 @@ type aeTimeProc func(el *aeEventLoop, id int, clientData any)
 type aeFileEvent struct {
 	mask       FeType     // ae file event type, AE_READABLE and AE_WRITEABLE
 	proc       aeFileProc // 文件事件处理函数
-	fd         int
+	fd         int        // server 或者 client 文件描述符
 	clientData any
 }
 
@@ -45,8 +45,8 @@ type aeEventLoop struct {
 	fileEvent       map[int]*aeFileEvent // file event maps
 	timeEvent       *aeTimeEvent         // time event list
 	ffd             int                  // epoll fd
-	timeEventNextId int
-	stop            bool
+	timeEventNextId int                  // 下一个被创建时间事件的id
+	stop            bool                 // default false
 }
 
 // fileEvent to epoll
@@ -230,7 +230,6 @@ func (el *aeEventLoop) aeProcessEvents() {
 func aeCreateEventLoop() *aeEventLoop {
 	el := new(aeEventLoop)
 	el.fileEvent = make(map[int]*aeFileEvent)
-	el.stop = false
 	el.timeEventNextId = 1
 	efd, err := unix.EpollCreate1(0)
 	if err != nil {
