@@ -66,14 +66,14 @@ func (zn *zSkipListNode) freeNode() {
 
 // create zSkipListNode
 func zslCreateNode(level int, score float64, obj *SRobj) *zSkipListNode {
-	zsln := new(zSkipListNode)
-	zsln.obj = obj
-	zsln.score = score
-	zsln.level = make([]*zSkipListNodeLevel, level)
+	zslNode := new(zSkipListNode)
+	zslNode.obj = obj
+	zslNode.score = score
+	zslNode.level = make([]*zSkipListNodeLevel, level)
 	for i := 0; i < level; i++ {
-		zsln.level[i] = new(zSkipListNodeLevel)
+		zslNode.level[i] = new(zSkipListNodeLevel)
 	}
-	return zsln
+	return zslNode
 }
 
 // ================================== skipList ===================================
@@ -87,13 +87,13 @@ type zSkipList struct {
 
 func (z *zSkipList) free() {
 	var next *zSkipListNode
-	node := z.header.level[0].forward
+	zslNode := z.header.level[0].forward
 	// free
 	z.header = nil
-	for node != nil {
-		next = node.level[0].forward
-		node.freeNode()
-		node = next
+	for zslNode != nil {
+		next = zslNode.level[0].forward
+		zslNode.freeNode()
+		zslNode = next
 	}
 	z.tail = nil
 }
@@ -230,10 +230,12 @@ type zSet struct {
 	d   *dict      // 冗余的dict，存储元素和分数的映射，用于快速查询元素对应的分数
 }
 
+// return skipList node numbers
 func (z *zSet) len() int64 {
 	return z.zsl.length
 }
 
+// return a random skipList level
 func zslRandomLevel() int {
 	level := 1
 	for float64(rand.Int63()&0xFFFF) < (ZSKIPLIST_P * 0xFFFF) {
@@ -245,16 +247,19 @@ func zslRandomLevel() int {
 	return level
 }
 
+// create a new zSet
 func zSetCreate() *zSet {
 	return &zSet{zsl: zslCreate(), d: dictCreate(&zSetDictType)}
 }
 
+// 检查有序集合的encoding是否正确，不正确时会抛出panic
 func checkZSetEncoding(subject *SRobj) {
 	if subject.encoding != REDIS_ENCODING_SKIPLIST {
-		panic("Unknown sorted zset encoding")
+		panic("Unknown sorted zSet encoding")
 	}
 }
 
+// 验证有序集合encoding，并返回有序集合元素数量
 func zSetLength(o *SRobj) int64 {
 	checkZSetEncoding(o)
 	return sLen(assertZSet(o))

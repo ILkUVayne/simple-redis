@@ -133,11 +133,10 @@ func (s *SRobj) tryObjectEncoding() {
 	}
 	// Check if we can represent this string as a long integer
 	var i int64
-	if str2.String2Int64(s.strVal(), &i) != nil {
-		return
+	if str2.String2Int64(s.strVal(), &i) == nil {
+		s.encoding = REDIS_ENCODING_INT
+		s.Val = i
 	}
-	s.encoding = REDIS_ENCODING_INT
-	s.Val = i
 }
 
 func (s *SRobj) getDecodedObject() *SRobj {

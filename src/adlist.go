@@ -17,7 +17,7 @@ var lType = dictType{
 
 type listIter struct {
 	next      *node
-	direction int
+	direction int // list 下一个元素的迭代方向， AL_START_HEAD => node.next ， AL_START_TAIL => node.prev
 }
 
 // return next node
@@ -38,20 +38,24 @@ func (li *listIter) listNext() *node {
 // list node
 // -----------------------------------------------------------------------------
 
+// list node 是一个双向链表
 type node struct {
 	data *SRobj
 	prev *node
 	next *node
 }
 
+// 当前 node 结点数据
 func (n *node) nodeValue() *SRobj {
 	return n.data
 }
 
+// 当前 node 结点的下一个结点指针
 func (n *node) nodeNext() *node {
 	return n.next
 }
 
+// 当前 node 结点的上一个结点指针
 func (n *node) nodePrev() *node {
 	return n.prev
 }
@@ -62,29 +66,34 @@ func (n *node) nodePrev() *node {
 
 type list struct {
 	lType  *dictType
-	head   *node
-	tail   *node
+	head   *node // list 头结点指针
+	tail   *node // list 尾结点指针
 	length int64
 }
 
 var _ Pusher = (*list)(nil)
 
+// return list length
 func (l *list) len() int64 {
 	return l.length
 }
 
+// 判断 list 是否为空（长度是否为零）
 func (l *list) isEmpty() bool {
 	return sLen(l) == 0
 }
 
+// 返回list头结点
 func (l *list) first() *node {
 	return l.head
 }
 
+// 返回list尾结点
 func (l *list) last() *node {
 	return l.tail
 }
 
+// 创建 node 结点，若 list 为空，则直接插入并返回true，反之则返回创建的 node 并返回false
 func (l *list) _push(data *SRobj) (bool, *node) {
 	n := new(node)
 	n.data = data
@@ -98,28 +107,43 @@ func (l *list) _push(data *SRobj) (bool, *node) {
 	return false, n
 }
 
+// 在 node 链表的尾部插入新的数据结点
 func (l *list) rPush(data *SRobj) {
 	var n *node
 	var res bool
 	if res, n = l._push(data); res {
 		return
 	}
+
+	// 假设当前链表结构：nil <- A <-> B <-> C -> nil，此时 n 为需要新加入的结点
+
+	// nil <- A <-> B <-> C -> nil , C <- n , l.tail = C
 	n.prev = l.tail
+	// nil <- A <-> B <-> C <-> n , l.tail = C
 	l.tail.next = n
+	// nil <- A <-> B <-> C <-> n , l.tail = n
 	l.tail = n
 }
 
+// // 在 node 链表的头部插入新的数据结点
 func (l *list) lPush(data *SRobj) {
 	var n *node
 	var res bool
 	if res, n = l._push(data); res {
 		return
 	}
+
+	// 假设当前链表结构：nil <- A <-> B <-> C -> nil，此时 n 为需要新加入的结点
+
+	// nil <- A <-> B <-> C -> nil , n -> A , l.head = A
 	n.next = l.head
+	// n <-> A <-> B <-> C -> nil , l.head = A
 	l.head.prev = n
+	// n <-> A <-> B <-> C -> nil , l.head = n
 	l.head = n
 }
 
+// 根据数据查找 list 结点，不存在则返回nil
 func (l *list) find(data *SRobj) *node {
 	p := l.head
 	for ; p != nil; p = p.next {
@@ -130,15 +154,14 @@ func (l *list) find(data *SRobj) *node {
 	return p
 }
 
+// 根据 node 结点删除
 func (l *list) delNode(n *node) {
-	if n == nil {
+	if n == nil || l.isEmpty() {
 		return
 	}
-	if l.length == 0 {
-		return
-	}
-	l.length--
 
+	l.length--
+	// 删除的结点为头结点
 	if l.head == n {
 		if n.next != nil {
 			n.next.prev = nil
@@ -147,7 +170,7 @@ func (l *list) delNode(n *node) {
 		n.next = nil
 		return
 	}
-
+	// 删除的结点为尾结点
 	if l.tail == n {
 		if n.prev != nil {
 			n.prev.next = nil
@@ -156,7 +179,7 @@ func (l *list) delNode(n *node) {
 		n.prev = nil
 		return
 	}
-
+	// 删除的结点为其他结点
 	if n.prev != nil {
 		n.prev.next = n.next
 	}
@@ -167,6 +190,7 @@ func (l *list) delNode(n *node) {
 	n.prev = nil
 }
 
+// 删除结点
 func (l *list) del(data *SRobj) {
 	l.delNode(l.find(data))
 }
