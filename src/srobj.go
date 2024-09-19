@@ -54,10 +54,16 @@ func (s *SRobj) strVal() string {
 }
 
 func (s *SRobj) incrRefCount() {
+	if s == nil {
+		return
+	}
 	s.refCount++
 }
 
 func (s *SRobj) decrRefCount() {
+	if s == nil {
+		return
+	}
 	s.refCount--
 	// gc 自动回收
 	if s.refCount == 0 {

@@ -168,6 +168,8 @@ const (
 	SMEMBERS     = "smembers"
 	SINTER       = "sinter"
 	SINTER_STORE = "sinterstore"
+	S_POP        = "spop"
+	S_REM        = "srem"
 
 	// list command
 

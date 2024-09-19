@@ -632,6 +632,43 @@ The destination can be the key itself.
 2) "php"
 ~~~
 
+### srem
+
+**SREM key member [member ...]**
+
+Remove one or more member elements from the set key, non-existent member elements will be ignored. When the key is not a collection type, return an error.
+
+~~~bash
+127.0.0.1:6379> sadd s1 11 aaa 5 bbb 66 ccc
+(integer) 6
+127.0.0.1:6379> srem s1 aaa
+(integer) 1
+127.0.0.1:6379> srem s1 aaa 11 ccc
+(integer) 2
+127.0.0.1:6379> smembers s1
+1) "5"
+2) "bbb"
+3) "66"
+~~~
+
+### spop
+
+**SPOP key [count]**
+
+Remove and return a random element from the collection.
+
+~~~bash
+127.0.0.1:6379> sadd s1 11 5 88 baidu google
+(integer) 5
+127.0.0.1:6379> spop s1
+"88"
+127.0.0.1:6379> smembers s1
+1) "google"
+2) "baidu"
+3) "5"
+4) "11"
+~~~
+
 ## zset
 
 ### zadd

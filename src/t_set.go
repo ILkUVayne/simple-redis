@@ -128,6 +128,10 @@ func sinterGenericCommand(c *SRedisClient, setKeys []*SRobj, setNum int64, dstKe
 	c.addReply(shared.czero)
 }
 
+func sPopWithCountCommand(c *SRedisClient) {
+	// todo spop key [count]
+}
+
 // sadd key member [member ...]
 func sAddCommand(c *SRedisClient) {
 	key := c.args[1]
@@ -161,4 +165,69 @@ func sinterCommand(c *SRedisClient) {
 // sinterstore key [key ...]
 func sinterStoreCommand(c *SRedisClient) {
 	sinterGenericCommand(c, c.args[2:], int64(len(c.args[2:])), c.args[1])
+}
+
+// spop key [count]
+func sPopCommand(c *SRedisClient) {
+	if len(c.args) > 3 {
+		c.addReply(shared.syntaxErr)
+		return
+	}
+	// with count
+	if len(c.args) == 3 {
+		sPopWithCountCommand(c)
+		return
+	}
+	// single pop
+	key := c.args[1]
+	set := c.db.lookupKeyReadOrReply(c, key, shared.nullBulk)
+	if set == nil || !set.checkType(c, SR_SET) {
+		return
+	}
+
+	// Get a random element
+	encoding, objEle, intEle := setTypeRandomElement(set)
+
+	// remove the element
+	if encoding == REDIS_ENCODING_INTSET {
+		objEle = createFromInt(intEle)
+	}
+	objEle.incrRefCount()
+	setTypeRemove(set, objEle)
+
+	// Replicate/AOF this command as an SREM operation
+	c.rewriteClientCommandVector(createSRobj(SR_STR, S_REM), key, objEle)
+
+	// Add the element to the reply
+	c.addReplyBulk(objEle)
+
+	// Delete the set if it's empty
+	if setTypeSize(set) == 0 {
+		c.db.dbDel(key)
+	}
+
+	// update dirty
+	server.incrDirtyCount(c, 1)
+}
+
+// srem key member [member ...]
+func sRemCommand(c *SRedisClient) {
+	key := c.args[1]
+	set := c.db.lookupKeyReadOrReply(c, key, shared.nullBulk)
+	if set == nil || !set.checkType(c, SR_SET) {
+		return
+	}
+
+	deleted := int64(0)
+	for i := 2; i < len(c.args); i++ {
+		if setTypeRemove(set, c.args[i]) {
+			deleted++
+			if setTypeSize(set) == 0 {
+				c.db.dbDel(key)
+				break
+			}
+		}
+	}
+	server.incrDirtyCount(c, deleted)
+	c.addReplyLongLong(deleted)
 }

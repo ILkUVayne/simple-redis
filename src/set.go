@@ -144,6 +144,40 @@ func setTypeIsMember(setObj, value *SRobj) bool {
 	return false
 }
 
+// 获取一个随机的集合（set）元素
+func setTypeRandomElement(setObj *SRobj) (encoding uint8, objEle *SRobj, intEle int64) {
+	checkSetEncoding(setObj)
+	encoding = setObj.encoding
+	if encoding == REDIS_ENCODING_INTSET {
+		return encoding, nil, assertIntSet(setObj).intSetRandom()
+	}
+	// hash table
+	objEle = assertDict(setObj).dictGetRandomKey().getKey()
+	return encoding, objEle, -123456789
+}
+
+// 删除集合元素，value 为需要被删除的元素
+func setTypeRemove(setObj, value *SRobj) bool {
+	checkSetEncoding(setObj)
+	if setObj.encoding == REDIS_ENCODING_HT {
+		d := assertDict(setObj)
+		if d.dictDelete(value) == REDIS_OK {
+			if d.htNeedResize() {
+				d.dictResize()
+			}
+			return true
+		}
+		return false
+	}
+	// intSet
+	var intVal int64
+	is := assertIntSet(setObj)
+	if value.isObjectRepresentableAsInt64(&intVal) == nil {
+		return is.intSetRemove(intVal)
+	}
+	return false
+}
+
 // qSortSet use c qsort function
 //
 // has error: cgo argument has Go pointer to Go pointer
