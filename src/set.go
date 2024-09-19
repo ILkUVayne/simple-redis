@@ -171,9 +171,8 @@ func setTypeRemove(setObj, value *SRobj) bool {
 	}
 	// intSet
 	var intVal int64
-	is := assertIntSet(setObj)
 	if value.isObjectRepresentableAsInt64(&intVal) == nil {
-		return is.intSetRemove(intVal)
+		return assertIntSet(setObj).intSetRemove(intVal)
 	}
 	return false
 }
