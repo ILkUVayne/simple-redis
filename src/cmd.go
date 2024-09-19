@@ -26,7 +26,7 @@ func (cmd *SRedisCommand) propagate(args []*SRobj) {
 
 // 查询需要执行的命令
 func lookupCommand(cmdStr string) *SRedisCommand {
-	c, ok := commandMaps[cmdStr]
+	c, ok := server.commands[cmdStr]
 	if !ok {
 		return nil
 	}
@@ -78,52 +78,56 @@ func call(c *SRedisClient) {
 
 // =================================== command ====================================
 
-// commandMaps 命令列表
-var commandMaps = map[string]SRedisCommand{
-	// db
-	EXPIRE:    {EXPIRE, expireCommand, 3},
-	OBJECT:    {OBJECT, objectCommand, 3},
-	KEYS:      {KEYS, keysCommand, 2},
-	PERSIST:   {PERSIST, persistCommand, 2},
-	TTL:       {TTL, ttlCommand, 2},
-	PTTL:      {PTTL, pTtlCommand, 2},
-	DEL:       {DEL, delCommand, -2},
-	EXISTS:    {EXISTS, existsCommand, -2},
-	RANDOMKEY: {RANDOMKEY, randomKeyCommand, 1},
-	FLUSHDB:   {FLUSHDB, flushDbCommand, 1},
-	TYPE:      {TYPE, typeCommand, 2},
-	// aof
-	BGREWRITEAOF: {BGREWRITEAOF, bgRewriteAofCommand, 1},
-	// rdb
-	SAVE:   {SAVE, saveCommand, 1},
-	BGSAVE: {BGSAVE, bgSaveCommand, 1},
-	// string
-	GET:  {GET, getCommand, 2},
-	SET:  {SET, setCommand, 3},
-	INCR: {INCR, incrCommand, 2},
-	DECR: {DECR, decrCommand, 2},
-	// zset
-	Z_ADD:   {Z_ADD, zAddCommand, -4},
-	Z_RANGE: {Z_RANGE, zRangeCommand, -4},
-	// set
-	S_ADD:        {S_ADD, sAddCommand, -3},
-	SMEMBERS:     {SMEMBERS, sinterCommand, 2},
-	SINTER:       {SINTER, sinterCommand, -2},
-	SINTER_STORE: {SINTER_STORE, sinterStoreCommand, -2},
-	// list
-	R_PUSH: {R_PUSH, rPushCommand, -3},
-	L_PUSH: {L_PUSH, lPushCommand, -3},
-	R_POP:  {R_POP, rPopCommand, 2},
-	L_POP:  {L_POP, lPopCommand, 2},
-	L_LEN:  {L_LEN, lLenCommand, 2},
-	// hash
-	H_SET:    {H_SET, hSetCommand, 4},
-	H_GET:    {H_GET, hGetCommand, 3},
-	H_DEL:    {H_DEL, hDelCommand, -3},
-	H_EXISTS: {H_EXISTS, hExistsCommand, 3},
-	H_LEN:    {H_LEN, hLenCommand, 2},
-	H_KEYS:   {H_KEYS, hKeysCommand, 2},
-	H_VALS:   {H_VALS, hValsCommand, 2},
-	H_GETALL: {H_GETALL, hGetAllCommand, 2},
-	// to be continued ! ! !
+// 初始化命令列表
+func initCommands() map[string]SRedisCommand {
+	return map[string]SRedisCommand{
+		// db
+		EXPIRE:    {EXPIRE, expireCommand, 3},
+		OBJECT:    {OBJECT, objectCommand, 3},
+		KEYS:      {KEYS, keysCommand, 2},
+		PERSIST:   {PERSIST, persistCommand, 2},
+		TTL:       {TTL, ttlCommand, 2},
+		PTTL:      {PTTL, pTtlCommand, 2},
+		DEL:       {DEL, delCommand, -2},
+		EXISTS:    {EXISTS, existsCommand, -2},
+		RANDOMKEY: {RANDOMKEY, randomKeyCommand, 1},
+		FLUSHDB:   {FLUSHDB, flushDbCommand, 1},
+		TYPE:      {TYPE, typeCommand, 2},
+		// aof
+		BGREWRITEAOF: {BGREWRITEAOF, bgRewriteAofCommand, 1},
+		// rdb
+		SAVE:   {SAVE, saveCommand, 1},
+		BGSAVE: {BGSAVE, bgSaveCommand, 1},
+		// string
+		GET:  {GET, getCommand, 2},
+		SET:  {SET, setCommand, 3},
+		INCR: {INCR, incrCommand, 2},
+		DECR: {DECR, decrCommand, 2},
+		// zset
+		Z_ADD:   {Z_ADD, zAddCommand, -4},
+		Z_RANGE: {Z_RANGE, zRangeCommand, -4},
+		// set
+		S_ADD:        {S_ADD, sAddCommand, -3},
+		SMEMBERS:     {SMEMBERS, sinterCommand, 2},
+		SINTER:       {SINTER, sinterCommand, -2},
+		SINTER_STORE: {SINTER_STORE, sinterStoreCommand, -2},
+		S_POP:        {S_POP, sPopCommand, -2},
+		S_REM:        {S_REM, sRemCommand, -3},
+		// list
+		R_PUSH: {R_PUSH, rPushCommand, -3},
+		L_PUSH: {L_PUSH, lPushCommand, -3},
+		R_POP:  {R_POP, rPopCommand, 2},
+		L_POP:  {L_POP, lPopCommand, 2},
+		L_LEN:  {L_LEN, lLenCommand, 2},
+		// hash
+		H_SET:    {H_SET, hSetCommand, 4},
+		H_GET:    {H_GET, hGetCommand, 3},
+		H_DEL:    {H_DEL, hDelCommand, -3},
+		H_EXISTS: {H_EXISTS, hExistsCommand, 3},
+		H_LEN:    {H_LEN, hLenCommand, 2},
+		H_KEYS:   {H_KEYS, hKeysCommand, 2},
+		H_VALS:   {H_VALS, hValsCommand, 2},
+		H_GETALL: {H_GETALL, hGetAllCommand, 2},
+		// to be continued ! ! !
+	}
 }

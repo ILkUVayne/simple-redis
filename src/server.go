@@ -44,6 +44,7 @@ type SRedisServer struct {
 	el             *aeEventLoop
 	loadFactor     int64 // 负载因子
 	rehashNullStep int64 // 每次rehash最多遍历rehashNullStep步为nil的数据
+	commands       map[string]SRedisCommand
 
 	// AOF persistence
 
@@ -139,6 +140,7 @@ func initServer() {
 	server.fd = TcpServer(server.port)
 	server.el = aeCreateEventLoop()
 	server.loadFactor = LOAD_FACTOR
+	server.commands = initCommands()
 	// add fileEvent
 	server.el.addFileEvent(server.fd, AE_READABLE, acceptTcpHandler, nil)
 	// add timeEvent
