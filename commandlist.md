@@ -745,12 +745,18 @@ Remove and return a random element from the collection.
 127.0.0.1:6379> sadd s1 11 5 88 baidu google
 (integer) 5
 127.0.0.1:6379> spop s1
-"88"
+"google"
 127.0.0.1:6379> smembers s1
-1) "google"
+1) "88"
 2) "baidu"
 3) "5"
 4) "11"
+127.0.0.1:6379> spop s1 3
+1) "88"
+2) "baidu"
+3) "5"
+127.0.0.1:6379> smembers s1
+1) "11"
 ~~~
 
 ## zset

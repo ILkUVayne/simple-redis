@@ -263,7 +263,90 @@ func sUnionDiffGenericCommand(c *SRedisClient, setKeys []*SRobj, setNum int64, d
 }
 
 func sPopWithCountCommand(c *SRedisClient) {
-	// todo spop key [count]
+	// get count
+	var count int64
+	if c.args[2].getLongLongFromObjectOrReply(c, &count, "") != REDIS_OK {
+		return
+	}
+
+	if count < 0 {
+		c.addReply(shared.outOfRangeErr)
+		return
+	}
+
+	key := c.args[1]
+	set := c.db.lookupKeyReadOrReply(c, key, shared.emptyMultiBulk)
+	if set == nil || !set.checkType(c, SR_SET) {
+		return
+	}
+
+	if count == 0 {
+		c.addReply(shared.emptyMultiBulk)
+		return
+	}
+
+	size := setTypeSize(set)
+
+	if count >= size {
+		sUnionDiffGenericCommand(c, c.args[1:2], 1, nil, SET_OP_UNION)
+		// del the set
+		c.rewriteClientCommandVector(shared.del, key)
+		c.db.dbDel(key)
+		server.incrDirtyCount(c, 1)
+		return
+	}
+
+	rewriteArgs := make([]*SRobj, 0)
+	rewriteArgs = append(rewriteArgs, shared.sRem, key)
+	c.addReplyMultiBulkLen(count, false)
+	remaining := size - count
+	server.incrDirtyCount(c, 1)
+
+	if remaining*SPOP_MOVE_STRATEGY_MUL > count {
+		for ; count > 0; count-- {
+			encoding, objEle, intEle := setTypeRandomElement(set)
+			if encoding == REDIS_ENCODING_INTSET {
+				objEle = createFromInt(intEle)
+			}
+			objEle.incrRefCount()
+			c.addReplyBulk(objEle)
+			setTypeRemove(set, objEle)
+			rewriteArgs = append(rewriteArgs, objEle)
+		}
+		c.rewriteClientCommandVector(rewriteArgs...)
+		return
+	}
+
+	var newSet *SRobj
+	for ; remaining > 0; remaining-- {
+		encoding, objEle, intEle := setTypeRandomElement(set)
+		if encoding == REDIS_ENCODING_INTSET {
+			objEle = createFromInt(intEle)
+		}
+		objEle.incrRefCount()
+		if newSet == nil {
+			newSet = setTypeCreate(objEle)
+		}
+		setTypeAdd(newSet, objEle)
+		setTypeRemove(set, objEle)
+	}
+
+	set.incrRefCount()
+	c.db.dictSet(key, newSet)
+
+	si := setTypeInitIterator(set)
+	var eleObj *SRobj
+	var intObj int64
+	for encoding := si.setTypeNext(&eleObj, &intObj); encoding != -1; encoding = si.setTypeNext(&eleObj, &intObj) {
+		if uint8(encoding) == REDIS_ENCODING_INTSET {
+			eleObj = createFromInt(intObj)
+		}
+		eleObj.incrRefCount()
+		c.addReplyBulk(eleObj)
+		rewriteArgs = append(rewriteArgs, eleObj)
+	}
+	si.setTypeReleaseIterator()
+	c.rewriteClientCommandVector(rewriteArgs...)
 }
 
 // sadd key member [member ...]
@@ -350,7 +433,7 @@ func sPopCommand(c *SRedisClient) {
 	setTypeRemove(set, objEle)
 
 	// Replicate/AOF this command as an SREM operation
-	c.rewriteClientCommandVector(createSRobj(SR_STR, S_REM), key, objEle)
+	c.rewriteClientCommandVector(shared.sRem, key, objEle)
 
 	// Add the element to the reply
 	c.addReplyBulk(objEle)

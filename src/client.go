@@ -73,6 +73,7 @@ func (c *SRedisClient) pushReply(data *SRobj, where int) {
 // 重写 client 的 args 和 cmd
 func (c *SRedisClient) rewriteClientCommandVector(args ...*SRobj) {
 	c.args = args
+	args[0].incrRefCount()
 	c.cmd = lookupCommand(strings.ToLower(args[0].strVal()))
 }
 
