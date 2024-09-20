@@ -72,6 +72,6 @@ func sendKill(PIDs ...int) {
 		if pid == -1 {
 			continue
 		}
-		_ = syscall.Kill(pid, syscall.SIGINT)
+		_ = syscall.Kill(pid, syscall.SIGKILL)
 	}
 }
