@@ -170,6 +170,10 @@ const (
 	SINTER_STORE = "sinterstore"
 	S_POP        = "spop"
 	S_REM        = "srem"
+	S_UNION      = "sunion"
+	S_UNIONSTORE = "sunionstore"
+	S_DIFF       = "sdiff"
+	S_DIFFSTORE  = "sdiffstore"
 
 	// list command
 
@@ -252,6 +256,15 @@ const (
 
 const (
 	DEFAULT_INTSET_BUF = 4
+)
+
+//-----------------------------------------------------------------------------
+// set
+//-----------------------------------------------------------------------------
+
+const (
+	SET_OP_UNION = 0
+	SET_OP_DIFF  = 1
 )
 
 //-----------------------------------------------------------------------------

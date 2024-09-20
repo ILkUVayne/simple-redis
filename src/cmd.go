@@ -113,6 +113,10 @@ func initCommands() map[string]SRedisCommand {
 		SINTER_STORE: {SINTER_STORE, sinterStoreCommand, -2},
 		S_POP:        {S_POP, sPopCommand, -2},
 		S_REM:        {S_REM, sRemCommand, -3},
+		S_UNION:      {S_UNION, sUnionCommand, -2},
+		S_UNIONSTORE: {S_UNIONSTORE, sUnionStoreCommand, -3},
+		S_DIFF:       {S_DIFF, sDiffCommand, -2},
+		S_DIFFSTORE:  {S_DIFFSTORE, sDiffStoreCommand, -3},
 		// list
 		R_PUSH: {R_PUSH, rPushCommand, -3},
 		L_PUSH: {L_PUSH, lPushCommand, -3},

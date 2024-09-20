@@ -35,6 +35,27 @@ func (si *setTypeIterator) setTypeNext(objEle **SRobj, llEle *int64) int {
 	return int(si.encoding)
 }
 
+// return next set Object
+func (si *setTypeIterator) setTypeNextObject() *SRobj {
+	var eleObj *SRobj
+	var intObj int64
+
+	encoding := si.setTypeNext(&eleObj, &intObj)
+	if encoding == -1 {
+		return nil
+	}
+	switch uint8(encoding) {
+	case REDIS_ENCODING_INTSET:
+		return createFromInt(intObj)
+	case REDIS_ENCODING_HT:
+		eleObj.incrRefCount()
+		return eleObj
+	default:
+		panic("Unsupported encoding")
+	}
+	return nil
+}
+
 // release set iterator
 func (si *setTypeIterator) setTypeReleaseIterator() {
 	if si.encoding == REDIS_ENCODING_HT {
@@ -122,6 +143,9 @@ func setTypeConvert(setObj *SRobj, enc uint8) {
 
 // return set length
 func setTypeSize(setObj *SRobj) int64 {
+	if setObj == nil {
+		return 0
+	}
 	checkSetEncoding(setObj)
 	if setObj.encoding == REDIS_ENCODING_HT {
 		return sLen(assertDict(setObj))

@@ -128,6 +128,140 @@ func sinterGenericCommand(c *SRedisClient, setKeys []*SRobj, setNum int64, dstKe
 	c.addReply(shared.czero)
 }
 
+func sUnionDiffGenericCommand(c *SRedisClient, setKeys []*SRobj, setNum int64, dstKey *SRobj, op int) {
+	sets := make([]*SRobj, setNum)
+	for i := int64(0); i < setNum; i++ {
+		setObj := c.db.lookupKeyRead(setKeys[i])
+		if setObj == nil {
+			sets[i] = nil
+			continue
+		}
+		if !setObj.checkType(c, SR_SET) {
+			return
+		}
+		sets[i] = setObj
+	}
+
+	// select DIFF algorithm
+	//
+	// Algorithm 1 is O(N*M) where N is the size of the element first set
+	// and M the total number of sets.
+	//
+	// Algorithm 2 is O(N) where N is the total number of elements in all
+	// the sets.
+	diffAlgo := 1
+	if op == SET_OP_DIFF && sets[0] != nil {
+		algoOne, algoTwo := int64(0), int64(0)
+		for i := int64(0); i < setNum; i++ {
+			if sets[i] == nil {
+				continue
+			}
+			algoOne += setTypeSize(sets[0])
+			algoTwo += setTypeSize(sets[i])
+		}
+		algoOne /= 2
+		if algoOne > algoTwo {
+			diffAlgo = 2
+		}
+		if diffAlgo == 1 && setNum > 1 {
+			sortSet(sets[1:])
+		}
+	}
+
+	dstset := createIntSetObject()
+	cardinality := int64(0)
+
+	// sunion
+	if op == SET_OP_UNION {
+		for i := int64(0); i < setNum; i++ {
+			if sets[i] == nil {
+				continue
+			}
+			si := setTypeInitIterator(sets[i])
+			for ele := si.setTypeNextObject(); ele != nil; ele = si.setTypeNextObject() {
+				if setTypeAdd(dstset, ele) {
+					cardinality++
+				}
+				ele.decrRefCount()
+			}
+			si.setTypeReleaseIterator()
+		}
+	}
+
+	// sdiff Algorithm 1
+	if op == SET_OP_DIFF && sets[0] != nil && diffAlgo == 1 {
+		si := setTypeInitIterator(sets[0])
+		for ele := si.setTypeNextObject(); ele != nil; ele = si.setTypeNextObject() {
+			var i int64
+			for i = int64(1); i < setNum; i++ {
+				if sets[i] == nil {
+					continue
+				}
+				if sets[i] == sets[0] || setTypeIsMember(sets[i], ele) {
+					break
+				}
+			}
+			if i == setNum {
+				setTypeAdd(dstset, ele)
+				cardinality++
+			}
+			ele.decrRefCount()
+		}
+		si.setTypeReleaseIterator()
+	}
+
+	// sdiff Algorithm 2
+	if op == SET_OP_DIFF && sets[0] != nil && diffAlgo == 2 {
+		for i := int64(0); i < setNum; i++ {
+			if sets[i] == nil {
+				continue
+			}
+			si := setTypeInitIterator(sets[i])
+			for ele := si.setTypeNextObject(); ele != nil; ele = si.setTypeNextObject() {
+				if i == 0 {
+					if setTypeAdd(dstset, ele) {
+						cardinality++
+					}
+				} else {
+					if setTypeRemove(dstset, ele) {
+						cardinality--
+					}
+				}
+				ele.decrRefCount()
+			}
+			si.setTypeReleaseIterator()
+
+			if cardinality == 0 {
+				break
+			}
+		}
+	}
+
+	// 返回响应
+	if dstKey == nil {
+		c.addReplyMultiBulkLen(cardinality, false)
+		si := setTypeInitIterator(dstset)
+		for ele := si.setTypeNextObject(); ele != nil; ele = si.setTypeNextObject() {
+			c.addReplyBulk(ele)
+			ele.decrRefCount()
+		}
+		si.setTypeReleaseIterator()
+		dstset.decrRefCount()
+		return
+	}
+	// dstKey != nil
+	c.db.dbDel(dstKey)
+	server.incrDirtyCount(c, 1)
+	if setTypeSize(dstset) == 0 {
+		dstset.decrRefCount()
+		c.addReply(shared.czero)
+		return
+	}
+	// dstSet is not empty
+	c.db.dictSet(dstKey, dstset)
+	c.addReplyLongLong(setTypeSize(dstset))
+}
+
 func sPopWithCountCommand(c *SRedisClient) {
 	// todo spop key [count]
 }
@@ -165,6 +299,26 @@ func sinterCommand(c *SRedisClient) {
 // sinterstore key [key ...]
 func sinterStoreCommand(c *SRedisClient) {
 	sinterGenericCommand(c, c.args[2:], int64(len(c.args[2:])), c.args[1])
+}
+
+// SUNION key [key ...]
+func sUnionCommand(c *SRedisClient) {
+	sUnionDiffGenericCommand(c, c.args[1:], int64(len(c.args[1:])), nil, SET_OP_UNION)
+}
+
+// SUNIONSTORE destination key [key ...]
+func sUnionStoreCommand(c *SRedisClient) {
+	sUnionDiffGenericCommand(c, c.args[2:], int64(len(c.args[2:])), c.args[1], SET_OP_UNION)
+}
+
+// SDIFF key [key ...]
+func sDiffCommand(c *SRedisClient) {
+	sUnionDiffGenericCommand(c, c.args[1:], int64(len(c.args[1:])), nil, SET_OP_DIFF)
+}
+
+// SDIFFSTORE destination key [key ...]
+func sDiffStoreCommand(c *SRedisClient) {
+	sUnionDiffGenericCommand(c, c.args[2:], int64(len(c.args[2:])), c.args[1], SET_OP_DIFF)
 }
 
 // spop key [count]
