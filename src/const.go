@@ -40,7 +40,7 @@ const (
 
 	// bgSave 或者 BGREWRITEAOF (child process) 执行时间阈值
 
-	C_PROC_MAX_TIME int64 = 1000 * 60 * 20 // 单位毫秒,默认20分钟
+	C_PROC_MAX_TIME int64 = 1000 * 60 * 5 // 单位毫秒,默认5分钟
 )
 
 //-----------------------------------------------------------------------------
@@ -168,6 +168,12 @@ const (
 	SMEMBERS     = "smembers"
 	SINTER       = "sinter"
 	SINTER_STORE = "sinterstore"
+	S_POP        = "spop"
+	S_REM        = "srem"
+	S_UNION      = "sunion"
+	S_UNIONSTORE = "sunionstore"
+	S_DIFF       = "sdiff"
+	S_DIFFSTORE  = "sdiffstore"
 
 	// list command
 
@@ -212,7 +218,7 @@ const (
 //-----------------------------------------------------------------------------
 
 const (
-	REDIS_RDB_VERSION = "6"
+	REDIS_RDB_VERSION = "7"
 	REDIS_RDB_BITS    = "64"
 )
 
@@ -250,6 +256,17 @@ const (
 
 const (
 	DEFAULT_INTSET_BUF = 4
+)
+
+//-----------------------------------------------------------------------------
+// set
+//-----------------------------------------------------------------------------
+
+const (
+	SET_OP_UNION = 0
+	SET_OP_DIFF  = 1
+
+	SPOP_MOVE_STRATEGY_MUL = 5
 )
 
 //-----------------------------------------------------------------------------

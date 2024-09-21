@@ -459,7 +459,7 @@ func (d *dict) dictGetRandomKey1() *dictEntry {
 		return he
 	}
 	for he == nil {
-		slotIdx = rand.Int63n(d.ht[0].mask)
+		slotIdx = rand.Int63n(d.ht[0].size)
 		he = d.ht[0].table[slotIdx]
 	}
 	return he

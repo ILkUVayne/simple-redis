@@ -4,8 +4,8 @@ go 1.21.0
 
 require (
 	github.com/GeertJohan/go.linenoise v0.0.0-20141120151038-1918ff89d613
-	github.com/hdt3213/rdb v1.0.15
-	golang.org/x/sys v0.22.0
+	github.com/hdt3213/rdb v1.0.18
+	golang.org/x/sys v0.25.0
 )
 
 require (

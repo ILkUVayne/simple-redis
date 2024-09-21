@@ -632,6 +632,133 @@ The destination can be the key itself.
 2) "php"
 ~~~
 
+### sunion
+
+**sunion key [key ...]**
+
+Returns all members of a set that is the union of all given sets.
+
+~~~bash
+127.0.0.1:6379> SADD website www.biancheng.net www.baidu.com
+(integer) 2
+127.0.0.1:6379> SADD site git python svn docker
+(integer) 4
+127.0.0.1:6379> SUNION website site
+1) "docker"
+2) "www.biancheng.net"
+3) "python"
+4) "www.baidu.com"
+5) "svn"
+6) "git"
+~~~
+
+### sunionstore
+
+**sunionstore destination key [key ...]**
+
+Similar to the SUNION command, but it saves the results to the destination set instead of simply returning the result set. If the destination already exists, overwrite it.
+
+The destination can be the key itself.
+
+~~~bash
+127.0.0.1:6379> SADD website www.biancheng.net www.baidu.com
+(integer) 2
+127.0.0.1:6379> SADD site git python svn docker
+(integer) 4
+127.0.0.1:6379> SUNIONSTORE mysite site website
+(integer) 6
+127.0.0.1:6379> SMEMBERS mysite
+1) "docker"
+2) "git"
+3) "python"
+4) "svn"
+5) "www.baidu.com"
+6) "www.biancheng.net"
+~~~
+
+### sdiff
+
+**sdiff key [key ...]**
+
+Returns the difference set between the first set and other sets, which can also be considered as an element unique to the first set. A non-existent set key will be considered an empty set. For non-existent keys, they will be treated as empty sets.
+
+~~~bash
+127.0.0.1:6379> SADD website www.biancheng.net www.baidu.com www.jd.com
+(integer) 3
+127.0.0.1:6379> SADD site www.biancheng.net www.baidu.com stackoverflow.com
+(integer) 3
+127.0.0.1:6379> SDIFF website site
+1) "www.jd.com"
+127.0.0.1:6379> SDIFF site website
+1) "stackoverflow.com"
+~~~
+
+### sdiffstore
+
+**sdiffstore destination key [key ...]**
+
+Similar to the SDIFF command, but the former saves the results to the destination set instead of simply returning the result set. If the destination set already exists, overwrite it.
+
+The destination can be the key itself.
+
+~~~bash
+127.0.0.1:6379> SADD website www.biancheng.net www.baidu.com www.jd.com
+(integer) 3
+127.0.0.1:6379> SADD site www.biancheng.net www.baidu.com stackoverflow.com
+(integer) 3
+127.0.0.1:6379> SDIFFSTORE mysite website site
+(integer) 1
+127.0.0.1:6379> SDIFFSTORE mysite1 site website
+(integer) 1
+127.0.0.1:6379> smembers mysite
+1) "www.jd.com"
+127.0.0.1:6379> smembers mysite1
+1) "stackoverflow.com"
+~~~
+
+### srem
+
+**SREM key member [member ...]**
+
+Remove one or more member elements from the set key, non-existent member elements will be ignored. When the key is not a collection type, return an error.
+
+~~~bash
+127.0.0.1:6379> sadd s1 11 aaa 5 bbb 66 ccc
+(integer) 6
+127.0.0.1:6379> srem s1 aaa
+(integer) 1
+127.0.0.1:6379> srem s1 aaa 11 ccc
+(integer) 2
+127.0.0.1:6379> smembers s1
+1) "5"
+2) "bbb"
+3) "66"
+~~~
+
+### spop
+
+**SPOP key [count]**
+
+Remove and return a random element from the collection.
+
+~~~bash
+127.0.0.1:6379> sadd s1 11 5 88 baidu google
+(integer) 5
+127.0.0.1:6379> spop s1
+"google"
+127.0.0.1:6379> smembers s1
+1) "88"
+2) "baidu"
+3) "5"
+4) "11"
+127.0.0.1:6379> spop s1 3
+1) "88"
+2) "baidu"
+3) "5"
+127.0.0.1:6379> smembers s1
+1) "11"
+~~~
+
 ## zset
 
 ### zadd

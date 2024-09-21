@@ -42,14 +42,18 @@ func TestIntSetAdd(t *testing.T) {
 func TestIntSetRemove(t *testing.T) {
 	var success bool
 	is := intSetNew()
-	is.intSetRemove(10)
+	if is.intSetRemove(10) {
+		t.Error("intSetRemove err: return ture")
+	}
 	is.intSetAdd(2, &success)
 	is.intSetAdd(28, &success)
 	is.intSetAdd(5, &success)
 	is.intSetAdd(9, &success)
 	is.intSetAdd(10, &success)
 	is.intSetAdd(13, &success)
-	is.intSetRemove(10)
+	if !is.intSetRemove(10) {
+		t.Error("intSetRemove err: return false")
+	}
 	if sLen(is) != 5 {
 		t.Error("intSetRemove err: is.length = ", is.length)
 	}

@@ -10,7 +10,7 @@ import (
 // 全局共享SRobj对象结构体，用以复用常用的命令返回对象
 type sharedObjects struct {
 	crlf, ok, err, czero, cone, emptyMultiBulk, nullBulk, syntaxErr, typeErr, unknowErr, argsNumErr, wrongTypeErr,
-	none *SRobj
+	none, outOfRangeErr, del, sRem *SRobj
 }
 
 // 全局共享SRobj对象
@@ -31,6 +31,10 @@ func initSharedObjects() {
 	shared.unknowErr = createSRobj(SR_STR, fmt.Sprintf(RESP_ERR, "unknow command"))
 	shared.argsNumErr = createSRobj(SR_STR, fmt.Sprintf(RESP_ERR, "wrong number of args"))
 	shared.wrongTypeErr = createSRobj(SR_STR, fmt.Sprintf(RESP_ERR, "Operation against a key holding the wrong kind of value"))
+	shared.outOfRangeErr = createSRobj(SR_STR, fmt.Sprintf(RESP_ERR, "index out of range"))
+
+	shared.del = createSRobj(SR_STR, DEL)
+	shared.sRem = createSRobj(SR_STR, S_REM)
 }
 
 // SRedisServer server 结构体
@@ -44,6 +48,7 @@ type SRedisServer struct {
 	el             *aeEventLoop
 	loadFactor     int64 // 负载因子
 	rehashNullStep int64 // 每次rehash最多遍历rehashNullStep步为nil的数据
+	commands       map[string]SRedisCommand
 
 	// AOF persistence
 
@@ -139,6 +144,7 @@ func initServer() {
 	server.fd = TcpServer(server.port)
 	server.el = aeCreateEventLoop()
 	server.loadFactor = LOAD_FACTOR
+	server.commands = initCommands()
 	// add fileEvent
 	server.el.addFileEvent(server.fd, AE_READABLE, acceptTcpHandler, nil)
 	// add timeEvent

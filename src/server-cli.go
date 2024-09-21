@@ -76,7 +76,7 @@ func cliInputLine() string {
 // print server reply
 func printPrompt() {
 	if context.err != nil {
-		fmt.Printf("(error) ERR: " + context.err.Error())
+		fmt.Printf("(error) ERR: " + context.err.Error() + "\n")
 	}
 	reader := context.reader.(*sRedisReply)
 	if reader.fStr != "" {
