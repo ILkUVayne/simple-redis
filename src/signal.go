@@ -46,7 +46,7 @@ func serverShutdown(sig os.Signal) {
 		ulog.Info("SYNC append only file rewrite start...")
 		rewriteAppendOnlyFileSync()
 	}
-	ulog.Info("Simple-Redis is now ready to exit, bye bye...")
+	ulog.Info("Simple-Redis is now ready to exit, bye bye !!!")
 	os.Exit(0)
 }
 
