@@ -40,23 +40,11 @@ func serverShutdown(sig os.Signal) {
 
 	if server.saveParams != nil {
 		ulog.Info("SYNC rdb save start...")
-		rdbSaveBackground()
+		rdbSave()
 	}
 	if server.aofState == REDIS_AOF_ON && server.saveParams == nil {
 		ulog.Info("SYNC append only file rewrite start...")
-		rewriteAppendOnlyFileBackground()
-	}
-	pid, err := wait4(-1, 0)
-	if err != nil {
-		ulog.ErrorP("wait4 err: ", err)
-	}
-	if pid != 0 && pid != -1 {
-		if pid == server.aofChildPid {
-			backgroundRewriteDoneHandler()
-		}
-		if pid == server.rdbChildPid {
-			backgroundSaveDoneHandler()
-		}
+		rewriteAppendOnlyFileSync()
 	}
 	ulog.Info("Simple-Redis is now ready to exit, bye bye...")
 	os.Exit(0)

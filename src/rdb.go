@@ -147,7 +147,7 @@ func rdbLoadHashObject(obj parser.RedisObject) {
 	rdbLoadExpire(key, expire)
 }
 
-// load zset obj from rdb
+// load zSet obj from rdb
 func rdbLoadZSetObject(obj parser.RedisObject) {
 	expire := rdbCheckExpire(obj)
 	if expire == -1 {
@@ -159,15 +159,15 @@ func rdbLoadZSetObject(obj parser.RedisObject) {
 	}
 	key := createSRobj(SR_STR, o.Key)
 
-	ZSobj := server.db.lookupKeyWrite(key)
-	if ZSobj != nil && ZSobj.Typ != SR_ZSET {
+	ZSObj := server.db.lookupKeyWrite(key)
+	if ZSObj != nil && ZSObj.Typ != SR_ZSET {
 		return
 	}
-	if ZSobj == nil {
-		ZSobj = createZsetSRobj()
-		server.db.dictSet(key, ZSobj)
+	if ZSObj == nil {
+		ZSObj = createZsetSRobj()
+		server.db.dictSet(key, ZSObj)
 	}
-	zs := assertZSet(ZSobj)
+	zs := assertZSet(ZSObj)
 	for _, v := range o.Entries {
 		ele := createSRobj(SR_STR, v.Member)
 		zNode := zs.zsl.insert(v.Score, ele)
@@ -257,7 +257,7 @@ func _writeSetObject(enc *core.Encoder, key string, value any, options ...any) e
 	return enc.WriteSetObject(key, value.([][]byte), options)
 }
 
-// write zset obj to disk (dump.rdb)
+// write zSet obj to disk (dump.rdb)
 func _writeZSetObject(enc *core.Encoder, key string, value any, options ...any) error {
 	return enc.WriteZSetObject(key, value.([]*model.ZSetEntry), options)
 }
@@ -321,7 +321,7 @@ func writeDictObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 	return _writeObjectHandle(val.Typ, enc, key.strVal(), values, expire)
 }
 
-// build zset obj and write to rdb
+// build zSet obj and write to rdb
 func writeZSetObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 	checkZSetEncoding(val)
 
@@ -342,10 +342,10 @@ func writeZSetObject(enc *core.Encoder, key, val *SRobj, expire int64) int {
 }
 
 // 保存当前内存中的数据到rdb
-func rdbSave(filename string) int {
+func rdbSave() int {
 	if server.db.dbDataSize() == 0 {
-		_ = os.Remove(filename)
-		_, _ = os.Create(filename)
+		_ = os.Remove(server.rdbFilename)
+		_, _ = os.Create(server.rdbFilename)
 		ulog.Info("database is empty")
 		return REDIS_OK
 	}
@@ -353,46 +353,45 @@ func rdbSave(filename string) int {
 	tmpFile := PersistenceFile(fmt.Sprintf("temp-%d.rdb", os.Getpid()))
 	f, err := os.Create(tmpFile)
 	if err != nil {
+		_ = os.Remove(tmpFile)
 		ulog.ErrorP("Failed opening .rdb for saving: ", err)
 		return REDIS_ERR
 	}
 	defer func() { _ = f.Close() }()
 
 	enc := encoder.NewEncoder(f)
+	di := server.db.dbDataDi()
 	if rdbBeforeWrite(enc) == REDIS_ERR {
-		return REDIS_ERR
+		goto wErr
 	}
 
-	di := server.db.dbDataDi()
 	for de := di.dictNext(); de != nil; de = di.dictNext() {
 		key, val := de.getKey(), de.getVal()
 		expireTime := server.db.expireTime(key)
 		if rdbWriteObject(enc, key, val, expireTime) == REDIS_ERR {
-			goto werr
+			goto wErr
 		}
 	}
-	di.dictReleaseIterator()
 
 	err = enc.WriteEnd()
 	if err != nil {
 		ulog.ErrorP("rdbSave err: ", err)
-		return REDIS_ERR
+		goto wErr
 	}
-	if err = os.Rename(tmpFile, filename); err != nil {
+	if err = os.Rename(tmpFile, server.rdbFilename); err != nil {
 		ulog.ErrorP("Error moving temp DB file on the final destination: ", err)
-		_ = os.Remove(tmpFile)
-		return REDIS_ERR
+		goto wErr
 	}
 
-	ulog.Info("DB saved on disk")
+	di.dictReleaseIterator()
 	server.dirty = 0
 	server.lastSave = time2.GetMsTime()
 	server.lastBgSaveStatus = REDIS_OK
+	ulog.Info("DB saved on disk")
 	return REDIS_OK
 
-werr:
+wErr:
 	_ = os.Remove(tmpFile)
-	ulog.ErrorP("Write error saving DB on disk: ", err)
 	di.dictReleaseIterator()
 	return REDIS_ERR
 }
@@ -412,7 +411,7 @@ func rdbSaveBackground() int {
 		if server.fd > 0 {
 			Close(server.fd)
 		}
-		if rdbSave(server.rdbFilename) == REDIS_OK {
+		if rdbSave() == REDIS_OK {
 			os.Exit(0)
 		}
 		os.Exit(1)
@@ -448,26 +447,26 @@ func saveCommand(c *SRedisClient) {
 		c.addReplyError("Background save already in progress")
 		return
 	}
-	if rdbSave(server.rdbFilename) == REDIS_OK {
+	if rdbSave() == REDIS_OK {
 		c.addReply(shared.ok)
 		return
 	}
-	c.addReply(shared.err)
+	c.addReplyError("save failed")
 }
 
-// BGSAVE
+// BgSave
 func bgSaveCommand(c *SRedisClient) {
 	if server.rdbChildPid != -1 {
 		c.addReplyError("Background save already in progress")
 		return
 	}
 	if server.aofChildPid != -1 {
-		c.addReplyError("Can't BGSAVE while AOF log rewriting is in progress")
+		c.addReplyError("Can't BgSave while AOF log rewriting is in progress")
 		return
 	}
 	if rdbSaveBackground() == REDIS_OK {
 		c.addReplyStatus("Background saving started")
 		return
 	}
-	c.addReply(shared.err)
+	c.addReplyError("bgSave failed")
 }
