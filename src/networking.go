@@ -225,14 +225,6 @@ func (c *SRedisClient) addReplyDouble(f float64) {
 
 // 添加整数返回
 func (c *SRedisClient) addReplyLongLong(ll int64) {
-	if ll == 0 {
-		c.addReply(shared.czero)
-		return
-	}
-	if ll == 1 {
-		c.addReply(shared.cone)
-		return
-	}
 	c.addReplyStr(fmt.Sprintf(RESP_INT, ll))
 }
 

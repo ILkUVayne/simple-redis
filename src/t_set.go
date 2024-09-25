@@ -361,15 +361,15 @@ func sAddCommand(c *SRedisClient) {
 		c.db.dictSet(key, set)
 	}
 	// add...
-	added := 0
+	added := int64(0)
 	for j := 2; j < len(c.args); j++ {
 		c.args[j].tryObjectEncoding()
 		if setTypeAdd(set, c.args[j]) {
 			added++
 		}
 	}
-	c.addReplyLongLong(int64(added))
-	server.incrDirtyCount(c, int64(added))
+	c.addReplyLongLong(added)
+	server.incrDirtyCount(c, added)
 }
 
 // smembers key
