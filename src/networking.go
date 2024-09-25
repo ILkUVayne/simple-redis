@@ -210,9 +210,16 @@ func (c *SRedisClient) addReplyError(err string) {
 	}
 }
 
+// add bulk int to SRedisClient.reply and send reply.
+//
+// e.g. addReplyBulkInt(15) = "$2\r\n15\r\n"
+func (c *SRedisClient) addReplyBulkInt(ll int64) {
+	c.addReplyBulk(createSRobj(SR_STR, strconv.FormatInt(ll, 10)))
+}
+
 // 添加浮点数返回
 func (c *SRedisClient) addReplyDouble(f float64) {
-	str := strconv.FormatFloat(f, 'f', 2, 64)
+	str := formatFloat(f, 10)
 	c.addReplyStr(fmt.Sprintf(RESP_BULK, len(str), str))
 }
 
@@ -253,13 +260,6 @@ func (c *SRedisClient) addReplyBulk(data *SRobj) {
 	c.addReplyBulkLen(data)
 	c.addReplyStr(fmt.Sprintf("%s", data.strVal()))
 	c.addReply(shared.crlf)
-}
-
-// add bulk int to SRedisClient.reply and send reply.
-//
-// e.g. addReplyBulkInt(15) = "$2\r\n15\r\n"
-func (c *SRedisClient) addReplyBulkInt(ll int64) {
-	c.addReplyBulk(createSRobj(SR_STR, strconv.FormatInt(ll, 10)))
 }
 
 // add status reply.

@@ -4,6 +4,8 @@ import (
 	"github.com/ILkUVayne/utlis-go/v2/flie"
 	"github.com/ILkUVayne/utlis-go/v2/math"
 	"github.com/ILkUVayne/utlis-go/v2/ulog"
+	"strconv"
+	"strings"
 )
 
 //-----------------------------------------------------------------------------
@@ -29,6 +31,21 @@ func sCap(c capacity) int64 {
 		return 0
 	}
 	return c.cap()
+}
+
+// float64 to string.
+//
+// formatFloat(12,10) = "12"
+// formatFloat(12.1,10) = "12.1"
+// formatFloat(12.12345678919,10) = "12.1234567892"
+func formatFloat(f float64, maxPrecision int) string {
+	str := strconv.FormatFloat(f, 'f', -1, 64)
+	parts := strings.Split(str, ".")
+	if len(parts) == 2 && len(parts[1]) > 10 {
+		// 最多10位小数
+		str = strconv.FormatFloat(f, 'f', maxPrecision, 64)
+	}
+	return str
 }
 
 //-----------------------------------------------------------------------------

@@ -49,3 +49,22 @@ func TestStringMatchLen(t *testing.T) {
 		t.Error("StringMatchLen err: res = ", res)
 	}
 }
+
+func TestFormatFloat(t *testing.T) {
+	var f float64
+	f = 12
+	str := formatFloat(f, 10)
+	if str != "12" {
+		t.Error("formatFloat err: str = ", str)
+	}
+	f = 12.1
+	str = formatFloat(f, 10)
+	if str != "12.1" {
+		t.Error("formatFloat err: str = ", str)
+	}
+	f = 12.12345678919
+	str = formatFloat(f, 10)
+	if str != "12.1234567892" {
+		t.Error("formatFloat err: str = ", str)
+	}
+}
