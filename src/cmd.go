@@ -81,6 +81,8 @@ func call(c *SRedisClient) {
 // 初始化命令列表
 func initCommands() map[string]SRedisCommand {
 	return map[string]SRedisCommand{
+		//server
+		PING: {PING, pingCommand, -1},
 		// db
 		EXPIRE:    {EXPIRE, expireCommand, 3},
 		OBJECT:    {OBJECT, objectCommand, 3},

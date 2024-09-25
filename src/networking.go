@@ -210,6 +210,14 @@ func (c *SRedisClient) addReplyError(err string) {
 	}
 }
 
+// 添加字符串错误(可格式化)返回
+func (c *SRedisClient) addReplyErrorFormat(format string, a ...any) {
+	err := fmt.Sprintf(format, a...)
+	if err != "" {
+		c.addReplyStr(fmt.Sprintf(RESP_ERR, err))
+	}
+}
+
 // add bulk int to SRedisClient.reply and send reply.
 //
 // e.g. addReplyBulkInt(15) = "$2\r\n15\r\n"

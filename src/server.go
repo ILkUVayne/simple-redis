@@ -9,7 +9,7 @@ import (
 
 // 全局共享SRobj对象结构体，用以复用常用的命令返回对象
 type sharedObjects struct {
-	crlf, ok, err, czero, cone, emptyMultiBulk, nullBulk, syntaxErr, typeErr, unknowErr, argsNumErr, wrongTypeErr,
+	crlf, ok, err, pong, czero, cone, emptyMultiBulk, nullBulk, syntaxErr, typeErr, unknowErr, argsNumErr, wrongTypeErr,
 	none, outOfRangeErr, del, sRem *SRobj
 }
 
@@ -21,6 +21,7 @@ func initSharedObjects() {
 	shared.crlf = createSRobj(SR_STR, "\r\n")
 	shared.ok = createSRobj(SR_STR, RESP_OK)
 	shared.err = createSRobj(SR_STR, RESP_ERR)
+	shared.pong = createSRobj(SR_STR, "+PONG\r\n")
 	shared.czero = createSRobj(SR_STR, ":0\r\n")
 	shared.cone = createSRobj(SR_STR, ":1\r\n")
 	shared.emptyMultiBulk = createSRobj(SR_STR, "*0\r\n")
@@ -177,6 +178,27 @@ func loadDataFromDisk() {
 	rdbLoad(server.rdbFilename)
 	ulog.InfoF("DB loaded from disk: %.3f seconds", float64(time.GetMsTime()-start)/1000)
 }
+
+//-----------------------------------------------------------------------------
+// db commands
+//-----------------------------------------------------------------------------
+
+// ping
+func pingCommand(c *SRedisClient) {
+	if len(c.args) > 2 {
+		c.addReplyErrorFormat("wrong number of arguments for '%s' command", c.cmd.name)
+		return
+	}
+	if len(c.args) == 1 {
+		c.addReply(shared.pong)
+		return
+	}
+	c.addReplyBulk(c.args[1])
+}
+
+//-----------------------------------------------------------------------------
+// Main!
+//-----------------------------------------------------------------------------
 
 // ServerStart server entry
 func ServerStart() {

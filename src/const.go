@@ -133,6 +133,10 @@ const (
 
 	MAX_EXPIRE = 1000000000
 
+	// server command
+
+	PING = "ping"
+
 	// db command
 
 	EXPIRE       = "expire"
