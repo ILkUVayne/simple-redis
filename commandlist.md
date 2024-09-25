@@ -785,13 +785,13 @@ By using the withscores option, return the member and its score value together.
 (empty array)
 127.0.0.1:6379> zrange zs 0 5 withscores
 1) "z2"
-2) "40.00"
+2) "40"
 3) "z4"
 4) "45.50"
 5) "z1"
-6) "50.00"
+6) "50"
 7) "z3"
-8) "60.00"
+8) "60"
 127.0.0.1:6379> object encoding zs
 "skiplist"
 ~~~

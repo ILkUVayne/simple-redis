@@ -11,7 +11,6 @@ import (
 	"github.com/ILkUVayne/utlis-go/v2/ulog"
 	"io"
 	"os"
-	"strconv"
 )
 
 // Write the contents of the AOF rewrite buffer into a file
@@ -309,7 +308,7 @@ func rewriteZSetObject(f *os.File, key, val *SRobj) {
 			rewriteObject(f, cmd, key)
 		}
 		sf, _ := score.floatVal()
-		str := strconv.FormatFloat(sf, 'f', 2, 64)
+		str := formatFloat(sf, 10)
 		// add zSetScore and zSetVal
 		rewriteObject(f, "", createSRobj(SR_STR, str), eleObj)
 		checkItems(&count, &items)

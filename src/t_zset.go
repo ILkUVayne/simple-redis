@@ -6,7 +6,7 @@ package src
 
 func zAddGenericCommand(c *SRedisClient, incr bool) {
 	var score float64
-	var added int
+	var added int64
 
 	key := c.args[1]
 	elements := len(c.args[2:]) / 2
@@ -70,12 +70,7 @@ func zAddGenericCommand(c *SRedisClient, incr bool) {
 		c.addReplyDouble(score)
 		return
 	}
-	c.addReplyLongLong(int64(added))
-}
-
-// zadd key score member [score member ...]
-func zAddCommand(c *SRedisClient) {
-	zAddGenericCommand(c, false)
+	c.addReplyLongLong(added)
 }
 
 func zRangeGenericCommand(c *SRedisClient, reverse bool) {
@@ -153,6 +148,11 @@ func zRangeGenericCommand(c *SRedisClient, reverse bool) {
 			ln = ln.level[0].forward
 		}
 	}
+}
+
+// zadd key score member [score member ...]
+func zAddCommand(c *SRedisClient) {
+	zAddGenericCommand(c, false)
 }
 
 // zrange key min max [withscores]
