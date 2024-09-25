@@ -787,7 +787,7 @@ By using the withscores option, return the member and its score value together.
 1) "z2"
 2) "40"
 3) "z4"
-4) "45.50"
+4) "45.5"
 5) "z1"
 6) "50"
 7) "z3"
