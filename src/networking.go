@@ -203,6 +203,12 @@ func (c *SRedisClient) addReplyStr(s string) {
 	data.decrRefCount()
 }
 
+func (c *SRedisClient) addReplyBulkStr(s string) {
+	if s != "" {
+		c.addReplyStr(fmt.Sprintf(RESP_BULK, len(s), s))
+	}
+}
+
 // 添加字符串错误返回
 func (c *SRedisClient) addReplyError(err string) {
 	if err != "" {

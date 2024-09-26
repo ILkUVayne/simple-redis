@@ -83,6 +83,7 @@ func initCommands() map[string]SRedisCommand {
 	return map[string]SRedisCommand{
 		//server
 		PING: {PING, pingCommand, -1},
+		INFO: {INFO, infoCommand, -1},
 		// db
 		EXPIRE:    {EXPIRE, expireCommand, 3},
 		OBJECT:    {OBJECT, objectCommand, 3},

@@ -24,7 +24,6 @@ func main() {
 	ulog.SetLevel(ulog.InfoLevel)
 	// initialization
 	fmt.Printf("%s\n\n", banner)
-	fmt.Printf("version: %s\n", VERSION)
 	// parse args
 	src.ParseServerArgs()
 	// server start

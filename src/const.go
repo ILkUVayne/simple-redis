@@ -13,6 +13,8 @@ const (
 //-----------------------------------------------------------------------------
 
 const (
+	REDIS_VERSION = "3.2.0"
+
 	DEFAULT_PORT       = 6379
 	DEFAULT_RH_NN_STEP = 10
 	REDIS_OK           = 0
@@ -136,6 +138,7 @@ const (
 	// server command
 
 	PING = "ping"
+	INFO = "info"
 
 	// db command
 

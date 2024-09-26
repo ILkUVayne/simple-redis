@@ -5,6 +5,7 @@ import (
 	"github.com/ILkUVayne/utlis-go/v2/time"
 	"github.com/ILkUVayne/utlis-go/v2/ulog"
 	"os"
+	"strings"
 )
 
 // 全局共享SRobj对象结构体，用以复用常用的命令返回对象
@@ -179,6 +180,20 @@ func loadDataFromDisk() {
 	ulog.InfoF("DB loaded from disk: %.3f seconds", float64(time.GetMsTime()-start)/1000)
 }
 
+func genRedisInfoString(section string) string {
+	if section == "" {
+		section = "default"
+	}
+	var info string
+	allSections := strings.EqualFold(section, "all")
+	defSections := strings.EqualFold(section, "default")
+
+	if allSections || defSections || strings.EqualFold(section, "server") {
+		info += fmt.Sprintf("# Server\r\nredis_version:%s\r\n", REDIS_VERSION)
+	}
+	return info
+}
+
 //-----------------------------------------------------------------------------
 // db commands
 //-----------------------------------------------------------------------------
@@ -196,6 +211,18 @@ func pingCommand(c *SRedisClient) {
 	c.addReplyBulk(c.args[1])
 }
 
+func infoCommand(c *SRedisClient) {
+	if len(c.args) > 2 {
+		c.addReplyErrorFormat("wrong number of arguments for '%s' command", c.cmd.name)
+		return
+	}
+	section := "default"
+	if len(c.args) == 2 {
+		section = c.args[1].strVal()
+	}
+	c.addReplyBulkStr(genRedisInfoString(section))
+}
+
 //-----------------------------------------------------------------------------
 // Main!
 //-----------------------------------------------------------------------------
@@ -210,6 +237,7 @@ func ServerStart() {
 	initSharedObjects()
 	// init server
 	initServer()
+	fmt.Printf("version: %s\n", REDIS_VERSION)
 	ulog.Info("* Server initialized")
 	// load data from rdb or aof
 	loadDataFromDisk()
