@@ -153,6 +153,7 @@ const (
 	BGREWRITEAOF = "bgrewriteaof"
 	BGSAVE       = "bgsave"
 	SAVE         = "save"
+	DBSIZE       = "dbsize"
 
 	// string command
 

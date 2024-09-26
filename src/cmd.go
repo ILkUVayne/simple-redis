@@ -95,6 +95,7 @@ func initCommands() map[string]SRedisCommand {
 		RANDOMKEY: {RANDOMKEY, randomKeyCommand, 1},
 		FLUSHDB:   {FLUSHDB, flushDbCommand, 1},
 		TYPE:      {TYPE, typeCommand, 2},
+		DBSIZE:    {DBSIZE, dbSizeCommand, 1},
 		// aof
 		BGREWRITEAOF: {BGREWRITEAOF, bgRewriteAofCommand, 1},
 		// rdb

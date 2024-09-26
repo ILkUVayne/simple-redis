@@ -224,6 +224,27 @@ zset
 none
 ~~~
 
+### dbsize
+
+**dbsize**
+
+Return the number of elements in the database.
+
+~~~bash
+127.0.0.1:6379> keys *
+1) "website"
+2) "zs"
+3) "name"
+4) "s1"
+5) "k1"
+6) "k2"
+7) "s2"
+8) "stu:1"
+9) "k3"
+127.0.0.1:6379> dbsize
+(integer) 9
+~~~
+
 ## AOF
 
 ### BGREWRITEAOF

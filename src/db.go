@@ -345,3 +345,8 @@ func flushDbCommand(c *SRedisClient) {
 	server.db.expire.dictEmpty()
 	c.addReply(shared.ok)
 }
+
+// dbsize
+func dbSizeCommand(c *SRedisClient) {
+	c.addReplyLongLong(c.db.dbDataSize())
+}
