@@ -468,3 +468,12 @@ func sRemCommand(c *SRedisClient) {
 	server.incrDirtyCount(c, deleted)
 	c.addReplyLongLong(deleted)
 }
+
+// scard key
+func sCardCommand(c *SRedisClient) {
+	set := c.db.lookupKeyReadOrReply(c, c.args[1], shared.czero)
+	if set == nil || !set.checkType(c, SR_SET) {
+		return
+	}
+	c.addReplyLongLong(setTypeSize(set))
+}

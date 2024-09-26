@@ -165,6 +165,7 @@ const (
 
 	Z_ADD   = "zadd"
 	Z_RANGE = "zrange"
+	Z_CARD  = "zcard"
 
 	// set command
 
@@ -178,6 +179,7 @@ const (
 	S_UNIONSTORE = "sunionstore"
 	S_DIFF       = "sdiff"
 	S_DIFFSTORE  = "sdiffstore"
+	S_CARD       = "scard"
 
 	// list command
 

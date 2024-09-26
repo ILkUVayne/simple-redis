@@ -759,6 +759,25 @@ Remove and return a random element from the collection.
 1) "11"
 ~~~
 
+### scard
+
+**scard key**
+
+Return the cardinality of the set key (the number of elements in the set).
+
+~~~bash
+127.0.0.1:6379> SADD website www.biancheng.net www.baidu.com www.jd.com
+(integer) 3
+127.0.0.1:6379> SADD website www.biancheng.net
+(integer) 0
+127.0.0.1:6379> SMEMBERS website
+1) "www.baidu.com"
+2) "www.biancheng.net"
+3) "www.jd.com"
+127.0.0.1:6379> SCARD website
+(integer) 3
+~~~
+
 ## zset
 
 ### zadd
@@ -794,6 +813,26 @@ By using the withscores option, return the member and its score value together.
 8) "60"
 127.0.0.1:6379> object encoding zs
 "skiplist"
+~~~
+
+### zcard
+
+**zcard key**
+
+Return the cardinality of the ordered set key.
+
+~~~bash
+127.0.0.1:6379> ZADD stu:1 90 math 85 English 90 history
+(integer) 3
+127.0.0.1:6379> ZRANGE stu:1 0 2 WITHSCORES
+1) "English"
+2) "85"
+3) "history"
+4) "90"
+5) "math"
+6) "90"
+127.0.0.1:6379> ZCARD stu:1
+(integer) 3
 ~~~
 
 // TODO MORE COMMAND

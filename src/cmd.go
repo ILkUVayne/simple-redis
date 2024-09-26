@@ -108,6 +108,7 @@ func initCommands() map[string]SRedisCommand {
 		// zset
 		Z_ADD:   {Z_ADD, zAddCommand, -4},
 		Z_RANGE: {Z_RANGE, zRangeCommand, -4},
+		Z_CARD:  {Z_CARD, zCardCommand, 2},
 		// set
 		S_ADD:        {S_ADD, sAddCommand, -3},
 		SMEMBERS:     {SMEMBERS, sinterCommand, 2},
@@ -119,6 +120,7 @@ func initCommands() map[string]SRedisCommand {
 		S_UNIONSTORE: {S_UNIONSTORE, sUnionStoreCommand, -3},
 		S_DIFF:       {S_DIFF, sDiffCommand, -2},
 		S_DIFFSTORE:  {S_DIFFSTORE, sDiffStoreCommand, -3},
+		S_CARD:       {S_DIFFSTORE, sCardCommand, 2},
 		// list
 		R_PUSH: {R_PUSH, rPushCommand, -3},
 		L_PUSH: {L_PUSH, lPushCommand, -3},
