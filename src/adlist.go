@@ -210,6 +210,6 @@ func (l *list) listRewindTail() *listIter {
 // -----------------------------------------------------------------------------
 
 // create new list
-func listCreate(lType *dictType) *list {
-	return &list{lType: lType}
+func listCreate() *list {
+	return &list{lType: &lType}
 }
