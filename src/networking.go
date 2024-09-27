@@ -26,14 +26,22 @@ func readQueryFromClient(_ *aeEventLoop, fd int, clientData any) {
 	if (len(c.queryBuf) - c.queryLen) < SREDIS_MAX_BULK {
 		c.queryBuf = append(c.queryBuf, make([]byte, SREDIS_MAX_BULK)...)
 	}
-	n, err := Read(fd, c.queryBuf)
-	if err != nil {
-		freeClient(c)
-		ulog.ErrorPf("simple-redis server: client %v read err: %v", fd, err)
-		return
+
+	for {
+		n, err := Read(fd, c.queryBuf[c.queryLen:])
+		if err != nil {
+			freeClient(c)
+			ulog.ErrorPf("simple-redis server: client %v read err: %v", fd, err)
+			return
+		}
+
+		c.queryLen += n
+		if checkEOF(c.queryBuf, c.queryLen) {
+			break
+		}
 	}
-	c.queryLen += n
-	err = processQueryBuf(c)
+
+	err := processQueryBuf(c)
 	if err != nil {
 		freeClient(c)
 		ulog.ErrorP("simple-redis server: process query buf err: ", err)

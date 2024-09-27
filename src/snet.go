@@ -5,6 +5,10 @@ import (
 	"golang.org/x/sys/unix"
 )
 
+func checkEOF(buf []byte, length int) bool {
+	return length >= 2 && string(buf[length-2:length]) == "\r\n"
+}
+
 func Accept(fd int) int {
 	nfd, _, err := unix.Accept(fd)
 	if err != nil {
