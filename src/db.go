@@ -3,6 +3,7 @@ package src
 import (
 	"github.com/ILkUVayne/utlis-go/v2/time"
 	"github.com/ILkUVayne/utlis-go/v2/ulog"
+	"strings"
 )
 
 // SRedisDB 数据库结构
@@ -179,6 +180,147 @@ func tryResizeHashTables() {
 	}
 }
 
+func parseScanCursorOrReply(c *SRedisClient, o *SRobj) (cursor int64, ok bool) {
+	if o.getLongLongFromObject(&cursor) != nil {
+		c.addReplyError("invalid cursor")
+		return -1, false
+	}
+	return cursor, true
+}
+
+//-----------------------------------------------------------------------------
+// tool func
+//-----------------------------------------------------------------------------
+
+func scanObjKV(o *SRobj, de *dictEntry) (key, val *SRobj) {
+	if o != nil && (o.Typ == SR_STR || o.Typ == SR_LIST) {
+		panic("Type not handled in SCAN callback.")
+	}
+
+	if o == nil || o.Typ == SR_SET {
+		key = de.getKey()
+		key.incrRefCount()
+		return key, nil
+	}
+	if o.Typ == SR_DICT {
+		key = de.getKey()
+		key.incrRefCount()
+		val = de.getVal()
+		val.incrRefCount()
+		return key, val
+	}
+	key = de.getKey()
+	key.incrRefCount()
+	fv, _ := de.getVal().floatVal()
+	val = createFromFloat(fv)
+	return key, val
+}
+
+func scanCallback(priVData any, de *dictEntry) {
+	pd := priVData.([2]any)
+	keys := pd[0].(*list)
+	o := pd[1].(*SRobj)
+
+	if o != nil && (o.Typ == SR_STR || o.Typ == SR_LIST) {
+		panic("Type not handled in SCAN callback.")
+	}
+
+	key, val := scanObjKV(o, de)
+	keys.rPush(key)
+	if val != nil {
+		keys.rPush(val)
+	}
+}
+
+func scanParseOptions(c *SRedisClient, o *SRobj) (count int64, pat string, usePattern bool, ok bool) {
+	count = 10
+	i := 3
+	if o == nil {
+		i = 2
+	}
+	argc := len(c.args)
+	for i < argc {
+		j := argc - i
+		if strings.EqualFold(c.args[i].strVal(), "count") && j >= 2 {
+			if c.args[i+1].getLongLongFromObjectOrReply(c, &count, "") == REDIS_ERR {
+				return -1, "", false, false
+			}
+			if count < 1 {
+				c.addReply(shared.syntaxErr)
+				return -1, "", false, false
+			}
+			i += 2
+			continue
+		}
+		if strings.EqualFold(c.args[i].strVal(), "match") && j >= 2 {
+			pat = c.args[i+1].strVal()
+			usePattern = !(pat[0] == '*' && len(pat) == 1)
+			i += 2
+			continue
+		}
+		c.addReply(shared.syntaxErr)
+		return -1, "", false, false
+	}
+	return count, pat, usePattern, true
+}
+
+func scanIterHt(c *SRedisClient, o *SRobj, oldCount int64) (ht *dict, count int64) {
+	if o == nil {
+		return c.db.data, oldCount
+	}
+	if o.Typ == SR_SET && o.encoding == REDIS_ENCODING_HT {
+		return assertDict(o), oldCount
+	}
+	if o.Typ == SR_DICT && o.encoding == REDIS_ENCODING_HT {
+		ht = assertDict(o)
+		oldCount *= 2
+		return assertDict(o), oldCount
+	}
+	if o.Typ == SR_ZSET && o.encoding == REDIS_ENCODING_SKIPLIST {
+		ht = assertZSet(o).d
+		oldCount *= 2
+		return assertZSet(o).d, oldCount
+	}
+	panic("Unknow obj type")
+}
+
+func scanIterColl(c *SRedisClient, o *SRobj, cursor int64, count int64) (*list, int64) {
+	var ht *dict
+	keys := listCreate()
+
+	ht, count = scanIterHt(c, o, count)
+
+	if ht != nil {
+		var priVData [2]any
+		maxIterations := count * 10
+
+		priVData[0] = keys
+		priVData[1] = o
+
+		for {
+			cursor = ht.dictScan(uint64(cursor), scanCallback, priVData)
+			if cursor == 0 || maxIterations == 0 || sLen(keys) >= count {
+				break
+			}
+			maxIterations--
+		}
+		return keys, cursor
+	}
+	if o.Typ == SR_SET {
+		is := assertIntSet(o)
+		var intVal int64
+		pos := int64(0)
+		for is.intSetGet(pos, &intVal); is.intSetGet(pos, &intVal); pos++ {
+			keys.rPush(createFromInt(intVal))
+		}
+		return keys, 0
+	}
+	if o.Typ == SR_DICT || o.Typ == SR_ZSET {
+
+	}
+	panic("Not handled encoding in SCAN.")
+}
+
 //-----------------------------------------------------------------------------
 // db commands
 //-----------------------------------------------------------------------------
@@ -200,6 +342,71 @@ func ttlGenericCommand(c *SRedisClient, outputMs bool) {
 		return
 	}
 	c.addReplyLongLong((ttl + 500) / 1000)
+}
+
+func scanGenericCommand(c *SRedisClient, o *SRobj, cursor int64) {
+	if o != nil && (o.Typ == SR_STR || o.Typ == SR_LIST) {
+		panic("invalid scan object")
+	}
+
+	var keys *list
+	var lNode *node
+
+	// Step 1: Parse options.
+	count, pat, usePattern, ok := scanParseOptions(c, o)
+	if !ok {
+		return
+	}
+
+	// Step 2: Iterate the collection.
+	keys, cursor = scanIterColl(c, o, cursor, count)
+
+	// Step 3: Filter elements.
+	lNode = keys.first()
+	for lNode != nil {
+		kObj := lNode.nodeValue()
+		nextLNode := lNode.nodeNext()
+		filter := false
+
+		if usePattern {
+			kObjStr := kObj.strVal()
+			if !StringMatchLen(pat, kObjStr, false) {
+				filter = true
+			}
+		}
+
+		if !filter && o == nil && c.db.expireIfNeeded(kObj) {
+			filter = true
+		}
+
+		if filter {
+			kObj.decrRefCount()
+			keys.delNode(lNode)
+		}
+
+		if o != nil && (o.Typ == SR_ZSET || o.Typ == SR_DICT) {
+			lNode = nextLNode
+			nextLNode = lNode.nodeNext()
+			if filter {
+				kObj = lNode.nodeValue()
+				kObj.decrRefCount()
+				keys.delNode(lNode)
+			}
+		}
+		lNode = nextLNode
+	}
+
+	// Step 4: Reply to the client
+	c.addReplyMultiBulkLen(2, false)
+	c.addReplyBulkInt(cursor)
+	c.addReplyMultiBulkLen(sLen(keys), false)
+
+	for n := keys.first(); n != nil; n = keys.first() {
+		kObj := n.nodeValue()
+		c.addReplyBulk(kObj)
+		kObj.decrRefCount()
+		keys.delNode(n)
+	}
 }
 
 // expire key value
@@ -343,5 +550,30 @@ func flushDbCommand(c *SRedisClient) {
 	server.incrDirtyCount(c, server.db.dbDataSize())
 	server.db.data.dictEmpty()
 	server.db.expire.dictEmpty()
+	c.addReply(shared.ok)
+}
+
+// dbsize
+func dbSizeCommand(c *SRedisClient) {
+	c.addReplyLongLong(c.db.dbDataSize())
+}
+
+// SCAN cursor [MATCH pattern] [COUNT count]
+func scanCommand(c *SRedisClient) {
+	if cursor, ok := parseScanCursorOrReply(c, c.args[1]); ok {
+		scanGenericCommand(c, nil, cursor)
+	}
+}
+
+// select id
+func selectCommand(c *SRedisClient) {
+	var id int64
+	if c.args[1].getLongLongFromObjectOrReply(c, &id, "invalid DB index") == REDIS_ERR {
+		return
+	}
+	if !c.selectDb(id) {
+		c.addReplyError("invalid DB index")
+		return
+	}
 	c.addReply(shared.ok)
 }

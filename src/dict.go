@@ -4,6 +4,7 @@ import (
 	"github.com/ILkUVayne/utlis-go/v2/ulog"
 	"hash/fnv"
 	"math"
+	"math/bits"
 	"math/rand"
 )
 
@@ -82,6 +83,8 @@ type dictType struct {
 	keyDestructor func(key *SRobj)             // 关键字销毁（释放）函数
 	valDestructor func(val *SRobj)             // 值销毁（释放）函数
 }
+
+type dictScanFunction func(priVData any, de *dictEntry)
 
 // dictht 哈希表结构
 type dictht struct {
@@ -194,6 +197,62 @@ func (d *dict) initHt() {
 	}
 	d.rehashIdx = -1
 	d.iterators = 0
+}
+
+func (d *dict) dictScan(v uint64, fn dictScanFunction, priVData any) int64 {
+	if d.isEmpty() {
+		return 0
+	}
+
+	if !d.isRehash() {
+		t := d.ht[0]
+		m := uint64(t.mask)
+
+		de := t.table[v&m]
+		for de != nil {
+			fn(priVData, de)
+			de = de.next
+		}
+
+		v |= ^m
+
+		v = bits.Reverse64(v)
+		v++
+		v = bits.Reverse64(v)
+		return int64(v)
+	}
+
+	t0, t1 := d.ht[0], d.ht[1]
+
+	if t0.size > t1.size {
+		t0, t1 = t1, t0
+	}
+
+	m0, m1 := uint64(t0.mask), uint64(t1.mask)
+
+	de := t0.table[v&m0]
+	for de != nil {
+		fn(priVData, de)
+		de = de.next
+	}
+
+	for {
+		de = t1.table[v&m1]
+		for de != nil {
+			fn(priVData, de)
+			de = de.next
+		}
+
+		v |= ^m1
+		v = bits.Reverse64(v)
+		v++
+		v = bits.Reverse64(v)
+
+		if v&(m0^m1) == 0 {
+			break
+		}
+	}
+	return int64(v)
 }
 
 // check if the current rehash is in progress

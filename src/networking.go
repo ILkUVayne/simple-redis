@@ -26,14 +26,22 @@ func readQueryFromClient(_ *aeEventLoop, fd int, clientData any) {
 	if (len(c.queryBuf) - c.queryLen) < SREDIS_MAX_BULK {
 		c.queryBuf = append(c.queryBuf, make([]byte, SREDIS_MAX_BULK)...)
 	}
-	n, err := Read(fd, c.queryBuf)
-	if err != nil {
-		freeClient(c)
-		ulog.ErrorPf("simple-redis server: client %v read err: %v", fd, err)
-		return
+
+	for {
+		n, err := Read(fd, c.queryBuf[c.queryLen:])
+		if err != nil {
+			freeClient(c)
+			ulog.ErrorPf("simple-redis server: client %v read err: %v", fd, err)
+			return
+		}
+
+		c.queryLen += n
+		if checkEOF(c.queryBuf, c.queryLen) {
+			break
+		}
 	}
-	c.queryLen += n
-	err = processQueryBuf(c)
+
+	err := processQueryBuf(c)
 	if err != nil {
 		freeClient(c)
 		ulog.ErrorP("simple-redis server: process query buf err: ", err)
@@ -203,8 +211,22 @@ func (c *SRedisClient) addReplyStr(s string) {
 	data.decrRefCount()
 }
 
+func (c *SRedisClient) addReplyBulkStr(s string) {
+	if s != "" {
+		c.addReplyStr(fmt.Sprintf(RESP_BULK, len(s), s))
+	}
+}
+
 // 添加字符串错误返回
 func (c *SRedisClient) addReplyError(err string) {
+	if err != "" {
+		c.addReplyStr(fmt.Sprintf(RESP_ERR, err))
+	}
+}
+
+// 添加字符串错误(可格式化)返回
+func (c *SRedisClient) addReplyErrorFormat(format string, a ...any) {
+	err := fmt.Sprintf(format, a...)
 	if err != "" {
 		c.addReplyStr(fmt.Sprintf(RESP_ERR, err))
 	}
@@ -225,14 +247,6 @@ func (c *SRedisClient) addReplyDouble(f float64) {
 
 // 添加整数返回
 func (c *SRedisClient) addReplyLongLong(ll int64) {
-	if ll == 0 {
-		c.addReply(shared.czero)
-		return
-	}
-	if ll == 1 {
-		c.addReply(shared.cone)
-		return
-	}
 	c.addReplyStr(fmt.Sprintf(RESP_INT, ll))
 }
 

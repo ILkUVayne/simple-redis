@@ -6,7 +6,7 @@ import (
 )
 
 func TestLen(t *testing.T) {
-	l := listCreate(&lType)
+	l := listCreate()
 	data := createSRobj(SR_STR, "name1")
 	if sLen(l) != 0 {
 		t.Error("get len err: len == ", sLen(l))
@@ -18,7 +18,7 @@ func TestLen(t *testing.T) {
 }
 
 func TestFirst(t *testing.T) {
-	l := listCreate(&lType)
+	l := listCreate()
 	data := createSRobj(SR_STR, "name1")
 	l.lPush(data)
 	data1 := createSRobj(SR_STR, "name1")
@@ -30,7 +30,7 @@ func TestFirst(t *testing.T) {
 }
 
 func TestLast(t *testing.T) {
-	l := listCreate(&lType)
+	l := listCreate()
 	data := createSRobj(SR_STR, "name1")
 	l.lPush(data)
 	data1 := createSRobj(SR_STR, "name1")
@@ -42,7 +42,7 @@ func TestLast(t *testing.T) {
 }
 
 func TestFind(t *testing.T) {
-	l := listCreate(&lType)
+	l := listCreate()
 	data := createSRobj(SR_STR, "name1")
 	l.lPush(data)
 	data1 := createSRobj(SR_STR, "name1")
@@ -59,7 +59,7 @@ func TestFind(t *testing.T) {
 }
 
 func TestRPush(t *testing.T) {
-	l := listCreate(&lType)
+	l := listCreate()
 	data := createSRobj(SR_STR, "name1")
 	l.rPush(data)
 	data1 := createSRobj(SR_STR, "name2")
@@ -71,7 +71,7 @@ func TestRPush(t *testing.T) {
 }
 
 func TestLPush(t *testing.T) {
-	l := listCreate(&lType)
+	l := listCreate()
 	data := createSRobj(SR_STR, "name1")
 	l.rPush(data)
 	data1 := createSRobj(SR_STR, "name1")
@@ -83,7 +83,7 @@ func TestLPush(t *testing.T) {
 }
 
 func TestDelNode(t *testing.T) {
-	l := listCreate(&lType)
+	l := listCreate()
 	data := createSRobj(SR_STR, "name1")
 	l.rPush(data)
 	data1 := createSRobj(SR_STR, "name2")
@@ -100,7 +100,7 @@ func TestDelNode(t *testing.T) {
 }
 
 func TestListNext(t *testing.T) {
-	l := listCreate(&lType)
+	l := listCreate()
 	data := createSRobj(SR_STR, "name1")
 	l.rPush(data)
 	data1 := createSRobj(SR_STR, "name2")

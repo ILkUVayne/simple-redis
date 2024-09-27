@@ -13,6 +13,8 @@ const (
 //-----------------------------------------------------------------------------
 
 const (
+	REDIS_VERSION = "3.2.0"
+
 	DEFAULT_PORT       = 6379
 	DEFAULT_RH_NN_STEP = 10
 	REDIS_OK           = 0
@@ -133,6 +135,11 @@ const (
 
 	MAX_EXPIRE = 1000000000
 
+	// server command
+
+	PING = "ping"
+	INFO = "info"
+
 	// db command
 
 	EXPIRE       = "expire"
@@ -149,6 +156,9 @@ const (
 	BGREWRITEAOF = "bgrewriteaof"
 	BGSAVE       = "bgsave"
 	SAVE         = "save"
+	DBSIZE       = "dbsize"
+	SCAN         = "scan"
+	SELECT       = "select"
 
 	// string command
 
@@ -161,6 +171,7 @@ const (
 
 	Z_ADD   = "zadd"
 	Z_RANGE = "zrange"
+	Z_CARD  = "zcard"
 
 	// set command
 
@@ -174,6 +185,7 @@ const (
 	S_UNIONSTORE = "sunionstore"
 	S_DIFF       = "sdiff"
 	S_DIFFSTORE  = "sdiffstore"
+	S_CARD       = "scard"
 
 	// list command
 

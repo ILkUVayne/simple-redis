@@ -81,6 +81,9 @@ func call(c *SRedisClient) {
 // 初始化命令列表
 func initCommands() map[string]SRedisCommand {
 	return map[string]SRedisCommand{
+		//server
+		PING: {PING, pingCommand, -1},
+		INFO: {INFO, infoCommand, -1},
 		// db
 		EXPIRE:    {EXPIRE, expireCommand, 3},
 		OBJECT:    {OBJECT, objectCommand, 3},
@@ -93,6 +96,9 @@ func initCommands() map[string]SRedisCommand {
 		RANDOMKEY: {RANDOMKEY, randomKeyCommand, 1},
 		FLUSHDB:   {FLUSHDB, flushDbCommand, 1},
 		TYPE:      {TYPE, typeCommand, 2},
+		DBSIZE:    {DBSIZE, dbSizeCommand, 1},
+		SCAN:      {SCAN, scanCommand, -2},
+		SELECT:    {SELECT, selectCommand, 2},
 		// aof
 		BGREWRITEAOF: {BGREWRITEAOF, bgRewriteAofCommand, 1},
 		// rdb
@@ -106,6 +112,7 @@ func initCommands() map[string]SRedisCommand {
 		// zset
 		Z_ADD:   {Z_ADD, zAddCommand, -4},
 		Z_RANGE: {Z_RANGE, zRangeCommand, -4},
+		Z_CARD:  {Z_CARD, zCardCommand, 2},
 		// set
 		S_ADD:        {S_ADD, sAddCommand, -3},
 		SMEMBERS:     {SMEMBERS, sinterCommand, 2},
@@ -117,6 +124,7 @@ func initCommands() map[string]SRedisCommand {
 		S_UNIONSTORE: {S_UNIONSTORE, sUnionStoreCommand, -3},
 		S_DIFF:       {S_DIFF, sDiffCommand, -2},
 		S_DIFFSTORE:  {S_DIFFSTORE, sDiffStoreCommand, -3},
+		S_CARD:       {S_DIFFSTORE, sCardCommand, 2},
 		// list
 		R_PUSH: {R_PUSH, rPushCommand, -3},
 		L_PUSH: {L_PUSH, lPushCommand, -3},

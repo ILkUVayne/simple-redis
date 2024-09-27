@@ -361,15 +361,15 @@ func sAddCommand(c *SRedisClient) {
 		c.db.dictSet(key, set)
 	}
 	// add...
-	added := 0
+	added := int64(0)
 	for j := 2; j < len(c.args); j++ {
 		c.args[j].tryObjectEncoding()
 		if setTypeAdd(set, c.args[j]) {
 			added++
 		}
 	}
-	c.addReplyLongLong(int64(added))
-	server.incrDirtyCount(c, int64(added))
+	c.addReplyLongLong(added)
+	server.incrDirtyCount(c, added)
 }
 
 // smembers key
@@ -467,4 +467,13 @@ func sRemCommand(c *SRedisClient) {
 	}
 	server.incrDirtyCount(c, deleted)
 	c.addReplyLongLong(deleted)
+}
+
+// scard key
+func sCardCommand(c *SRedisClient) {
+	set := c.db.lookupKeyReadOrReply(c, c.args[1], shared.czero)
+	if set == nil || !set.checkType(c, SR_SET) {
+		return
+	}
+	c.addReplyLongLong(setTypeSize(set))
 }

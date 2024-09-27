@@ -79,19 +79,27 @@ func sRedisGetReply(c *sRedisContext, reply *sRedisReply) int {
 	}
 	// Read
 	reply.buf = make([]byte, SREDIS_IO_BUF)
-	for reply.str == "" {
+Reader:
+	for {
 		n, err := Read(c.fd, reply.buf[reply.length:])
 		if err != nil {
 			c.err = err
 			return CLI_ERR
 		}
+
 		reply.length += n
+		if checkEOF(reply.buf, reply.length) {
+			break
+		}
+
 		if (len(reply.buf) - reply.length) < SREDIS_MAX_BULK {
 			reply.buf = append(reply.buf, make([]byte, SREDIS_MAX_BULK)...)
 		}
-		if getReply(c, reply) == CLI_ERR {
-			return CLI_ERR
-		}
 	}
-	return CLI_OK
+	// checkEOF 方法不能保证Read读取的数据完整，可能出现刚好读到\r\n，此时使用getReply兜底继续读
+	var res int
+	if res = getReply(c, reply); res == CLI_OK && reply.str == "" {
+		goto Reader
+	}
+	return res
 }

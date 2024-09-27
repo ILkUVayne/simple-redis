@@ -48,6 +48,15 @@ func formatFloat(f float64, maxPrecision int) string {
 	return str
 }
 
+// 获取指定长度的空格数组
+func spaces(num int) string {
+	str := ""
+	for ; num > 0; num-- {
+		str += "\x20"
+	}
+	return str
+}
+
 //-----------------------------------------------------------------------------
 // sys function
 //-----------------------------------------------------------------------------

@@ -224,6 +224,90 @@ zset
 none
 ~~~
 
+### dbsize
+
+**dbsize**
+
+Return the number of elements in the database.
+
+~~~bash
+127.0.0.1:6379> keys *
+1) "website"
+2) "zs"
+3) "name"
+4) "s1"
+5) "k1"
+6) "k2"
+7) "s2"
+8) "stu:1"
+9) "k3"
+127.0.0.1:6379> dbsize
+(integer) 9
+~~~
+
+### scan
+
+**SCAN cursor [MATCH pattern] [COUNT count]**
+
+Iterate the keys in the database. Similar commands include SSCAN, HSCAN, and ZSCAN, which are used for iterating sets, hashing, and ordered combinations, respectively.
+
+Based on cursor iterators, after each call, a new cursor is returned to the user. The user needs to use this new cursor as the cursor parameter for the SCAN command in the next iteration, allowing the iteration process to continue. When the cursor returns 0, the iteration ends.
+
+~~~bash
+127.0.0.1:6379> keys *
+1) "name"
+2) "s1"
+3) "s2"
+4) "k4"
+5) "l1"
+6) "l2"
+7) "zs"
+8) "website"
+9) "k1"
+10) "k2"
+11) "stu:1"
+12) "k3"
+127.0.0.1:6379> scan 0
+1) "3"
+2) 1) "k4"
+   2) "l1"
+   3) "name"
+   4) "zs"
+   5) "website"
+   6) "s2"
+   7) "k2"
+   8) "stu:1"
+   9) "s1"
+   10) "k1"
+127.0.0.1:6379> scan 3
+1) "0"
+2) 1) "l2"
+   2) "k3"
+127.0.0.1:6379> scan 0 count 13
+1) "0"
+2) 1) "k4"
+   2) "l1"
+   3) "name"
+   4) "zs"
+   5) "website"
+   6) "s2"
+   7) "k2"
+   8) "stu:1"
+   9) "s1"
+   10) "k1"
+   11) "l2"
+   12) "k3"
+127.0.0.1:6379> scan 0 match k* count 13
+1) "0"
+2) 1) "k4"
+   2) "k2"
+   3) "k1"
+   4) "k3"
+127.0.0.1:6379> scan 0 match kk* count 13
+1) "0"
+2) (empty array)
+~~~
+
 ## AOF
 
 ### BGREWRITEAOF
@@ -759,6 +843,25 @@ Remove and return a random element from the collection.
 1) "11"
 ~~~
 
+### scard
+
+**scard key**
+
+Return the cardinality of the set key (the number of elements in the set).
+
+~~~bash
+127.0.0.1:6379> SADD website www.biancheng.net www.baidu.com www.jd.com
+(integer) 3
+127.0.0.1:6379> SADD website www.biancheng.net
+(integer) 0
+127.0.0.1:6379> SMEMBERS website
+1) "www.baidu.com"
+2) "www.biancheng.net"
+3) "www.jd.com"
+127.0.0.1:6379> SCARD website
+(integer) 3
+~~~
+
 ## zset
 
 ### zadd
@@ -794,6 +897,26 @@ By using the withscores option, return the member and its score value together.
 8) "60"
 127.0.0.1:6379> object encoding zs
 "skiplist"
+~~~
+
+### zcard
+
+**zcard key**
+
+Return the cardinality of the ordered set key.
+
+~~~bash
+127.0.0.1:6379> ZADD stu:1 90 math 85 English 90 history
+(integer) 3
+127.0.0.1:6379> ZRANGE stu:1 0 2 WITHSCORES
+1) "English"
+2) "85"
+3) "history"
+4) "90"
+5) "math"
+6) "90"
+127.0.0.1:6379> ZCARD stu:1
+(integer) 3
 ~~~
 
 // TODO MORE COMMAND

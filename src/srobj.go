@@ -222,6 +222,14 @@ func (s *SRobj) isObjectRepresentableAsInt64(intVal *int64) error {
 }
 
 //-----------------------------------------------------------------------------
+// zSet tool func
+//-----------------------------------------------------------------------------
+
+func (s *SRobj) isWithScores() bool {
+	return s != nil && strings.ToLower(s.strVal()) == "withscores"
+}
+
+//-----------------------------------------------------------------------------
 // object func
 //-----------------------------------------------------------------------------
 
@@ -238,6 +246,15 @@ func compareStringObjects(obj1, obj2 *SRobj) int {
 //-----------------------------------------------------------------------------
 
 func createFromInt(val int64) *SRobj {
+	return &SRobj{
+		Typ:      SR_STR,
+		Val:      val,
+		refCount: 1,
+		encoding: REDIS_ENCODING_INT,
+	}
+}
+
+func createFromFloat(val float64) *SRobj {
 	return &SRobj{
 		Typ:      SR_STR,
 		Val:      val,
@@ -283,7 +300,7 @@ func createSetObject() *SRobj {
 }
 
 func createListObject() *SRobj {
-	o := createSRobj(SR_LIST, listCreate(&lType))
+	o := createSRobj(SR_LIST, listCreate())
 	o.encoding = REDIS_ENCODING_LINKEDLIST
 	return o
 }

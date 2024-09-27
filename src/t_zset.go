@@ -84,11 +84,11 @@ func zRangeGenericCommand(c *SRedisClient, reverse bool) {
 		c.args[3].getLongLongFromObjectOrReply(c, &end, "") != REDIS_OK {
 		return
 	}
-	if len(c.args) > 5 || (len(c.args) == 5 && c.args[4].strVal() != "withscores") {
+	if len(c.args) > 5 || (len(c.args) == 5 && !c.args[4].isWithScores()) {
 		c.addReply(shared.syntaxErr)
 		return
 	}
-	if len(c.args) == 5 && c.args[4].strVal() == "withscores" {
+	if len(c.args) == 5 && c.args[4].isWithScores() {
 		withscores = true
 	}
 
@@ -158,4 +158,13 @@ func zAddCommand(c *SRedisClient) {
 // zrange key min max [withscores]
 func zRangeCommand(c *SRedisClient) {
 	zRangeGenericCommand(c, false)
+}
+
+// zcard key
+func zCardCommand(c *SRedisClient) {
+	zs := c.db.lookupKeyReadOrReply(c, c.args[1], shared.czero)
+	if zs == nil || !zs.checkType(c, SR_ZSET) {
+		return
+	}
+	c.addReplyLongLong(zSetLength(zs))
 }
