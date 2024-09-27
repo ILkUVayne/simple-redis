@@ -245,6 +245,69 @@ Return the number of elements in the database.
 (integer) 9
 ~~~
 
+### scan
+
+**SCAN cursor [MATCH pattern] [COUNT count]**
+
+Iterate the keys in the database. Similar commands include SSCAN, HSCAN, and ZSCAN, which are used for iterating sets, hashing, and ordered combinations, respectively.
+
+Based on cursor iterators, after each call, a new cursor is returned to the user. The user needs to use this new cursor as the cursor parameter for the SCAN command in the next iteration, allowing the iteration process to continue. When the cursor returns 0, the iteration ends.
+
+~~~bash
+127.0.0.1:6379> keys *
+1) "name"
+2) "s1"
+3) "s2"
+4) "k4"
+5) "l1"
+6) "l2"
+7) "zs"
+8) "website"
+9) "k1"
+10) "k2"
+11) "stu:1"
+12) "k3"
+127.0.0.1:6379> scan 0
+1) "3"
+2) 1) "k4"
+   2) "l1"
+   3) "name"
+   4) "zs"
+   5) "website"
+   6) "s2"
+   7) "k2"
+   8) "stu:1"
+   9) "s1"
+   10) "k1"
+127.0.0.1:6379> scan 3
+1) "0"
+2) 1) "l2"
+   2) "k3"
+127.0.0.1:6379> scan 0 count 13
+1) "0"
+2) 1) "k4"
+   2) "l1"
+   3) "name"
+   4) "zs"
+   5) "website"
+   6) "s2"
+   7) "k2"
+   8) "stu:1"
+   9) "s1"
+   10) "k1"
+   11) "l2"
+   12) "k3"
+127.0.0.1:6379> scan 0 match k* count 13
+1) "0"
+2) 1) "k4"
+   2) "k2"
+   3) "k1"
+   4) "k3"
+127.0.0.1:6379> scan 0 match kk* count 13
+1) "0"
+2) (empty array)
+~~~
+
 ## AOF
 
 ### BGREWRITEAOF

@@ -157,6 +157,8 @@ const (
 	BGSAVE       = "bgsave"
 	SAVE         = "save"
 	DBSIZE       = "dbsize"
+	SCAN         = "scan"
+	SELECT       = "select"
 
 	// string command
 

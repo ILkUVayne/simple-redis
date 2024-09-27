@@ -254,6 +254,15 @@ func createFromInt(val int64) *SRobj {
 	}
 }
 
+func createFromFloat(val float64) *SRobj {
+	return &SRobj{
+		Typ:      SR_STR,
+		Val:      val,
+		refCount: 1,
+		encoding: REDIS_ENCODING_INT,
+	}
+}
+
 func createSRobj(typ SRType, ptr any) *SRobj {
 	return &SRobj{
 		Typ:      typ,
@@ -291,7 +300,7 @@ func createSetObject() *SRobj {
 }
 
 func createListObject() *SRobj {
-	o := createSRobj(SR_LIST, listCreate(&lType))
+	o := createSRobj(SR_LIST, listCreate())
 	o.encoding = REDIS_ENCODING_LINKEDLIST
 	return o
 }

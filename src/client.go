@@ -77,6 +77,12 @@ func (c *SRedisClient) rewriteClientCommandVector(args ...*SRobj) {
 	c.cmd = lookupCommand(strings.ToLower(args[0].strVal()))
 }
 
+func (c *SRedisClient) selectDb(id int64) bool {
+	// only 1 db now
+	ulog.InfoF("select db: %d now", id)
+	return true
+}
+
 // return SRClient
 //
 // fd: client accept fd
@@ -85,7 +91,7 @@ func createSRClient(fd int) *SRedisClient {
 		fd:         fd,
 		db:         server.db,
 		cmdTyp:     CMD_UNKNOWN,
-		reply:      listCreate(&lType),
+		reply:      listCreate(),
 		queryBuf:   make([]byte, SREDIS_IO_BUF),
 		replyReady: true,
 	}

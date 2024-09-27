@@ -97,6 +97,8 @@ func initCommands() map[string]SRedisCommand {
 		FLUSHDB:   {FLUSHDB, flushDbCommand, 1},
 		TYPE:      {TYPE, typeCommand, 2},
 		DBSIZE:    {DBSIZE, dbSizeCommand, 1},
+		SCAN:      {SCAN, scanCommand, -2},
+		SELECT:    {SELECT, selectCommand, 2},
 		// aof
 		BGREWRITEAOF: {BGREWRITEAOF, bgRewriteAofCommand, 1},
 		// rdb
