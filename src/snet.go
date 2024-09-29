@@ -17,16 +17,13 @@ func Accept(fd int) int {
 	return nfd
 }
 
-func Connect(host [4]byte, port int) int {
+func Connect(host [4]byte, port int) (int, error) {
 	sfd, err := unix.Socket(unix.AF_INET, unix.SOCK_STREAM, 0)
 	if err != nil {
 		ulog.Error("simple-redis server: init socket err: ", err)
 	}
 	err = unix.Connect(sfd, &unix.SockaddrInet4{Addr: host, Port: port})
-	if err != nil {
-		ulog.Error("simple-redis server: connect err: ", err)
-	}
-	return sfd
+	return sfd, err
 }
 
 func Write(fd int, buf []byte) (int, error) {

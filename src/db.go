@@ -349,9 +349,6 @@ func scanGenericCommand(c *SRedisClient, o *SRobj, cursor int64) {
 		panic("invalid scan object")
 	}
 
-	var keys *list
-	var lNode *node
-
 	// Step 1: Parse options.
 	count, pat, usePattern, ok := scanParseOptions(c, o)
 	if !ok {
@@ -359,20 +356,16 @@ func scanGenericCommand(c *SRedisClient, o *SRobj, cursor int64) {
 	}
 
 	// Step 2: Iterate the collection.
-	keys, cursor = scanIterColl(c, o, cursor, count)
+	keys, cursor := scanIterColl(c, o, cursor, count)
 
 	// Step 3: Filter elements.
-	lNode = keys.first()
+	lNode := keys.first()
 	for lNode != nil {
-		kObj := lNode.nodeValue()
-		nextLNode := lNode.nodeNext()
+		kObj, nextLNode := lNode.nodeValue(), lNode.nodeNext()
 		filter := false
 
-		if usePattern {
-			kObjStr := kObj.strVal()
-			if !StringMatchLen(pat, kObjStr, false) {
-				filter = true
-			}
+		if usePattern && !StringMatchLen(pat, kObj.strVal(), false) {
+			filter = true
 		}
 
 		if !filter && o == nil && c.db.expireIfNeeded(kObj) {
@@ -397,8 +390,11 @@ func scanGenericCommand(c *SRedisClient, o *SRobj, cursor int64) {
 	}
 
 	// Step 4: Reply to the client
+	// 返回长度为2的嵌套数组
 	c.addReplyMultiBulkLen(2, false)
+	// reply[1] = cursor
 	c.addReplyBulkInt(cursor)
+	// reply[2] = [count]key
 	c.addReplyMultiBulkLen(sLen(keys), false)
 
 	for n := keys.first(); n != nil; n = keys.first() {

@@ -29,6 +29,11 @@ func readQueryFromClient(_ *aeEventLoop, fd int, clientData any) {
 
 	for {
 		n, err := Read(fd, c.queryBuf[c.queryLen:])
+		if n == 0 {
+			// client closed the connection
+			freeClient(c)
+			return
+		}
 		if err != nil {
 			freeClient(c)
 			ulog.ErrorPf("simple-redis server: client %v read err: %v", fd, err)

@@ -1,11 +1,13 @@
 package src
 
 import (
+	"errors"
 	"fmt"
 	linenoise "github.com/GeertJohan/go.linenoise"
 	"github.com/ILkUVayne/utlis-go/v2/cli"
 	"github.com/ILkUVayne/utlis-go/v2/str"
 	"github.com/ILkUVayne/utlis-go/v2/ulog"
+	"golang.org/x/sys/unix"
 	"os"
 )
 
@@ -22,7 +24,7 @@ func sRedisConnect() *sRedisContext {
 	if err != nil {
 		ulog.Error(err)
 	}
-	c.fd = Connect(host, CliArgs.port)
+	c.fd, c.err = Connect(host, CliArgs.port)
 	return c
 }
 
@@ -37,8 +39,8 @@ func cliConnect(force int) int {
 }
 
 // send cli command to server and get reply
-func cliSendCommand(args []string) int {
-	if context == nil {
+func cliSendCommand1(args []string) int {
+	if context == nil || context.err != nil {
 		return CLI_ERR
 	}
 	var reply sRedisReply
@@ -47,6 +49,16 @@ func cliSendCommand(args []string) int {
 	context.reader = &reply
 	printPrompt()
 	return CLI_OK
+}
+
+// send cli command to server and get reply,will retry 1 time if context is nil
+func cliSendCommand(args []string) {
+	if cliSendCommand1(args) != CLI_OK {
+		cliConnect(1)
+		if cliSendCommand1(args) != CLI_OK {
+			printPrompt()
+		}
+	}
 }
 
 /*------------------------------------------------------------------------------
@@ -73,10 +85,27 @@ func cliInputLine() string {
 	return s
 }
 
+// return false if err is nil
+func printErrorPrompt() bool {
+	if context.err == nil {
+		return false
+	}
+	switch {
+	case errors.Is(context.err, unix.ECONNREFUSED):
+		fmt.Printf("Could not connect to Redis at %s:%d: Connection refused\r\n", CliArgs.hostIp, CliArgs.port)
+	case errors.Is(context.err, CONN_DISCONNECTED):
+		fmt.Printf("Error: Server closed the connection\r\n")
+		context = nil
+	default:
+		fmt.Printf("(error) ERR: " + context.err.Error() + "\r\n")
+	}
+	return true
+}
+
 // print server reply
 func printPrompt() {
-	if context.err != nil {
-		fmt.Printf("(error) ERR: " + context.err.Error() + "\n")
+	if printErrorPrompt() {
+		return
 	}
 	reader := context.reader.(*sRedisReply)
 	if reader.fStr != "" {
@@ -124,12 +153,7 @@ func repl() {
 			os.Exit(0)
 		}
 		// cliSendCommand
-		if cliSendCommand(fields) != CLI_OK {
-			cliConnect(1)
-			if cliSendCommand(fields) != CLI_OK {
-				ulog.Error("simple-redis cli: cliSendCommand error")
-			}
-		}
+		cliSendCommand(fields)
 	}
 }
 
