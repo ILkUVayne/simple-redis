@@ -82,6 +82,11 @@ func sRedisGetReply(c *sRedisContext, reply *sRedisReply) int {
 Reader:
 	for {
 		n, err := Read(c.fd, reply.buf[reply.length:])
+		if n == 0 {
+			// connection disconnected
+			c.err = CONN_DISCONNECTED
+			return CLI_ERR
+		}
 		if err != nil {
 			c.err = err
 			return CLI_ERR
