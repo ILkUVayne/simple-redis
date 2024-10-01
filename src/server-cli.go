@@ -47,7 +47,6 @@ func cliSendCommand1(args []string) int {
 	sRedisAppendCommandArg(context, args)
 	sRedisGetReply(context, &reply)
 	context.reader = &reply
-	printPrompt()
 	return CLI_OK
 }
 
@@ -55,10 +54,9 @@ func cliSendCommand1(args []string) int {
 func cliSendCommand(args []string) {
 	if cliSendCommand1(args) != CLI_OK {
 		cliConnect(1)
-		if cliSendCommand1(args) != CLI_OK {
-			printPrompt()
-		}
+		cliSendCommand1(args)
 	}
+	printPrompt()
 }
 
 /*------------------------------------------------------------------------------
@@ -92,7 +90,7 @@ func printErrorPrompt() bool {
 	}
 	switch {
 	case errors.Is(context.err, unix.ECONNREFUSED):
-		fmt.Printf("Could not connect to Redis at %s:%d: Connection refused\r\n", CliArgs.hostIp, CliArgs.port)
+		fmt.Printf("Could not connect to simple-redis at %s:%d: Connection refused\r\n", CliArgs.hostIp, CliArgs.port)
 	case errors.Is(context.err, CONN_DISCONNECTED):
 		fmt.Printf("Error: Server closed the connection\r\n")
 		context = nil
