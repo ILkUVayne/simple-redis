@@ -23,10 +23,8 @@ const (
 const (
 	REDIS_VERSION = "3.2.0"
 
-	DEFAULT_PORT       = 6379
-	DEFAULT_RH_NN_STEP = 10
-	REDIS_OK           = 0
-	REDIS_ERR          = 1
+	REDIS_OK  = 0
+	REDIS_ERR = 1
 
 	REDIS_AOF_OFF = 0 /* AOF is off */
 	REDIS_AOF_ON  = 1
