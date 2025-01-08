@@ -75,6 +75,13 @@ func SetupConf(confName string) {
 	}(f)
 
 	parse(f)
+	// check config
+	if config.Port <= 0 {
+		ulog.ErrorF("config Port invalid please check your config file %s, Port = %d", confName, config.Port)
+	}
+	if config.RehashNullStep <= 0 {
+		config.RehashNullStep = 10
+	}
 }
 
 // 解析每行配置，并更新到config中

@@ -114,17 +114,10 @@ func updateDictResizePolicy() {
 
 // init server config
 func initServerConfig() {
-	server.port = DEFAULT_PORT
-	if config.Port > 0 {
-		server.port = config.Port
-	}
+	server.port = config.Port
 	server.fd = -1
-	server.rehashNullStep = DEFAULT_RH_NN_STEP
-	if config.RehashNullStep > 0 {
-		server.rehashNullStep = config.RehashNullStep
-	}
+	server.rehashNullStep = config.RehashNullStep
 	// aof
-	server.aofState = REDIS_AOF_OFF
 	if config.AppendOnly {
 		server.aofState = REDIS_AOF_ON
 	}
