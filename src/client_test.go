@@ -22,27 +22,12 @@ func TestCreateClient(t *testing.T) {
 	}
 }
 
-func TestGetQueryLine(t *testing.T) {
-	c := createSRClient(5)
-	buf := []byte("set name 5\r\n")
-	c.queryBuf = buf
-	c.queryLen = len(buf)
-	idx, err := c.getQueryLine()
-	if err != nil {
-		t.Error("getQueryLine error: ", err)
-	}
-	if idx != 10 {
-		t.Error("getQueryLine error: idx ==", idx)
-	}
-}
-
 func TestGetQueryNum(t *testing.T) {
 	c := createSRClient(6)
 	buf := []byte("$3\r\nset\r\n")
 	c.queryBuf = buf
 	c.queryLen = len(buf)
-	idx, _ := c.getQueryLine()
-	num, err := c.getQueryNum(1, idx)
+	num, err := c.getQueryNum()
 	if err != nil {
 		t.Error("getQueryNum error: ", err)
 	}

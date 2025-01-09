@@ -28,27 +28,18 @@ func (c *SRedisClient) isFake() bool {
 	return c.fd == FAKE_CLIENT_FD
 }
 
-// getQueryLine
-// e.g. "get name\r\n"
-// idx == 8
-// e.g. "$3\r\nget\r\n$4\r\nname\r\n"
-// idx == 2
-func (c *SRedisClient) getQueryLine() (int, error) {
-	idx := strings.Index(string(c.queryBuf[:c.queryLen]), "\r\n")
-	if idx < 0 && c.queryLen > SREDIS_MAX_INLINE {
-		return idx, errors.New("inline cmd is too long")
-	}
-	return idx, nil
-}
-
 // getQueryNum
 // e.g. "$3\r\nget\r\n$4\r\nname\r\n"
 // n == 3
 // string(queryBuf) == "get\r\n$4\r\nname\r\n"
-func (c *SRedisClient) getQueryNum(start, end int) (int, error) {
-	n, err := strconv.Atoi(string(c.queryBuf[start:end]))
-	c.queryBuf = c.queryBuf[end+2:]
-	c.queryLen -= end + 2
+func (c *SRedisClient) getQueryNum() (int, error) {
+	idx, err := getQueryLine(c.queryBuf[:c.queryLen], c.queryLen)
+	if idx < 0 {
+		return 0, err
+	}
+	n, err := strconv.Atoi(string(c.queryBuf[1:idx]))
+	c.queryBuf = c.queryBuf[idx+2:]
+	c.queryLen -= idx + 2
 	return n, err
 }
 
@@ -152,7 +143,7 @@ func checkCmdType(c *SRedisClient) {
 // inline command handle
 // e.g. "get name\r\n"
 func inlineBufHandle(c *SRedisClient) (bool, error) {
-	idx, err := c.getQueryLine()
+	idx, err := getQueryLine(c.queryBuf[:c.queryLen], c.queryLen)
 	if idx < 0 {
 		return false, err
 	}
@@ -172,12 +163,8 @@ func inlineBufHandle(c *SRedisClient) (bool, error) {
 // bulkNum == 2
 func bulkBufHandle(c *SRedisClient) (bool, error) {
 	if c.bulkNum == 0 {
-		idx, err := c.getQueryLine()
-		if idx < 0 {
-			return false, err
-		}
 		// get bulkNum
-		n, err := c.getQueryNum(1, idx)
+		n, err := c.getQueryNum()
 		if err != nil {
 			return false, err
 		}
@@ -191,14 +178,10 @@ func bulkBufHandle(c *SRedisClient) (bool, error) {
 	for c.bulkNum > 0 {
 		// get bulkLen
 		if c.bulkLen == 0 {
-			idx, err := c.getQueryLine()
-			if idx < 0 {
-				return false, err
-			}
 			if c.queryBuf[0] != '$' {
 				return false, errors.New("expect $ for bulk")
 			}
-			bulkLen, err := c.getQueryNum(1, idx)
+			bulkLen, err := c.getQueryNum()
 			if bulkLen == 0 || err != nil {
 				return false, err
 			}

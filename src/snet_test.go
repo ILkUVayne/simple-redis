@@ -36,7 +36,7 @@ func TestTcpServer(t *testing.T) {
 	go EchoServer(s, c, e)
 	<-s
 	host := [4]byte{127, 0, 0, 1}
-	cfd := Connect(host, 9999)
+	cfd, _ := Connect(host, 9999)
 	fmt.Printf("connected cfd: %v\n", cfd)
 	time.Sleep(100 * time.Millisecond)
 	c <- struct{}{}
