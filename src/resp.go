@@ -34,9 +34,15 @@ func getRespType(t byte) int {
 	return typ
 }
 
-// e.g. queryLen = "get name\r\n" return 8
+//-----------------------------------------------------------------------------
+// Parse resp data
+//-----------------------------------------------------------------------------
+
+// ================================ tool func =================================
+
+// e.g. buf = "get name\r\n" return 8
 //
-// queryLen = "$3\r\nget\r\n$4\r\nname\r\n" return 2
+// buf = "$3\r\nget\r\n$4\r\nname\r\n" return 2
 func getQueryLine(buf []byte, queryLen int) (int, error) {
 	idx := strings.Index(string(buf), "\r\n")
 	if idx < 0 && queryLen > SREDIS_MAX_INLINE {
@@ -45,50 +51,52 @@ func getQueryLine(buf []byte, queryLen int) (int, error) {
 	return idx, nil
 }
 
-//-----------------------------------------------------------------------------
-// Parse resp data
-//-----------------------------------------------------------------------------
-
-// ================================ tool func =================================
-
-// 检查数组是否为空
-func respArrayCheckEmpty(aLen int) (string, bool) {
-	if aLen == -1 {
-		return "(nil)\r\n", true
+// buf = "$3\r\nget\r\n$4\r\nname\r\n" return 3
+func getQueryNum(buf []byte, queryLen int, idx int) ([]byte, int, error) {
+	var err error
+	if idx == 0 {
+		idx, err = getQueryLine(buf, queryLen)
+		if idx < 0 {
+			return buf, INCOMPLETE_STR, err
+		}
 	}
-	if aLen == 0 {
-		return "(empty array)\r\n", true
-	}
-	return "", false
+	qLen, err := strconv.Atoi(string(buf[1:idx]))
+	return buf[idx+2:], qLen, err
 }
 
-// 获取数组长度
-func respArrayLength(buf []byte, length int) ([]byte, int, error) {
-	idx, err := getQueryLine(buf, length)
+// buf = "$3\r\nget\r\n$4\r\nname\r\n" return ["$4\r\nname\r\n", 3, get, nil]
+func getBulk(buf []byte, length int, idx int) ([]byte, int, string, error) {
+	newBuf, bLen, err := getQueryNum(buf, length, idx)
+	if err != nil || bLen <= 0 {
+		return newBuf, bLen, "", err
+	}
+	idx, err = getQueryLine(newBuf, length)
 	if err != nil || idx < 0 {
-		return buf, -1, err
+		return newBuf, INCOMPLETE_STR, "", err
 	}
-	aLen, err := strconv.Atoi(string(buf[1:idx]))
-	if err != nil {
-		return buf, -1, err
-	}
-	buf = buf[idx+2:]
-	return buf, aLen, nil
+	return newBuf[idx+2:], bLen, string(newBuf[:idx]), nil
 }
 
 // 递归解析数组数据
 func respParseArrays1(buf []byte, length int, spaceNum int) ([]byte, string, error) {
-	buf, aLen, err := respArrayLength(buf, length)
-	if err != nil || aLen < 0 {
+	// get array length
+	newBuf, aLen, err := getQueryNum(buf, length, 0)
+	if err != nil || aLen == INCOMPLETE_STR {
 		return buf, "", err
 	}
-	if emptyStr, ok := respArrayCheckEmpty(aLen); ok {
-		return buf, emptyStr + spaces(spaceNum), nil
+	buf = newBuf
+	// check empty
+	if aLen == -1 {
+		return buf, "(nil)\r\n" + spaces(spaceNum), nil
+	}
+	if aLen == 0 {
+		return buf, "(empty array)\r\n" + spaces(spaceNum), nil
 	}
 
-	str, subStr, idx := "", "", 0
+	str, subStr := "", ""
 
 	for i := 0; i < aLen; i++ {
+		// 递归解析嵌套数组
 		if buf[0] == '*' {
 			str += strconv.Itoa(i+1) + ") "
 			buf, subStr, err = respParseArrays1(buf, length, spaceNum+3)
@@ -99,31 +107,21 @@ func respParseArrays1(buf []byte, length int, spaceNum int) ([]byte, string, err
 			str += subStr[:len(subStr)-(spaceNum+3)]
 			continue
 		}
-		idx, err = getQueryLine(buf, length)
-		if err != nil || idx < 0 {
+		// 解析bulk
+		newBuf, bulkLen, bulk, err := getBulk(buf, length, 0)
+		if err != nil || bulkLen == INCOMPLETE_STR {
 			return buf, "", err
 		}
-		bulkLen, err := strconv.Atoi(string(buf[1:idx]))
-		if err != nil {
-			return buf, "", err
-		}
+		buf = newBuf
 		if bulkLen == -1 {
 			str += strconv.Itoa(i+1) + ") (nil)\r\n" + spaces(spaceNum)
-			buf = buf[idx+2:]
 			continue
 		}
 		if bulkLen == 0 {
 			str += strconv.Itoa(i+1) + ") \r\n" + spaces(spaceNum)
-			buf = buf[idx+2:]
 			continue
 		}
-		buf = buf[idx+2:]
-		idx, err = getQueryLine(buf, length)
-		if err != nil || idx < 0 {
-			return buf, "", err
-		}
-		str += strconv.Itoa(i+1) + ") \"" + string(buf[:idx]) + "\"\r\n" + spaces(spaceNum)
-		buf = buf[idx+2:]
+		str += strconv.Itoa(i+1) + ") \"" + bulk + "\"\r\n" + spaces(spaceNum)
 	}
 	return buf, str, nil
 }
@@ -131,52 +129,32 @@ func respParseArrays1(buf []byte, length int, spaceNum int) ([]byte, string, err
 // ================================ respParseFunc Impl =================================
 
 // e.g. "+OK\r\n" => "OK"
-func respParseSimpleStr(buf []byte, length int) (string, error) {
-	idx, err := getQueryLine(buf, length)
-	if err != nil || idx < 0 {
-		return "", err
-	}
-	str := string(buf[1:idx])
-	return str, nil
+func respParseSimpleStr(buf []byte, _ int, idx int) (string, error) {
+	return string(buf[1:idx]), nil
 }
 
 // e.g. "$5\r\nhello\r\n" => "hello"
-func respParseBulk(buf []byte, length int) (string, error) {
-	idx, err := getQueryLine(buf, length)
-	if err != nil || idx < 0 {
+func respParseBulk(buf []byte, length int, idx int) (string, error) {
+	_, bulkLen, bulk, err := getBulk(buf, length, idx)
+	if err != nil || bulkLen == INCOMPLETE_STR {
 		return "", err
 	}
-	sLen, err := strconv.Atoi(string(buf[1:idx]))
-	if err != nil {
-		return "", err
-	}
-	if sLen == -1 {
+	if bulkLen == -1 {
 		return "(nil)", nil
 	}
-	if sLen == 0 && length == 4 {
+	if bulkLen == 0 && length == 4 {
 		return "empty string", nil
 	}
-	buf = buf[idx+2:]
-	idx, err = getQueryLine(buf, length-(idx+2))
-	if err != nil || idx < 0 {
-		return "", err
-	}
-	str := string(buf[:idx])
-	return str, nil
+	return bulk, nil
 }
 
 // e.g. ":3\r\n" => 3
-func respParseIntegers(buf []byte, length int) (string, error) {
-	idx, err := getQueryLine(buf, length)
-	if err != nil || idx < 0 {
-		return "", err
-	}
-	str := string(buf[1:idx])
-	return str, nil
+func respParseIntegers(buf []byte, _ int, idx int) (string, error) {
+	return string(buf[1:idx]), nil
 }
 
 // e.g. *2\r\n$2\r\nxx\r\n$3\r\nccc\r\n => "1) \"xx\"\r\n2) \"ccc\"\r\n"
-func respParseArrays(buf []byte, length int) (string, error) {
+func respParseArrays(buf []byte, length int, _ int) (string, error) {
 	_, str, err := respParseArrays1(buf, length, 0)
 	if str != "" {
 		str = str[:len(str)-2]

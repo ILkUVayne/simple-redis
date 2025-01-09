@@ -28,7 +28,6 @@ func (c *SRedisClient) isFake() bool {
 	return c.fd == FAKE_CLIENT_FD
 }
 
-// getQueryNum
 // e.g. "$3\r\nget\r\n$4\r\nname\r\n"
 // n == 3
 // string(queryBuf) == "get\r\n$4\r\nname\r\n"

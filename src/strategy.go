@@ -191,7 +191,7 @@ func complexConfHandle(key, val string) (ok bool) {
 
 // ================================ Parse resp data =================================
 
-type respParseFunc func([]byte, int) (string, error)
+type respParseFunc func([]byte, int, int) (string, error)
 
 var respParseFuncMaps = map[int]respParseFunc{
 	SIMPLE_STR:   respParseSimpleStr,
@@ -203,7 +203,11 @@ var respParseFuncMaps = map[int]respParseFunc{
 
 func respParseHandle(reply *sRedisReply) (string, error) {
 	if fn, ok := respParseFuncMaps[reply.typ]; ok {
-		return fn(reply.buf, reply.length)
+		idx, err := getQueryLine(reply.buf, reply.length)
+		if err != nil || idx < 0 {
+			return "", err
+		}
+		return fn(reply.buf, reply.length, idx)
 	}
 	return "", errors.New(fmt.Sprintf("type %d respParseFunc not found", reply.typ))
 }
