@@ -191,7 +191,7 @@ func genRedisInfoString(section string) string {
 // db commands
 //-----------------------------------------------------------------------------
 
-// ping
+// usage: ping
 func pingCommand(c *SRedisClient) {
 	if len(c.args) > 2 {
 		c.addReplyErrorFormat("wrong number of arguments for '%s' command", c.cmd.name)
@@ -204,6 +204,7 @@ func pingCommand(c *SRedisClient) {
 	c.addReplyBulk(c.args[1])
 }
 
+// usage: info [server]
 func infoCommand(c *SRedisClient) {
 	if len(c.args) > 2 {
 		c.addReplyErrorFormat("wrong number of arguments for '%s' command", c.cmd.name)

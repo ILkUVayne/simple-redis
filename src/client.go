@@ -28,6 +28,18 @@ func (c *SRedisClient) isFake() bool {
 	return c.fd == FAKE_CLIENT_FD
 }
 
+// return complete command slice
+func (c *SRedisClient) completeCommand() []string {
+	if len(c.args) == 0 {
+		return nil
+	}
+	cmdStr := make([]string, 0)
+	for _, v := range c.args {
+		cmdStr = append(cmdStr, v.strVal())
+	}
+	return cmdStr
+}
+
 // e.g. "$3\r\nget\r\n$4\r\nname\r\n"
 // n == 3
 // string(queryBuf) == "get\r\n$4\r\nname\r\n"

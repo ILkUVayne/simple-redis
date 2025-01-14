@@ -30,7 +30,7 @@ func genericHGetAllCommand(c *SRedisClient, flags int) {
 	}
 }
 
-// hset key field value
+// usage: hset key field value
 func hSetCommand(c *SRedisClient) {
 	o := hashTypeLookupWriteOrCreate(c, c.args[1])
 	if o == nil {
@@ -46,7 +46,7 @@ func hSetCommand(c *SRedisClient) {
 	c.addReply(shared.czero)
 }
 
-// hget key field
+// usage: hget key field
 func hGetCommand(c *SRedisClient) {
 	o := c.db.lookupKeyReadOrReply(c, c.args[1], nil)
 	if o != nil && o.checkType(c, SR_DICT) {
@@ -54,7 +54,7 @@ func hGetCommand(c *SRedisClient) {
 	}
 }
 
-// HDEL key field [field ...]
+// usage: HDEL key field [field ...]
 func hDelCommand(c *SRedisClient) {
 	deleted := int64(0)
 	o := c.db.lookupKeyReadOrReply(c, c.args[1], nil)
@@ -74,7 +74,7 @@ func hDelCommand(c *SRedisClient) {
 	c.addReplyLongLong(deleted)
 }
 
-// hexists key field
+// usage: hexists key field
 func hExistsCommand(c *SRedisClient) {
 	o := c.db.lookupKeyReadOrReply(c, c.args[1], shared.czero)
 	if o == nil || !o.checkType(c, SR_DICT) {
@@ -87,7 +87,7 @@ func hExistsCommand(c *SRedisClient) {
 	c.addReply(shared.czero)
 }
 
-// hlen key
+// usage: hlen key
 func hLenCommand(c *SRedisClient) {
 	o := c.db.lookupKeyReadOrReply(c, c.args[1], shared.czero)
 	if o != nil && o.checkType(c, SR_DICT) {
@@ -95,17 +95,17 @@ func hLenCommand(c *SRedisClient) {
 	}
 }
 
-// HKEYS key
+// usage: HKEYS key
 func hKeysCommand(c *SRedisClient) {
 	genericHGetAllCommand(c, OBJ_HASH_KEY)
 }
 
-// HVALS key
+// usage: HVALS key
 func hValsCommand(c *SRedisClient) {
 	genericHGetAllCommand(c, OBJ_HASH_VALUE)
 }
 
-// HGETALL key
+// usage: HGETALL key
 func hGetAllCommand(c *SRedisClient) {
 	genericHGetAllCommand(c, OBJ_HASH_KEY|OBJ_HASH_VALUE)
 }

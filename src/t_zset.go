@@ -150,17 +150,17 @@ func zRangeGenericCommand(c *SRedisClient, reverse bool) {
 	}
 }
 
-// zadd key score member [score member ...]
+// usage: zadd key score member [score member ...]
 func zAddCommand(c *SRedisClient) {
 	zAddGenericCommand(c, false)
 }
 
-// zrange key min max [withscores]
+// usage: zrange key min max [withscores]
 func zRangeCommand(c *SRedisClient) {
 	zRangeGenericCommand(c, false)
 }
 
-// zcard key
+// usage: zcard key
 func zCardCommand(c *SRedisClient) {
 	zs := c.db.lookupKeyReadOrReply(c, c.args[1], shared.czero)
 	if zs == nil || !zs.checkType(c, SR_ZSET) {

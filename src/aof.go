@@ -477,7 +477,9 @@ cleanup:
 // aof commands
 //-----------------------------------------------------------------------------
 
-// BGREWRITEAOF
+// Instruct Redis to start an Append Only File rewrite process.
+//
+// usage: BGREWRITEAOF
 func bgRewriteAofCommand(c *SRedisClient) {
 	if server.aofState == REDIS_AOF_OFF {
 		c.addReplyError("Background append only file rewriting is not enabled")
