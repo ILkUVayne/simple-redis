@@ -147,6 +147,7 @@ const (
 
 	PING = "ping"
 	INFO = "info"
+	AUTH = "auth"
 
 	// db command
 

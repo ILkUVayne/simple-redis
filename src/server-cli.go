@@ -28,35 +28,57 @@ func sRedisConnect() *sRedisContext {
 	return c
 }
 
+// check connect available, return false if unconnected.
+func checkConnected() bool {
+	return context != nil
+}
+
+// return false if you have error.
+func checkError() bool {
+	return context.err == nil
+}
+
+// client auth
+func cliAuth() {
+	if CliArgs.auth != "" {
+		cliSendCommand1([]string{"auth", CliArgs.auth})
+	}
+}
+
 // try to connect server
-func cliConnect(force int) int {
+func cliConnect(force int) bool {
 	if context == nil || force > 0 {
 		context = sRedisConnect()
-
-		// Do AUTH
 	}
-	return CLI_OK
+
+	// 连接出错，返回
+	if !checkError() {
+		return false
+	}
+
+	// Do AUTH
+	cliAuth()
+
+	return checkError()
 }
 
 // send cli command to server and get reply
-func cliSendCommand1(args []string) int {
-	if context == nil || context.err != nil {
-		return CLI_ERR
-	}
+func cliSendCommand1(args []string) bool {
 	var reply sRedisReply
 	sRedisAppendCommandArg(context, args)
 	sRedisGetReply(context, &reply)
 	context.reader = &reply
-	return CLI_OK
+	return checkError()
 }
 
 // send cli command to server and get reply,will retry 1 time if context is nil
 func cliSendCommand(args []string) {
-	if cliSendCommand1(args) != CLI_OK {
-		cliConnect(1)
-		cliSendCommand1(args)
+	// 连接不存在或者重连失败，直接返回
+	if !checkConnected() && !cliConnect(1) {
+		return
 	}
-	printPrompt()
+	// 连接存在，发送请求
+	cliSendCommand1(args)
 }
 
 /*------------------------------------------------------------------------------
@@ -92,11 +114,11 @@ func printErrorPrompt() bool {
 	case errors.Is(context.err, unix.ECONNREFUSED):
 		fmt.Printf("Could not connect to simple-redis at %s:%d: Connection refused\r\n", CliArgs.hostIp, CliArgs.port)
 	case errors.Is(context.err, CONN_DISCONNECTED):
-		fmt.Printf("Error: Server closed the connection\r\n")
-		context = nil
+		fmt.Printf("Error: Server closed the connection or restart, try again please\r\n")
 	default:
 		fmt.Printf("(error) ERR: " + context.err.Error() + "\r\n")
 	}
+	context = nil
 	return true
 }
 
@@ -152,6 +174,7 @@ func repl() {
 		}
 		// cliSendCommand
 		cliSendCommand(fields)
+		printPrompt()
 	}
 }
 
@@ -170,7 +193,7 @@ func CliStart(args []string) {
 	}
 
 	// Otherwise, we have some arguments to execute
-	if cliConnect(0) == CLI_ERR {
+	if !cliConnect(0) {
 		os.Exit(1)
 	}
 	noninteractive(args)

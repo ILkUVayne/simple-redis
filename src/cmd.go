@@ -59,6 +59,12 @@ func processCommand(c *SRedisClient) {
 		resetClient(c)
 		return
 	}
+	// Check if the user is authenticated
+	if server.requirePass != "" && !c.authenticated && c.cmd.name != AUTH {
+		c.addReply(shared.noAuthErr)
+		resetClient(c)
+		return
+	}
 	call(c)
 	resetClient(c)
 }
@@ -84,6 +90,7 @@ func initCommands() map[string]SRedisCommand {
 		//server
 		PING: {PING, pingCommand, -1},
 		INFO: {INFO, infoCommand, -1},
+		AUTH: {AUTH, authCommand, 2},
 		// db
 		EXPIRE:    {EXPIRE, expireCommand, 3},
 		OBJECT:    {OBJECT, objectCommand, 3},

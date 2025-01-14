@@ -9,18 +9,19 @@ import (
 
 // SRedisClient 客户端结构
 type SRedisClient struct {
-	fd         int       // 客户端fd, 当fd等于 FAKE_CLIENT_FD 是fakeClient
-	db         *SRedisDB // 数据库指针
-	args       []*SRobj  // command args
-	reply      *list     // reply data
-	replyReady bool      // 响应数据是否准备完毕
-	queryBuf   []byte
-	queryLen   int
-	sentLen    int
-	cmd        *SRedisCommand // 客户端需要执行的命令
-	cmdTyp     CmdType        // unknown inline bulk
-	bulkNum    int
-	bulkLen    int
+	fd            int       // 客户端fd, 当fd等于 FAKE_CLIENT_FD 是fakeClient
+	db            *SRedisDB // 数据库指针
+	authenticated bool      // 当前客户端密码验证状态，默认未验证（false）
+	args          []*SRobj  // command args
+	reply         *list     // reply data
+	replyReady    bool      // 响应数据是否准备完毕
+	queryBuf      []byte
+	queryLen      int
+	sentLen       int
+	cmd           *SRedisCommand // 客户端需要执行的命令
+	cmdTyp        CmdType        // unknown inline bulk
+	bulkNum       int
+	bulkLen       int
 }
 
 // return true if is fake client
@@ -101,7 +102,10 @@ func createSRClient(fd int) *SRedisClient {
 
 // return a fake client,client.fd == FAKE_CLIENT_FD
 func createFakeClient() *SRedisClient {
-	return createSRClient(FAKE_CLIENT_FD)
+	fakeClient := createSRClient(FAKE_CLIENT_FD)
+	// fake客户端不需要验证密码，默认true
+	fakeClient.authenticated = true
+	return fakeClient
 }
 
 // free SRedisClient.args

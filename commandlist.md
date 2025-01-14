@@ -308,6 +308,30 @@ Based on cursor iterators, after each call, a new cursor is returned to the user
 2) (empty array)
 ~~~
 
+### AUTH
+
+**AUTH your_password**
+
+Used for authentication when connecting to Redis servers. When password protection is set on the Redis server, clients must provide the correct password before connecting to the server to execute other commands, otherwise access will be denied. ‌
+
+~~~bash
+# mode 1
+go run sredis-cli.go
+127.0.0.1:6379> get name
+(error) NOAUTH Authentication required.
+127.0.0.1:6379> auth example1
+(error) ERR: invalid password
+127.0.0.1:6379> auth example
+OK
+127.0.0.1:6379> get name
+"aaa"
+
+# mode 2
+go run sredis-cli.go -a example
+127.0.0.1:6379> get name
+"aaa"
+~~~
+
 ## AOF
 
 ### BGREWRITEAOF
