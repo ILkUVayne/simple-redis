@@ -349,7 +349,7 @@ func sPopWithCountCommand(c *SRedisClient) {
 	c.rewriteClientCommandVector(rewriteArgs...)
 }
 
-// sadd key member [member ...]
+// usage: sadd key member [member ...]
 func sAddCommand(c *SRedisClient) {
 	key := c.args[1]
 	set := c.db.lookupKeyWrite(key)
@@ -372,39 +372,39 @@ func sAddCommand(c *SRedisClient) {
 	server.incrDirtyCount(c, added)
 }
 
-// smembers key
+// command smembers: len(args) == 2, usage: smembers key
 //
-// sinter key [key ...]
+// command sinter: len(args) > 2, usage: sinter key [key ...]
 func sinterCommand(c *SRedisClient) {
 	sinterGenericCommand(c, c.args[1:], int64(len(c.args[1:])), nil)
 }
 
-// sinterstore key [key ...]
+// usage: sinterstore key [key ...]
 func sinterStoreCommand(c *SRedisClient) {
 	sinterGenericCommand(c, c.args[2:], int64(len(c.args[2:])), c.args[1])
 }
 
-// SUNION key [key ...]
+// usage: SUNION key [key ...]
 func sUnionCommand(c *SRedisClient) {
 	sUnionDiffGenericCommand(c, c.args[1:], int64(len(c.args[1:])), nil, SET_OP_UNION)
 }
 
-// SUNIONSTORE destination key [key ...]
+// usage: SUNIONSTORE destination key [key ...]
 func sUnionStoreCommand(c *SRedisClient) {
 	sUnionDiffGenericCommand(c, c.args[2:], int64(len(c.args[2:])), c.args[1], SET_OP_UNION)
 }
 
-// SDIFF key [key ...]
+// usage: SDIFF key [key ...]
 func sDiffCommand(c *SRedisClient) {
 	sUnionDiffGenericCommand(c, c.args[1:], int64(len(c.args[1:])), nil, SET_OP_DIFF)
 }
 
-// SDIFFSTORE destination key [key ...]
+// usage: SDIFFSTORE destination key [key ...]
 func sDiffStoreCommand(c *SRedisClient) {
 	sUnionDiffGenericCommand(c, c.args[2:], int64(len(c.args[2:])), c.args[1], SET_OP_DIFF)
 }
 
-// spop key [count]
+// usage: spop key [count]
 func sPopCommand(c *SRedisClient) {
 	if len(c.args) > 3 {
 		c.addReply(shared.syntaxErr)
@@ -447,7 +447,7 @@ func sPopCommand(c *SRedisClient) {
 	server.incrDirtyCount(c, 1)
 }
 
-// srem key member [member ...]
+// usage: srem key member [member ...]
 func sRemCommand(c *SRedisClient) {
 	key := c.args[1]
 	set := c.db.lookupKeyReadOrReply(c, key, shared.nullBulk)
@@ -469,7 +469,7 @@ func sRemCommand(c *SRedisClient) {
 	c.addReplyLongLong(deleted)
 }
 
-// scard key
+// usage: scard key
 func sCardCommand(c *SRedisClient) {
 	set := c.db.lookupKeyReadOrReply(c, c.args[1], shared.czero)
 	if set == nil || !set.checkType(c, SR_SET) {

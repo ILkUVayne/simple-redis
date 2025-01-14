@@ -52,6 +52,7 @@ type configVal struct {
 	Port           int    `cfg:"port"`
 	AppendOnly     bool   `cfg:"appendOnly"`
 	RehashNullStep int64  `cfg:"rehashNullStep"`
+	RequirePass    string `cfg:"requirePass"`
 
 	// complex conf
 

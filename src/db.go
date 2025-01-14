@@ -405,7 +405,9 @@ func scanGenericCommand(c *SRedisClient, o *SRobj, cursor int64) {
 	}
 }
 
-// expire key value
+// set expire time.
+//
+// usage: expire key value
 func expireCommand(c *SRedisClient) {
 	key := c.args[1]
 	val := c.args[2]
@@ -436,7 +438,9 @@ func expireCommand(c *SRedisClient) {
 	server.incrDirtyCount(c, 1)
 }
 
-// object encoding key
+// get encoding of key.
+//
+// usage: object encoding key
 func objectCommand(c *SRedisClient) {
 	val := c.args[2]
 	if !val.checkType(c, SR_STR) {
@@ -448,7 +452,9 @@ func objectCommand(c *SRedisClient) {
 	}
 }
 
-// TYPE key
+// get type of key.
+//
+// usage: TYPE key
 func typeCommand(c *SRedisClient) {
 	val := c.args[1]
 	if !val.checkType(c, SR_STR) {
@@ -460,7 +466,9 @@ func typeCommand(c *SRedisClient) {
 	}
 }
 
-// del key [key ...]
+// delete db key.
+//
+// usage: del key [key ...]
 func delCommand(c *SRedisClient) {
 	deleted := 0
 	for i := 1; i < len(c.args); i++ {
@@ -471,7 +479,9 @@ func delCommand(c *SRedisClient) {
 	c.addReplyLongLong(int64(deleted))
 }
 
-// keys pattern
+// get all keys.
+//
+// usage: keys pattern
 func keysCommand(c *SRedisClient) {
 	pattern := c.args[1].strVal()
 	numKeys := 0
@@ -494,7 +504,7 @@ func keysCommand(c *SRedisClient) {
 	c.setDeferredMultiBulkLength(replyLen, numKeys)
 }
 
-// EXISTS key [key ...]
+// usage: EXISTS key [key ...]
 func existsCommand(c *SRedisClient) {
 	count := 0
 	for i := 1; i < len(c.args); i++ {
@@ -505,17 +515,23 @@ func existsCommand(c *SRedisClient) {
 	c.addReplyLongLong(int64(count))
 }
 
-// TTL key, return s
+// get ttl of key, Time Unit: second.
+//
+// usage: TTL key
 func ttlCommand(c *SRedisClient) {
 	ttlGenericCommand(c, false)
 }
 
-// PTTL key, return ms
+// // get ttl of key, Time Unit: millisecond.
+//
+// usage: PTTL key, return ms
 func pTtlCommand(c *SRedisClient) {
 	ttlGenericCommand(c, true)
 }
 
-// PERSIST key
+// remove the expiration time of a specified key.
+//
+// usage: PERSIST key
 func persistCommand(c *SRedisClient) {
 	key := c.args[1]
 	c.db.expireIfNeeded(key)
@@ -531,7 +547,9 @@ func persistCommand(c *SRedisClient) {
 	c.addReply(shared.czero)
 }
 
-// RANDOMKEY
+// randomly return a key from the current database.
+//
+// usage: RANDOMKEY
 func randomKeyCommand(c *SRedisClient) {
 	key := c.db.dbRandomKey()
 	if key == nil {
@@ -541,7 +559,9 @@ func randomKeyCommand(c *SRedisClient) {
 	c.addReplyBulk(key)
 }
 
-// FLUSHDB
+// clear all data in Redis.
+//
+// usage: FLUSHDB
 func flushDbCommand(c *SRedisClient) {
 	server.incrDirtyCount(c, server.db.dbDataSize())
 	server.db.data.dictEmpty()
@@ -549,19 +569,21 @@ func flushDbCommand(c *SRedisClient) {
 	c.addReply(shared.ok)
 }
 
-// dbsize
+// Return the number of elements in the database.
+//
+// usage: dbsize
 func dbSizeCommand(c *SRedisClient) {
 	c.addReplyLongLong(c.db.dbDataSize())
 }
 
-// SCAN cursor [MATCH pattern] [COUNT count]
+// usage: SCAN cursor [MATCH pattern] [COUNT num]
 func scanCommand(c *SRedisClient) {
 	if cursor, ok := parseScanCursorOrReply(c, c.args[1]); ok {
 		scanGenericCommand(c, nil, cursor)
 	}
 }
 
-// select id
+// usage: select id
 func selectCommand(c *SRedisClient) {
 	var id int64
 	if c.args[1].getLongLongFromObjectOrReply(c, &id, "invalid DB index") == REDIS_ERR {

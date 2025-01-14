@@ -145,6 +145,7 @@ type cliArgs struct {
 	hostIp string
 	port   int
 	prompt string // client cli prompt
+	auth   string // auth password, default ""
 }
 
 var CliArgs cliArgs
@@ -152,5 +153,6 @@ var CliArgs cliArgs
 func ParseCliArgs() {
 	flag.StringVar(&CliArgs.hostIp, "host", "127.0.0.1", "Server hostname")
 	flag.IntVar(&CliArgs.port, "p", 6379, "Server port")
+	flag.StringVar(&CliArgs.auth, "a", "", "auth password")
 	flag.Parse()
 }

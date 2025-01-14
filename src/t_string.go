@@ -31,7 +31,7 @@ func incrDecrCommand(c *SRedisClient, incr int64) {
 	c.addReplyLongLong(value)
 }
 
-// get key
+// usage: get key
 func getCommand(c *SRedisClient) {
 	val := c.db.lookupKeyReadOrReply(c, c.args[1], nil)
 	if val != nil && val.checkType(c, SR_STR) {
@@ -39,7 +39,7 @@ func getCommand(c *SRedisClient) {
 	}
 }
 
-// set key value
+// usage: set key value
 func setCommand(c *SRedisClient) {
 	key, val := c.args[1], c.args[2]
 	if !val.checkType(c, SR_STR) {
@@ -52,12 +52,12 @@ func setCommand(c *SRedisClient) {
 	server.incrDirtyCount(c, 1)
 }
 
-// incr key
+// usage: incr key
 func incrCommand(c *SRedisClient) {
 	incrDecrCommand(c, 1)
 }
 
-// decr key
+// usage: decr key
 func decrCommand(c *SRedisClient) {
 	incrDecrCommand(c, -1)
 }

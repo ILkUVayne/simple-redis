@@ -441,7 +441,9 @@ func backgroundSaveDoneHandler() {
 // rdb commands
 //-----------------------------------------------------------------------------
 
-// SAVE
+// Save the DB.
+//
+// usage: SAVE
 func saveCommand(c *SRedisClient) {
 	if server.rdbChildPid != -1 {
 		c.addReplyError("Background save already in progress")
@@ -454,7 +456,9 @@ func saveCommand(c *SRedisClient) {
 	c.addReplyError("save failed")
 }
 
-// BgSave
+// Save the DB in background.
+//
+// usage: BgSave
 func bgSaveCommand(c *SRedisClient) {
 	if server.rdbChildPid != -1 {
 		c.addReplyError("Background save already in progress")

@@ -9,18 +9,19 @@ import (
 
 // SRedisClient 客户端结构
 type SRedisClient struct {
-	fd         int       // 客户端fd, 当fd等于 FAKE_CLIENT_FD 是fakeClient
-	db         *SRedisDB // 数据库指针
-	args       []*SRobj  // command args
-	reply      *list     // reply data
-	replyReady bool      // 响应数据是否准备完毕
-	queryBuf   []byte
-	queryLen   int
-	sentLen    int
-	cmd        *SRedisCommand // 客户端需要执行的命令
-	cmdTyp     CmdType        // unknown inline bulk
-	bulkNum    int
-	bulkLen    int
+	fd            int       // 客户端fd, 当fd等于 FAKE_CLIENT_FD 是fakeClient
+	db            *SRedisDB // 数据库指针
+	authenticated bool      // 当前客户端密码验证状态，默认未验证（false）
+	args          []*SRobj  // command args
+	reply         *list     // reply data
+	replyReady    bool      // 响应数据是否准备完毕
+	queryBuf      []byte
+	queryLen      int
+	sentLen       int
+	cmd           *SRedisCommand // 客户端需要执行的命令
+	cmdTyp        CmdType        // unknown inline bulk
+	bulkNum       int
+	bulkLen       int
 }
 
 // return true if is fake client
@@ -28,27 +29,29 @@ func (c *SRedisClient) isFake() bool {
 	return c.fd == FAKE_CLIENT_FD
 }
 
-// getQueryLine
-// e.g. "get name\r\n"
-// idx == 8
-// e.g. "$3\r\nget\r\n$4\r\nname\r\n"
-// idx == 2
-func (c *SRedisClient) getQueryLine() (int, error) {
-	idx := strings.Index(string(c.queryBuf[:c.queryLen]), "\r\n")
-	if idx < 0 && c.queryLen > SREDIS_MAX_INLINE {
-		return idx, errors.New("inline cmd is too long")
+// return complete command slice
+func (c *SRedisClient) completeCommand() []string {
+	if len(c.args) == 0 {
+		return nil
 	}
-	return idx, nil
+	cmdStr := make([]string, 0)
+	for _, v := range c.args {
+		cmdStr = append(cmdStr, v.strVal())
+	}
+	return cmdStr
 }
 
-// getQueryNum
 // e.g. "$3\r\nget\r\n$4\r\nname\r\n"
 // n == 3
 // string(queryBuf) == "get\r\n$4\r\nname\r\n"
-func (c *SRedisClient) getQueryNum(start, end int) (int, error) {
-	n, err := strconv.Atoi(string(c.queryBuf[start:end]))
-	c.queryBuf = c.queryBuf[end+2:]
-	c.queryLen -= end + 2
+func (c *SRedisClient) getQueryNum() (int, error) {
+	idx, err := getQueryLine(c.queryBuf[:c.queryLen], c.queryLen)
+	if idx < 0 {
+		return 0, err
+	}
+	n, err := strconv.Atoi(string(c.queryBuf[1:idx]))
+	c.queryBuf = c.queryBuf[idx+2:]
+	c.queryLen -= idx + 2
 	return n, err
 }
 
@@ -99,7 +102,10 @@ func createSRClient(fd int) *SRedisClient {
 
 // return a fake client,client.fd == FAKE_CLIENT_FD
 func createFakeClient() *SRedisClient {
-	return createSRClient(FAKE_CLIENT_FD)
+	fakeClient := createSRClient(FAKE_CLIENT_FD)
+	// fake客户端不需要验证密码，默认true
+	fakeClient.authenticated = true
+	return fakeClient
 }
 
 // free SRedisClient.args
@@ -152,7 +158,7 @@ func checkCmdType(c *SRedisClient) {
 // inline command handle
 // e.g. "get name\r\n"
 func inlineBufHandle(c *SRedisClient) (bool, error) {
-	idx, err := c.getQueryLine()
+	idx, err := getQueryLine(c.queryBuf[:c.queryLen], c.queryLen)
 	if idx < 0 {
 		return false, err
 	}
@@ -172,12 +178,8 @@ func inlineBufHandle(c *SRedisClient) (bool, error) {
 // bulkNum == 2
 func bulkBufHandle(c *SRedisClient) (bool, error) {
 	if c.bulkNum == 0 {
-		idx, err := c.getQueryLine()
-		if idx < 0 {
-			return false, err
-		}
 		// get bulkNum
-		n, err := c.getQueryNum(1, idx)
+		n, err := c.getQueryNum()
 		if err != nil {
 			return false, err
 		}
@@ -191,14 +193,10 @@ func bulkBufHandle(c *SRedisClient) (bool, error) {
 	for c.bulkNum > 0 {
 		// get bulkLen
 		if c.bulkLen == 0 {
-			idx, err := c.getQueryLine()
-			if idx < 0 {
-				return false, err
-			}
 			if c.queryBuf[0] != '$' {
 				return false, errors.New("expect $ for bulk")
 			}
-			bulkLen, err := c.getQueryNum(1, idx)
+			bulkLen, err := c.getQueryNum()
 			if bulkLen == 0 || err != nil {
 				return false, err
 			}

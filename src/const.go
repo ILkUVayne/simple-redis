@@ -77,6 +77,8 @@ const (
 //-----------------------------------------------------------------------------
 
 const (
+	INCOMPLETE_STR = -2
+
 	RESP_NIL_VAL = "$-1\r\n"
 
 	RESP_OK  = "+OK\r\n"
@@ -145,6 +147,7 @@ const (
 
 	PING = "ping"
 	INFO = "info"
+	AUTH = "auth"
 
 	// db command
 

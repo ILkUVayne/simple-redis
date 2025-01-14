@@ -11,7 +11,7 @@ import (
 // 全局共享SRobj对象结构体，用以复用常用的命令返回对象
 type sharedObjects struct {
 	crlf, ok, err, pong, czero, cone, emptyMultiBulk, nullBulk, syntaxErr, typeErr, unknowErr, argsNumErr, wrongTypeErr,
-	none, outOfRangeErr, del, sRem *SRobj
+	none, outOfRangeErr, del, sRem, noAuthErr *SRobj
 }
 
 // 全局共享SRobj对象
@@ -34,6 +34,7 @@ func initSharedObjects() {
 	shared.argsNumErr = createSRobj(SR_STR, fmt.Sprintf(RESP_ERR, "wrong number of args"))
 	shared.wrongTypeErr = createSRobj(SR_STR, fmt.Sprintf(RESP_ERR, "Operation against a key holding the wrong kind of value"))
 	shared.outOfRangeErr = createSRobj(SR_STR, fmt.Sprintf(RESP_ERR, "index out of range"))
+	shared.noAuthErr = createSRobj(SR_STR, "-NOAUTH Authentication required.\r\n")
 
 	shared.del = createSRobj(SR_STR, DEL)
 	shared.sRem = createSRobj(SR_STR, S_REM)
@@ -51,6 +52,7 @@ type SRedisServer struct {
 	loadFactor     int64 // 负载因子
 	rehashNullStep int64 // 每次rehash最多遍历rehashNullStep步为nil的数据
 	commands       map[string]SRedisCommand
+	requirePass    string // 服务端认证密码
 
 	// AOF persistence
 
@@ -117,6 +119,7 @@ func initServerConfig() {
 	server.port = config.Port
 	server.fd = -1
 	server.rehashNullStep = config.RehashNullStep
+	server.requirePass = config.RequirePass
 	// aof
 	if config.AppendOnly {
 		server.aofState = REDIS_AOF_ON
@@ -191,7 +194,7 @@ func genRedisInfoString(section string) string {
 // db commands
 //-----------------------------------------------------------------------------
 
-// ping
+// usage: ping
 func pingCommand(c *SRedisClient) {
 	if len(c.args) > 2 {
 		c.addReplyErrorFormat("wrong number of arguments for '%s' command", c.cmd.name)
@@ -204,6 +207,7 @@ func pingCommand(c *SRedisClient) {
 	c.addReplyBulk(c.args[1])
 }
 
+// usage: info [server]
 func infoCommand(c *SRedisClient) {
 	if len(c.args) > 2 {
 		c.addReplyErrorFormat("wrong number of arguments for '%s' command", c.cmd.name)
@@ -214,6 +218,21 @@ func infoCommand(c *SRedisClient) {
 		section = c.args[1].strVal()
 	}
 	c.addReplyBulkStr(genRedisInfoString(section))
+}
+
+// usage: auth your_password
+func authCommand(c *SRedisClient) {
+	if server.requirePass == "" {
+		c.addReplyError("Client sent AUTH, but no password is set")
+		return
+	}
+	if c.args[1].strVal() != server.requirePass {
+		c.authenticated = false
+		c.addReplyError("invalid password")
+		return
+	}
+	c.authenticated = true
+	c.addReply(shared.ok)
 }
 
 //-----------------------------------------------------------------------------
