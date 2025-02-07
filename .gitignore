@@ -1,3 +1,3 @@
 **/.idea/
-./appendonly.aof
-./dump.rdb
+*.aof
+*.rdb

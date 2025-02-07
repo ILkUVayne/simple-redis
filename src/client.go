@@ -108,13 +108,6 @@ func createFakeClient() *SRedisClient {
 	return fakeClient
 }
 
-// free SRedisClient.args
-func freeArgs(c *SRedisClient) {
-	for _, arg := range c.args {
-		arg.decrRefCount()
-	}
-}
-
 // free SRedisClient.reply
 func freeReplyList(c *SRedisClient) {
 	for c.reply.length != 0 {
@@ -126,7 +119,7 @@ func freeReplyList(c *SRedisClient) {
 
 // free client
 func freeClient(c *SRedisClient) {
-	freeArgs(c)
+	c.args = nil
 	delete(server.clients, c.fd)
 	server.el.removeFileEvent(c.fd, AE_READABLE)
 	server.el.removeFileEvent(c.fd, AE_WRITEABLE)
@@ -137,7 +130,7 @@ func freeClient(c *SRedisClient) {
 }
 
 func resetClient(c *SRedisClient) {
-	freeArgs(c)
+	c.args = nil
 	c.cmd = nil
 	c.cmdTyp = CMD_UNKNOWN
 	c.bulkLen = 0

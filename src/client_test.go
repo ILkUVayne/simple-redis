@@ -36,20 +36,6 @@ func TestGetQueryNum(t *testing.T) {
 	}
 }
 
-func TestFreeArgs(t *testing.T) {
-	c := createSRClient(7)
-	c.args = make([]*SRobj, 2)
-	c.args[0] = createSRobj(SR_STR, "get")
-	c.args[1] = createSRobj(SR_STR, "name")
-	if c.args[0].strVal() != "get" || c.args[1].strVal() != "name" {
-		t.Error("createSRobj error")
-	}
-	freeArgs(c)
-	if c.args[0].Val != nil || c.args[1].Val != nil {
-		t.Error("freeArgs error")
-	}
-}
-
 func TestInlineBufHandle(t *testing.T) {
 	c := createSRClient(8)
 	buf := []byte("get name\r\n")
