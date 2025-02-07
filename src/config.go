@@ -48,15 +48,29 @@ func appendServerSaveParams(val string) {
 
 // 配置信息映射结构
 type configVal struct {
-	Bind           string `cfg:"bind"`
-	Port           int    `cfg:"port"`
-	AppendOnly     bool   `cfg:"appendOnly"`
-	RehashNullStep int64  `cfg:"rehashNullStep"`
-	RequirePass    string `cfg:"requirePass"`
+	// NETWORK
 
-	// complex conf
+	Bind string `cfg:"bind"`
+	Port int    `cfg:"port"`
+
+	// DB
+
+	RehashNullStep int64  `cfg:"rehashNullStep"`
+	Dir            string `cfg:"dir"`
+
+	// APPEND ONLY MODE
+
+	AppendOnly     bool   `cfg:"appendOnly"`
+	AppendFilename string `cfg:"appendFilename"`
+
+	// SECURITY
+
+	RequirePass string `cfg:"requirePass"`
+
+	// SNAPSHOTTING
 
 	saveParams []*saveParam // rdb save params
+	DbFilename string       `cfg:"dbFilename"`
 }
 
 // 配置信息

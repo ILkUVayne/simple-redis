@@ -3,7 +3,9 @@ package src
 import (
 	"github.com/ILkUVayne/utlis-go/v2/flie"
 	"github.com/ILkUVayne/utlis-go/v2/math"
+	"github.com/ILkUVayne/utlis-go/v2/str"
 	"github.com/ILkUVayne/utlis-go/v2/ulog"
+	"path"
 	"strconv"
 	"strings"
 )
@@ -39,22 +41,34 @@ func sCap(c capacity) int64 {
 // formatFloat(12.1,10) = "12.1"
 // formatFloat(12.12345678919,10) = "12.1234567892"
 func formatFloat(f float64, maxPrecision int) string {
-	str := strconv.FormatFloat(f, 'f', -1, 64)
-	parts := strings.Split(str, ".")
+	s := strconv.FormatFloat(f, 'f', -1, 64)
+	parts := strings.Split(s, ".")
 	if len(parts) == 2 && len(parts[1]) > 10 {
 		// 最多10位小数
-		str = strconv.FormatFloat(f, 'f', maxPrecision, 64)
+		s = strconv.FormatFloat(f, 'f', maxPrecision, 64)
 	}
-	return str
+	return s
 }
 
 // 获取指定长度的空格数组
 func spaces(num int) string {
-	str := ""
+	s := ""
 	for ; num > 0; num-- {
-		str += "\x20"
+		s += "\x20"
 	}
-	return str
+	return s
+}
+
+// 字符串IP转换为 [4]byte
+func ipStrToHost(ip string) [4]byte {
+	if ip == "" {
+		return [4]byte{127, 0, 0, 1}
+	}
+	host, err := str.IPStrToHost(ip)
+	if err != nil {
+		ulog.Error(err)
+	}
+	return host
 }
 
 //-----------------------------------------------------------------------------
@@ -63,11 +77,11 @@ func spaces(num int) string {
 
 // 以home路径为基础拼接绝对路径
 func absolutePath(file string) string {
-	str, err := flie.Home()
+	s, err := flie.Home()
 	if err != nil {
 		ulog.Error(err)
 	}
-	return str + "/" + file
+	return s + "/" + file
 }
 
 // HistoryFile cli历史命令文件绝对路径
@@ -76,8 +90,8 @@ func HistoryFile(file string) string {
 }
 
 // PersistenceFile 持久化文件绝对路径
-func PersistenceFile(file string) string {
-	return absolutePath(file)
+func PersistenceFile(dir, file string) string {
+	return path.Join(dir, file)
 }
 
 //-----------------------------------------------------------------------------
