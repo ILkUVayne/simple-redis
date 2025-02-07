@@ -5,7 +5,6 @@ import (
 	"fmt"
 	linenoise "github.com/GeertJohan/go.linenoise"
 	"github.com/ILkUVayne/utlis-go/v2/cli"
-	"github.com/ILkUVayne/utlis-go/v2/str"
 	"github.com/ILkUVayne/utlis-go/v2/ulog"
 	"golang.org/x/sys/unix"
 	"os"
@@ -20,11 +19,7 @@ var context *sRedisContext
 // connect server
 func sRedisConnect() *sRedisContext {
 	c := new(sRedisContext)
-	host, err := str.IPStrToHost(CliArgs.hostIp)
-	if err != nil {
-		ulog.Error(err)
-	}
-	c.fd, c.err = Connect(host, CliArgs.port)
+	c.fd, c.err = Connect(ipStrToHost(CliArgs.hostIp), CliArgs.port)
 	return c
 }
 

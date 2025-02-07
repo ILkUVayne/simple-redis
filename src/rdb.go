@@ -350,7 +350,7 @@ func rdbSave() int {
 		return REDIS_OK
 	}
 
-	tmpFile := PersistenceFile(fmt.Sprintf("temp-%d.rdb", os.Getpid()))
+	tmpFile := PersistenceFile(server.dir, fmt.Sprintf("temp-%d.rdb", os.Getpid()))
 	f, err := os.Create(tmpFile)
 	if err != nil {
 		_ = os.Remove(tmpFile)

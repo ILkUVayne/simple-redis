@@ -9,7 +9,7 @@ require (
 )
 
 require (
-	github.com/ILkUVayne/utlis-go/v2 v2.0.6
+	github.com/ILkUVayne/utlis-go/v2 v2.0.7
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/saintfish/chardet v0.0.0-20230101081208-5e3ef4b5456d // indirect
 	golang.org/x/text v0.16.0 // indirect

@@ -64,7 +64,8 @@ func TestEpollMask(t *testing.T) {
 
 // test addFileEvent and removeFileEvent
 func TestAddFe(t *testing.T) {
-	fd := TcpServer(9999)
+	host := [4]byte{127, 0, 0, 1}
+	fd := TcpServer(9999, host)
 	el := aeCreateEventLoop()
 	el.addFileEvent(fd, AE_READABLE, testFeProc, nil)
 	if len(el.fileEvent) != 1 {
@@ -93,7 +94,8 @@ func TestAddFe(t *testing.T) {
 
 // test addTimeEvent and removeTimeEvent
 func TestAddTe(t *testing.T) {
-	fd := TcpServer(8888)
+	host := [4]byte{127, 0, 0, 1}
+	fd := TcpServer(8888, host)
 	el := aeCreateEventLoop()
 	el.addTimeEvent(AE_ONCE, 10, testTeProc, nil)
 	el.addTimeEvent(AE_NORMAL, 11, testTeProc, nil)
@@ -116,7 +118,8 @@ func TestAddTe(t *testing.T) {
 }
 
 func TestAeMain(t *testing.T) {
-	fd := TcpServer(7777)
+	host := [4]byte{127, 0, 0, 1}
+	fd := TcpServer(7777, host)
 	el := aeCreateEventLoop()
 	el.addFileEvent(fd, AE_READABLE, testFeProc, nil)
 	el.addFileEvent(fd, AE_WRITEABLE, testFeProc, nil)

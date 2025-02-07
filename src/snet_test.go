@@ -7,7 +7,8 @@ import (
 )
 
 func EchoServer(s, c, e chan struct{}) {
-	sfd := TcpServer(9999)
+	host := [4]byte{127, 0, 0, 1}
+	sfd := TcpServer(9999, host)
 	fmt.Println("server started")
 	fmt.Println("tcpserver sfd:", sfd)
 	s <- struct{}{}
