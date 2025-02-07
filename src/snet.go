@@ -40,7 +40,7 @@ func Close(fd int) {
 	}
 }
 
-func TcpServer(port int) int {
+func TcpServer(port int, host [4]byte) int {
 	sfd, err := unix.Socket(unix.AF_INET, unix.SOCK_STREAM, 0)
 	if err != nil {
 		ulog.Error("simple-redis server: init socket err: ", err)
@@ -51,7 +51,7 @@ func TcpServer(port int) int {
 	if err != nil {
 		ulog.Error("simple-redis server: set SO_REUSEPORT err: ", err)
 	}
-	addr := unix.SockaddrInet4{Port: port}
+	addr := unix.SockaddrInet4{Port: port, Addr: host}
 	err = unix.Bind(sfd, &addr)
 	if err != nil {
 		ulog.ErrorF("simple-redis server: %s:%d bind err: %s", string(addr.Addr[:]), addr.Port, err)

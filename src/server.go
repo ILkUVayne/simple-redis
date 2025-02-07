@@ -2,6 +2,7 @@ package src
 
 import (
 	"fmt"
+	"github.com/ILkUVayne/utlis-go/v2/flie"
 	"github.com/ILkUVayne/utlis-go/v2/time"
 	"github.com/ILkUVayne/utlis-go/v2/ulog"
 	"os"
@@ -44,6 +45,8 @@ func initSharedObjects() {
 //
 // 定义server所需的所有基本信息
 type SRedisServer struct {
+	dir            string
+	bind           [4]byte
 	port           int
 	fd             int // server 监听的fd
 	db             *SRedisDB
@@ -116,15 +119,22 @@ func updateDictResizePolicy() {
 
 // init server config
 func initServerConfig() {
+	server.dir = config.Dir
+	if _, ok := flie.IsDir(server.dir); !ok {
+		ulog.ErrorF("work dir \"%s\" invalid, check your configuration file please!", server.dir)
+	}
 	server.port = config.Port
 	server.fd = -1
 	server.rehashNullStep = config.RehashNullStep
 	server.requirePass = config.RequirePass
+	server.bind = ipStrToHost(config.Bind)
 	// aof
+	server.aofFilename = PersistenceFile(server.dir, config.AppendFilename)
 	if config.AppendOnly {
 		server.aofState = REDIS_AOF_ON
 	}
 	// rdb
+	server.rdbFilename = PersistenceFile(server.dir, config.DbFilename)
 	if config.saveParams != nil && len(config.saveParams) != 0 {
 		server.saveParams = config.saveParams
 	}
@@ -139,7 +149,7 @@ func initServer() {
 		expire: dictCreate(&keyPtrDictType),
 	}
 	server.clients = make(map[int]*SRedisClient)
-	server.fd = TcpServer(server.port)
+	server.fd = TcpServer(server.port, server.bind)
 	server.el = aeCreateEventLoop()
 	server.loadFactor = LOAD_FACTOR
 	server.commands = initCommands()
@@ -150,7 +160,6 @@ func initServer() {
 	// AOF fd
 	server.aofChildPid = -1
 	if server.aofState == REDIS_AOF_ON {
-		server.aofFilename = PersistenceFile(REDIS_AOF_DEFAULT)
 		fd, err := os.OpenFile(server.aofFilename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 		if err != nil {
 			ulog.Error("Can't open the append-only file: ", err)
@@ -161,7 +170,6 @@ func initServer() {
 	}
 	// rdb
 	server.rdbChildPid = -1
-	server.rdbFilename = PersistenceFile(REDIS_RDB_DEFAULT)
 }
 
 // load data from aof or rdb
