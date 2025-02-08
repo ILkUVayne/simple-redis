@@ -1,3 +1,5 @@
 **/.idea/
 *.aof
 *.rdb
+sredis
+sredis-cli
