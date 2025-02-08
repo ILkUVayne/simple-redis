@@ -16,10 +16,6 @@ var banner = `
 |_______||___| |_|   |_||___|    |_______||_______|       |___|  |_||_______||______| |___| |_______|
 `
 
-const (
-	VERSION = "1.0.0"
-)
-
 func main() {
 	ulog.SetLevel(ulog.InfoLevel)
 	// initialization

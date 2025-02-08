@@ -9,19 +9,32 @@ Simple Redis written in Go, mainly for learning, for reference only.
 - Linux
 - Go 1.21 or above
 
-## Building
+## Running
 
-- build
+- mode 1
 
 ~~~bash
+# step 1. build
+
 # server
 go build ./sredis.go
-
 # cli
 go build ./sredis-cli.go
+
+# step 2. run
+
+# server
+./sredis
+# or with conf
+./sredis -c ./sredis.conf
+
+# cli
+./sredis-cli
+# cli with args
+./sredis-cli -host 127.0.0.1 -p 6379
 ~~~
 
-- run
+- mode 2
 
 ~~~bash
 # server
@@ -35,25 +48,11 @@ go run ./sredis-cli.go
 go run ./sredis-cli.go -host 127.0.0.1 -p 6379
 ~~~
 
-## Running
-
-~~~bash
-# server
-./sredis
-# or with conf
-./sredis -c ./sredis.conf
-
-# cli
-./sredis-cli
-# cli with args
-./sredis-cli -host 127.0.0.1 -p 6379
-~~~
-
 ## Playing
 
-Please refer to  [command list](https://github.com/ILkUVayne/simple-redis/blob/master/commandlist.md) for the complete command documentation
+You can use the following client to play with Simple-Redis. Start a sredis instance, then in another terminal try the following:
 
-- use sredis-cli
+- sredis-cli
 
 ~~~bash
 ./sredis-cli
@@ -65,7 +64,7 @@ OK
 
 ~~~
 
-- use telnet
+- telnet
 
 ~~~bash
 telnet 127.0.0.1 6379
@@ -77,7 +76,7 @@ get name
 $2ly
 ~~~
 
-- use redis-cli
+- redis-cli
 
 ~~~bash
 ./redis-cli
@@ -87,3 +86,15 @@ OK
 "sadasda"
 127.0.0.1:6379> quit
 ~~~
+
+You can find the list of all the available commands at https://github.com/ILkUVayne/simple-redis/blob/master/commandlist.md.
+
+## project layout
+
+- `cgo`: contains the cgo implementation.
+- `src`: contains the Simple-Redis implementation, written in Go.
+- `sredis.conf` is the configuration file of Simple-Redis.
+- `sredis.go` is the entry point of the Simple-Redis server.
+- `sredis-cli.go` is the entry point of the Simple-Redis client cli.
+
+Enjoy!
