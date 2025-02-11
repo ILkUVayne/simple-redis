@@ -82,6 +82,9 @@ type SRedisServer struct {
 	rdbFilename       string
 	lastSave          int64
 	rdbStartTime      int64
+
+	// PubSub
+	pubSubChannels *dict
 }
 
 // incr SRedisServer.dirty
