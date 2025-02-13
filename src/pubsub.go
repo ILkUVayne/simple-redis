@@ -32,6 +32,27 @@ func pubSubSubscribeChannel(c *SRedisClient, channel *SRobj) (ok bool) {
 	return
 }
 
+func pubSubPublishMessage(channel, message *SRobj) (receivers int64) {
+	// Send to clients listening for that channel
+	_, de := server.pubSubChannels.dictFind(channel)
+	if de != nil {
+		l := assertList(de.getVal())
+		li := l.listRewind()
+		for ln := li.listNext(); ln != nil; ln = li.listNext() {
+			client := assertClient(ln.nodeValue().Val)
+			client.addReplyMultiBulkLen(3, false)
+			client.addReplyBulk(shared.messageBulk)
+			client.addReplyBulk(channel)
+			client.addReplyBulk(message)
+			client.doReply()
+			receivers++
+		}
+	}
+	// Send to clients listening to matching channels
+
+	return
+}
+
 //-----------------------------------------------------------------------------
 // PubSub commands implementation
 //-----------------------------------------------------------------------------
@@ -50,5 +71,6 @@ func unsubscribeCommand(c *SRedisClient) {
 
 // usage: PUBLISH channel messages
 func publishCommand(c *SRedisClient) {
-
+	receivers := pubSubPublishMessage(c.args[1], c.args[2])
+	c.addReplyLongLong(receivers)
 }
