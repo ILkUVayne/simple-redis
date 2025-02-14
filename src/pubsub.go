@@ -53,6 +53,41 @@ func pubSubPublishMessage(channel, message *SRobj) (receivers int64) {
 	return
 }
 
+func pubSubUnsubscribeChannel(c *SRedisClient, channel *SRobj, notify bool) {
+	channel.incrRefCount()
+	if c.pubSubChannels.dictDelete(channel) == DICT_OK {
+		_, de := server.pubSubChannels.dictFind(channel)
+		clients := assertList(de.getVal())
+		clients.del(createSRobj(SR_STR, c))
+		if sLen(clients) == 0 {
+			server.pubSubChannels.dictDelete(channel)
+		}
+	}
+
+	if notify {
+		c.addReplyMultiBulkLen(3, false)
+		c.addReplyBulk(shared.unsubScribeBulk)
+		c.addReplyBulk(channel)
+		c.addReplyLongLong(sLen(c.pubSubChannels))
+	}
+}
+
+func pubSubUnsubscribeAllChannels(c *SRedisClient, notify bool) {
+
+}
+
+func pubSubUnsubscribeChannel0(c *SRedisClient) {
+	// UNSUBSCRIBE
+	if len(c.args) == 1 {
+		pubSubUnsubscribeAllChannels(c, true)
+		return
+	}
+	// UNSUBSCRIBE [channel ...]
+	for i := 1; i < len(c.args); i++ {
+		pubSubUnsubscribeChannel(c, c.args[i], true)
+	}
+}
+
 //-----------------------------------------------------------------------------
 // PubSub commands implementation
 //-----------------------------------------------------------------------------
@@ -66,7 +101,7 @@ func subscribeCommand(c *SRedisClient) {
 
 // usage: UNSUBSCRIBE [channel ...]
 func unsubscribeCommand(c *SRedisClient) {
-
+	pubSubUnsubscribeChannel0(c)
 }
 
 // usage: PUBLISH channel messages
