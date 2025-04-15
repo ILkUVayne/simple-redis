@@ -211,12 +211,6 @@ const (
 	H_KEYS   = "hkeys"
 	H_VALS   = "hvals"
 	H_GETALL = "hgetall"
-
-	// PubSub command
-
-	SUBSCRIBE   = "subscribe"
-	UNSUBSCRIBE = "unsubscribe"
-	PUBLISH     = "publish"
 )
 
 //-----------------------------------------------------------------------------

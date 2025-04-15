@@ -22,8 +22,6 @@ type SRedisClient struct {
 	cmdTyp        CmdType        // unknown inline bulk
 	bulkNum       int
 	bulkLen       int
-
-	pubSubChannels *dict
 }
 
 // return true if is fake client

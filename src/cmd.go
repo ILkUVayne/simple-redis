@@ -147,10 +147,6 @@ func initCommands() map[string]SRedisCommand {
 		H_KEYS:   {H_KEYS, hKeysCommand, 2},
 		H_VALS:   {H_VALS, hValsCommand, 2},
 		H_GETALL: {H_GETALL, hGetAllCommand, 2},
-		// PubSub
-		SUBSCRIBE:   {SUBSCRIBE, subscribeCommand, -2},
-		UNSUBSCRIBE: {UNSUBSCRIBE, unsubscribeCommand, -1},
-		PUBLISH:     {PUBLISH, publishCommand, 3},
 		// to be continued ! ! !
 	}
 }
