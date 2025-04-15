@@ -93,13 +93,12 @@ func (c *SRedisClient) selectDb(id int64) bool {
 // fd: client accept fd
 func createSRClient(fd int) *SRedisClient {
 	return &SRedisClient{
-		fd:             fd,
-		db:             server.db,
-		cmdTyp:         CMD_UNKNOWN,
-		reply:          listCreate(),
-		queryBuf:       make([]byte, SREDIS_IO_BUF),
-		replyReady:     true,
-		pubSubChannels: dictCreate(&dbDictType),
+		fd:         fd,
+		db:         server.db,
+		cmdTyp:     CMD_UNKNOWN,
+		reply:      listCreate(),
+		queryBuf:   make([]byte, SREDIS_IO_BUF),
+		replyReady: true,
 	}
 }
 
