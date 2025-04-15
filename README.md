@@ -1,6 +1,6 @@
 # simple-redis
 
-Simple Redis written in Go, mainly for learning, for reference only.
+Simple Redis written in Go, mainly for learning, for reference only. Inspiration comes from [godis](https://github.com/archeryue/godis).
 
 ![](https://github.com/ILkUVayne/simple-redis/blob/dev/demonstrate.gif)
 
