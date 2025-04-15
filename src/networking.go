@@ -8,9 +8,7 @@ import (
 	"strconv"
 )
 
-// ======================= File/Time Event handles ========================
-
-// accept client connect handle
+// accept client connect
 func acceptTcpHandler(el *aeEventLoop, fd int, _ any) {
 	cfd := Accept(fd)
 	if cfd == AE_ERR {
@@ -22,7 +20,7 @@ func acceptTcpHandler(el *aeEventLoop, fd int, _ any) {
 	el.addFileEvent(cfd, AE_READABLE, readQueryFromClient, client)
 }
 
-// read client query and process handle
+// read client query and process
 func readQueryFromClient(_ *aeEventLoop, fd int, clientData any) {
 	c := assertClient(clientData)
 	if (len(c.queryBuf) - c.queryLen) < SREDIS_MAX_BULK {
@@ -31,8 +29,8 @@ func readQueryFromClient(_ *aeEventLoop, fd int, clientData any) {
 
 	for {
 		n, err := Read(fd, c.queryBuf[c.queryLen:])
-		// client closed the connection
 		if n == 0 {
+			// client closed the connection
 			freeClient(c)
 			return
 		}
@@ -56,19 +54,26 @@ func readQueryFromClient(_ *aeEventLoop, fd int, clientData any) {
 	}
 }
 
-// SendReplyToClient send query result to client handle
+// SendReplyToClient send query result to client
 func SendReplyToClient(el *aeEventLoop, _ int, clientData any) {
 	c := assertClient(clientData)
 	for !isEmpty(c.reply) {
 		resp := c.reply.first()
 		buf := []byte(resp.data.strVal())
-		if c.sentLen < len(buf) {
+		bufLen := len(buf)
+		if c.sentLen < bufLen {
+			//n, err := Write(c.fd, buf[c.sentLen:])
 			_, err := Write(c.fd, buf[:])
 			if err != nil {
 				freeClient(c)
 				ulog.ErrorP("simple-redis server: SendReplyToClient err: ", err)
 				return
 			}
+			//c.sentLen += n
+			//utils.InfoF("simple-redis server: send %v bytes to client:%v", n, c.fd)
+			//if c.sentLen != bufLen {
+			//	break
+			//}
 			c.reply.delNode(resp)
 			resp.data.decrRefCount()
 		}
@@ -78,6 +83,8 @@ func SendReplyToClient(el *aeEventLoop, _ int, clientData any) {
 		el.removeFileEvent(c.fd, AE_WRITEABLE)
 	}
 }
+
+// ======================= Cron: called every 100 ms ========================
 
 // check some random expire key
 func activeExpireCycle() {
@@ -97,7 +104,6 @@ func activeExpireCycle() {
 
 // check background persistence terminated
 func checkPersistence() {
-	// run aof/rdb doneHandler, if child process completed
 	if server.aofChildPid != -1 || server.rdbChildPid != -1 {
 		pid, _ := wait4(-1, unix.WNOHANG)
 		if pid != 0 && pid != -1 {
@@ -108,7 +114,6 @@ func checkPersistence() {
 				backgroundSaveDoneHandler()
 			}
 		}
-		// try resize db
 		updateDictResizePolicy()
 		return
 	}
@@ -176,9 +181,7 @@ func checkRdbOrAofExecTimeout() {
 	}
 }
 
-// server cronjob handle
-//
-// Cron: called every 100 ms
+// server cronjob, default 100ms
 func serverCron(*aeEventLoop, int, any) {
 	// database corn
 	databaseCron()
